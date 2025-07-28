@@ -51,8 +51,8 @@ Spectral uses a stack-based execution model (like RPN calculators):
 ```spectral
 # Expression: + 3 5
 # Execution:
-# 1. Push 5 → stack: [5]
-# 2. Push 3 → stack: [5, 3] 
+# 1. Push 5 → stack: 5
+# 2. Push 3 → stack: 5 3 
 # 3. Pop both, add: 5+3=8 → stack: [8]
 ```
 
