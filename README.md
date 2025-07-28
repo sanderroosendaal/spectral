@@ -140,8 +140,6 @@ This is an experimental language exploring new ideas. Contributions welcome:
 
 ### Discussion Topics
 
-- Should matrix operations be postfix? (`A B *` vs `* A B`)
-- How to handle multi-dimensional array indexing?
 - What’s the right balance of built-in vs user-defined functions?
 - Integration strategies with existing scientific libraries?
 

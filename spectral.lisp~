@@ -1,0 +1,19 @@
+(defparameter *stack* nil)
+
+(defun push-stack (value)
+  (push value *stack*))
+
+(defun pop-stack ()
+  (pop *stack*))
+
+(defun peek-stack ()
+  (first *stack*))
+
+;; Array operations
+(defun array-op (op a b)
+  "Apply binary operation element-wise"
+  (cond
+    ((and (numberp a) (numberp b)) (funcall op a b))
+    ((numberp a) (mapcar (lambda (x) (funcall op a x)) b))
+    ((numberp b) (mapcar  (lambda (x) (funcall op x b)) a))
+    (t (mapcar op a b))))
