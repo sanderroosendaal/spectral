@@ -73,7 +73,7 @@ This repository contains a Lisp prototype (~100 lines) implementing:
 ### Try It
 
 ```bash
-git clone https://github.com/yourusername/spectral
+git clone https://github.com/sanderroosendaal/spectral.git
 cd spectral
 sbcl --load spectral.lisp
 ```
@@ -156,10 +156,12 @@ Spectral draws inspiration from:
 
 ## License
 
-MIT License - See <LICENSE> for details.
+MIT License - See [LICENSE](https://github.com/sanderroosendaal/spectral/blob/main/LICENSE "Standard MIT License") for details.
 
 -----
 
 *“The best way to predict the future is to invent it.”* - Alan Kay
 
 **Status**: Exploring the intersection of language design and scientific computing. Join the experiment!
+
+**Note**: Readme written with help of LLM, approved by roosendaalsander
