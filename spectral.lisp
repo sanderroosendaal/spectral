@@ -9,7 +9,11 @@
       (pop *stack*)))
 
 (defun peek-stack ()
-  (first *stack*))
+  (or
+   (first *stack*)
+   (progn
+     (pop-stack)
+     (peek-stack))))
 
 ;; Array operations
 (defun array-op (op a b)
@@ -23,6 +27,12 @@
        (error "Mismatched array lengths: ~S and ~S" a b))
      (mapcar #'(lambda (x y) (array-op op x y)) a b))
     (t (error "Invalid inputs: ~S and ~S" a b))))
+
+(defun array-fn (op a)
+  (cond
+    ((numberp a) (funcall op a))
+    ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
+    (t (error "Invalid input for array operation: ~S" a))))
      
 ;; Built-in functions
 (defun range-fn (n)
@@ -34,9 +44,69 @@
 (defun div-fn (a b) (array-op #'/ b a))
 
 ;; trigonometry (element-wise)
-(defun sin-fn (a) (if (numberp a) (sin a) (mapcar #'sin a)))
-(defun cos-fn (a) (if (numberp a) (cos a) (mapcar #'cos a)))
-(defun tan-fn (a) (if (numberp a) (tan a) (mapcar #'tan a)))
+(defun sin-fn (a) (array-fn #'sin a))
+(defun cos-fn (a) (array-fn #'cos a))
+(defun tan-fn (a) (array-fn #'tan a))
+
+;; table operations
+;; rotate, transpose, reshape, mean, std, median
+;; max min
+;; reductions
+(defun rotate (array)
+  "Rotate clockwise, i.e. last element becomes first element"
+  (if (null array)
+      nil
+      (cons (car (last array)) (butlast array))))
+
+(defun transpose (matrix)
+  "Transpose a matrix (list of lists)"
+  (apply #'mapcar #'list matrix))
+
+(defun count-elements (array)
+  "Count the number of elements in an array"
+  (if (listp array)
+      (reduce #'+ (mapcar #'count-elements array))
+      1))
+
+(defun flatten (lst)
+  (cond
+    ((null lst) nil)
+    ((listp (car lst)) (append (flatten (car lst)) (flatten (cdr lst))))
+    (t (cons (car lst) (flatten (cdr lst))))))
+
+(defun product (lst)
+  (reduce #'* lst :initial-value 1))
+
+(defun partition (lst size)
+  (when lst
+    (cons (subseq lst 0 size)
+          (partition (nthcdr size lst) size))))
+
+(defun reshape-rec (shape flat)
+  (let ((dim (car shape))
+        (rest (cdr shape)))
+    (if (null rest)
+        (partition flat dim) ;; Base case: just partition
+        (let ((chunks (partition flat (* dim (product rest)))))
+          (mapcar (lambda (chunk)
+                    (reshape-rec rest chunk))
+                  chunks)))))
+
+(defun reshape (shape data)
+  (let* ((flat (flatten data))
+         (expected (product shape)))
+    (unless (= (length flat) expected)
+      (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
+    (first (reshape-rec (reverse shape) flat))))
+
+
+;; Stack manipulation functions
+(defun dup ()
+  "Duplicate the top element of the stack."
+  (let ((top (pop-stack)))
+    (push-stack top)
+    (peek-stack)))
+
 
 ;; Constants
 (defparameter *constants*
@@ -48,16 +118,26 @@
 
 (defparameter *functions* (make-hash-table))
 
-;; Symbol table
-(defparameter *ops*
-  (list (cons '+ #'add-fn)
-	(cons '- #'sub-fn)
-	(cons '* #'mul-fn)
-	(cons '% #'div-fn)
-	(cons 'range #'range-fn)
-	(cons 'sin #'sin-fn)
-	(cons 'cos #'cos-fn)
-	(cons 'tan #'tan-fn)))
+(defparameter *ops* (make-hash-table))
+
+;; Symbol list
+(defun register-op (name function arity)
+  "Register a new operation with the given name, function, and arity."
+  (setf (gethash name *ops*)
+	(cons function arity)))
+
+(register-op '+ #'add-fn 2)
+(register-op '- #'sub-fn 2)
+(register-op '* #'mul-fn 2)
+(register-op '% #'div-fn 2)
+(register-op 'range #'range-fn 1)
+(register-op 'sin #'sin-fn 1)
+(register-op 'cos #'cos-fn 1)
+(register-op 'tan #'tan-fn 1)
+(register-op 'rotate #'rotate 1)
+(register-op 'transpose #'transpose 1)
+(register-op 'reshape #'reshape 2)
+(register-op 'dup #'dup 0)
 
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
@@ -71,6 +151,10 @@
     ;; Arrays push themselves
     ((and (listp token) (eq (first token) 'array))
      (push-stack (rest token)))
+
+    ;; Strings push themselves
+    ((stringp token)
+     (push-stack token))
 
     ;; Constants
     ((assoc token *constants*)
@@ -89,16 +173,23 @@
      (let ((filename (pop-stack)))
        (push-stack (load-numbers filename))))
 
+    ;; Nullary operations
+    ((= (cdr (gethash token *ops*)) 0)
+     (let ((op-fn (car (gethash token *ops*))))
+       (push-stack (funcall op-fn))))
+    
     ;; Unary operations
-    ((member token '(range sin cos tan))
-     (let ((a (pop-stack)))
-       (push-stack (funcall (cdr (assoc token *ops*)) a))))
+    ((= (cdr (gethash token *ops*)) 1)
+     (let ((a (pop-stack))
+	   (op-fn (car (gethash token *ops*))))
+       (push-stack (funcall op-fn a))))
 
     ;; Binary operations
-    ((member token '(+ - * %))
+    ((= (cdr (gethash token *ops*)) 2)
      (let ((a (pop-stack))
-	   (b (pop-stack)))
-       (push-stack (funcall (cdr (assoc token *ops*)) a b))))
+	   (b (pop-stack))
+	   (op-fn (car (gethash token *ops*))))
+       (push-stack (funcall op-fn a b))))
 
     (t (error "Unknown token:: ~A" token))))
 
@@ -108,8 +199,7 @@ Returns (values tokens-before-matrix matrix).
 Signals an error on invalid tokens or unmatched brackets."
   (labels
       ((scan-right (tokens)
-	 (let ((stack '())
-	       (matrix-tokens '())
+	 (let ((matrix-tokens '())
 	       (depth 0))
 	   (loop for token in (reverse tokens)
 		 do (cond
@@ -234,9 +324,11 @@ Signals an error on invalid tokens or unmatched brackets."
 (defun load-numbers (filename)
   "Load numbers from a text file (one per line)"
   (with-open-file (stream filename :direction :input)
-    (loop for line = (read-line stream nil nil)
-	  while line
-	  collect (parse-number line))))
+    (let ((result '()))
+      (loop for line = (read-line stream nil nil)
+	    while line
+	    do (push (parse-number line) result))
+      (nreverse result))))
 
 (defun parse-number (str)
   "Parse a string as a number"
@@ -246,16 +338,14 @@ Signals an error on invalid tokens or unmatched brackets."
 (defun run-script (filename)
   "Execute a script file line by line"
    (with-open-file (stream filename :direction :input)
-     (let ((results '()))
-       (loop for line = (read-line stream nil nil)
-	     while line
-	     when (and (> (length line) 0)
-		       (not (char= (char line 0) #\;))) ; Skip comments
-	       do (let ((result (evaluate (string-trim " " line))))
-		    (when result
-		      (push (list line result) results))))
-       (reverse results))))
+     (loop for line = (read-line stream nil nil)
+	   while line
+	   when (and (> (length line) 0)
+		     (not (char= (char line 0) #\;))) ; Skip comments
+	     do (evaluate (string-trim " " line)))))
+
 
 ;; Add file operations
-(setf *ops* (append *ops* (list (cons 'load #'load-numbers)
-				(cons 'run #'run-script))))
+(register-op 'load #'load-numbers 1)
+(register-op 'run #'run-script 1)
+
