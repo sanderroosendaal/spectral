@@ -53,14 +53,14 @@ Spectral uses a stack-based execution model (like RPN calculators):
 # Execution:
 # 1. Push 5 → stack: 5
 # 2. Push 3 → stack: 5 3 
-# 3. Pop both, add: 5+3=8 → stack: [8]
+# 3. Pop both, add: 5+3=8 → stack: 8
 ```
 
 This eliminates parentheses and makes data flow explicit.
 
 ## Current Implementation
 
-This repository contains a Lisp prototype (~100 lines) implementing:
+This repository contains a Lisp prototype (<500 lines) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
 - ✅ Trigonometry (`sin`, `cos`, `tan`)
@@ -79,7 +79,7 @@ sbcl --load spectral.lisp
 ```
 
 ```lisp
-* (evaluate "sin * 2 pi % range 20 4") ; Sine wave
+* (evaluate "sin * 2 * pi % 20 range 20") ; Sine wave
 * (evaluate "AddFive = + 5") ; Define function
 * (evaluate "AddFive 10") ; Use function → 15
 ```
@@ -140,8 +140,6 @@ This is an experimental language exploring new ideas. Contributions welcome:
 
 ### Discussion Topics
 
-- Should matrix operations be postfix? (`A B *` vs `* A B`)
-- How to handle multi-dimensional array indexing?
 - What’s the right balance of built-in vs user-defined functions?
 - Integration strategies with existing scientific libraries?
 
