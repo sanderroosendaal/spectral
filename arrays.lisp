@@ -23,6 +23,19 @@
       (reduce #'+ (mapcar #'count-elements array))
       1))
 
+;; shape, length
+(defun shape-fn (array)
+  "Return the shape of an array"
+  (labels ((shape-rec (lst)
+	     (if (listp lst)
+		 (cons (length lst)
+		       (if (and lst (every #'listp lst))
+			   (shape-rec (first lst))
+			   '()))
+		 '())))
+    (shape-rec array)))
+
+
 (defun flatten (lst)
   (cond
     ((null lst) nil)
@@ -54,7 +67,9 @@
       (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
     (first (reshape-rec (reverse shape) flat))))
 
-
+(register-op 'size #'count-elements 1)
+(register-op 'length #'length 1)
+(register-op 'shape #'shape-fn 1)
 (register-op 'range #'range-fn 1)
 (register-op 'rotate #'rotate 1)
 (register-op 'transpose #'transpose 1)
