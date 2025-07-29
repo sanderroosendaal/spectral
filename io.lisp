@@ -1,4 +1,9 @@
 ;; Simple file I/O functions
+(defun parse-number (str)
+  "Parse a string as a number"
+  (handler-case (read-from-string str)
+    (error () 0)))
+
 (defun load-numbers (filename)
   "Load numbers from a text file (one per line)"
   (with-open-file (stream filename :direction :input)
@@ -7,11 +12,6 @@
 	    while line
 	    do (push (parse-number line) result))
       (nreverse result))))
-
-(defun parse-number (str)
-  "Parse a string as a number"
-  (handler-case (read-from-string str)
-    (error () 0)))
 
 (defun run-script (filename)
   "Execute a script file line by line"

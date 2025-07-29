@@ -75,13 +75,17 @@ This repository contains a Lisp prototype (<500 lines) implementing:
 ```bash
 git clone https://github.com/sanderroosendaal/spectral.git
 cd spectral
-sbcl --load spectral.lisp
+sbcl --load load-spectral.lisp
 ```
 
-```lisp
-* (evaluate "sin * 2 * pi % 20 range 20") ; Sine wave
-* (evaluate "AddFive = + 5") ; Define function
-* (evaluate "AddFive 10") ; Use function → 15
+```spectral
+> load "numbers.dat" ; load a list of numbers
+> sin * 2 * pi % 20 range 20 ; Sine wave
+> AddFive = + 5 ; Define function
+> AddFive 10 ; Use function → 15
+> run "tests.spec" ; run a script
+> exit ; to exit
+* (exit) ; to exit from lisp
 ```
 
 ## Roadmap

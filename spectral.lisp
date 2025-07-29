@@ -1,6 +1,7 @@
 (require "asdf")
 
 (defpackage :spectral
+  (:use :cl)
   (:export :evaluate))
 
 (in-package :spectral)
@@ -299,29 +300,6 @@ Signals an error on invalid tokens or unmatched brackets."
 	    do (push token tokens)))
     (reverse tokens)))
 
-(defun evaluate (expr-string &optional (debug nil))
-  "Main evaluation function"
-  ;;(setf *stack* nil)
-  (let ((tokens (tokenize expr-string)))
-    ;; Check for assignment
-    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
-	(handle-assignment (first tokens) (cddr tokens))
-	;; Normal evaluation: process tokens right to left
-	(progn
-	  (loop while tokens do
-	    (let ((token (first (reverse tokens))))
-	      (when debug
-		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
-	      (cond
-		(( eq token '])
-		 (multiple-value-bind (rest array-literal) (parse-array tokens)
-		   (push-stack array-literal)
-		   (setf tokens rest)))
-		(t
-		 (execute-token token)
-		 (setf tokens (reverse (cdr (reverse tokens))))))))
-	  (peek-stack)))))
-
 (defun handle-assignment (name expr-tokens &optional (debug nil))
   "Handle variable/function assignment"
   (let ((result
@@ -349,6 +327,41 @@ Signals an error on invalid tokens or unmatched brackets."
 	(setf (gethash name *variables*) result))
     result))
 
+(defun evaluate (expr-string &optional (debug nil))
+  "Main evaluation function"
+  ;;(setf *stack* nil)
+  (let ((tokens (tokenize expr-string)))
+    ;; Check for assignment
+    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
+	(handle-assignment (first tokens) (cddr tokens))
+	;; Normal evaluation: process tokens right to left
+	(progn
+	  (loop while tokens do
+	    (let ((token (first (reverse tokens))))
+	      (when debug
+		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
+	      (cond
+		(( eq token '])
+		 (multiple-value-bind (rest array-literal) (parse-array tokens)
+		   (push-stack array-literal)
+		   (setf tokens rest)))
+		(t
+		 (execute-token token)
+		 (setf tokens (reverse (cdr (reverse tokens))))))))
+	  (peek-stack)))))
+
+(defun spectral-repl ()
+  (format t "Spectral REPL - type exit to exit")
+  (loop 
+    (format t "~&> ")
+    (finish-output)
+    (let ((line (read-line *standard-input* nil :eof)))
+      (cond
+	((or (null line) (string= line "exit")) (return))
+	(t (evaluate line)
+	   (pretty-print-stack))))))
+
 (load "arrays.lisp")
 (load "math.lisp")
 (load "io.lisp")
+
