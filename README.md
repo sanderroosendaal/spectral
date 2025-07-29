@@ -63,7 +63,7 @@ This eliminates parentheses and makes data flow explicit.
 This repository contains a Lisp prototype (<500 lines) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
-- ✅ Trigonometry (`sin`, `cos`, `tan`)
+- ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
 - ✅ Constants (`pi`, `e`)
 - ✅ Array operations with broadcasting
 - ✅ Variables and function definitions
@@ -91,7 +91,7 @@ sbcl --load spectral.lisp
 - [x] Core syntax and semantics
 - [x] Basic mathematical operations
 - [ ] Reduction operators (`/+`, `/*`, `/max`)
-- [ ] Array manipulation (`dup`, `swap`, `transpose`)
+- [X] Array manipulation (`dup`, `swap`, `transpose`)
 - [ ] Control flow and conditionals
 
 ### Phase 2: Scientific Computing

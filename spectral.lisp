@@ -1,5 +1,31 @@
 (defparameter *stack* nil)
 
+;; Constants
+(defparameter *constants*
+  `((pi . ,(coerce pi 'double-float))
+    (e . ,(exp 1.0d0))))
+
+;; Variables and functions storage
+(defparameter *variables* (make-hash-table))
+
+(defparameter *functions* (make-hash-table))
+
+(defparameter *ops* (make-hash-table))
+
+(defparameter *stack-ops* (make-hash-table))
+
+;; Symbol list
+(defun register-op (name function arity)
+  "Register a new operation with the given name, function, and arity."
+  (setf (gethash name *ops*)
+	(cons function arity)))
+
+(defun register-stack-op (name function arity)
+  "Registers a new stack operation with the given name, function and arity"
+  (setf (gethash name *stack-ops*)
+	(cons function arity)))
+
+;; Stack manipulation functions
 (defun push-stack (value)
   (push value *stack*))
 
@@ -14,6 +40,22 @@
    (progn
      (pop-stack)
      (peek-stack))))
+
+(defun dup ()
+  "Duplicate the top element of the stack."
+  (let ((top (pop-stack)))
+    (push-stack top)
+    (peek-stack)))
+
+(defun swap ()
+  "Swap top and second element of the stack"
+  (let ((top (pop-stack))
+	(second (pop-stack)))
+    (push-stack top)
+    (push-stack second)))
+
+(register-stack-op 'dup #'dup 0)
+(register-stack-op 'swap #'swap 0)
 
 ;; Array operations
 (defun array-op (op a b)
@@ -34,110 +76,7 @@
     ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
     (t (error "Invalid input for array operation: ~S" a))))
      
-;; Built-in functions
-(defun range-fn (n)
-  (loop for i from 0 below n collect i))
 
-(defun add-fn (a b) (array-op #'+ b a))
-(defun sub-fn (a b) (array-op #'- b a))
-(defun mul-fn (a b) (array-op #'* b a))
-(defun div-fn (a b) (array-op #'/ b a))
-
-;; trigonometry (element-wise)
-(defun sin-fn (a) (array-fn #'sin a))
-(defun cos-fn (a) (array-fn #'cos a))
-(defun tan-fn (a) (array-fn #'tan a))
-
-;; table operations
-;; rotate, transpose, reshape, mean, std, median
-;; max min
-;; reductions
-(defun rotate (array)
-  "Rotate clockwise, i.e. last element becomes first element"
-  (if (null array)
-      nil
-      (cons (car (last array)) (butlast array))))
-
-(defun transpose (matrix)
-  "Transpose a matrix (list of lists)"
-  (apply #'mapcar #'list matrix))
-
-(defun count-elements (array)
-  "Count the number of elements in an array"
-  (if (listp array)
-      (reduce #'+ (mapcar #'count-elements array))
-      1))
-
-(defun flatten (lst)
-  (cond
-    ((null lst) nil)
-    ((listp (car lst)) (append (flatten (car lst)) (flatten (cdr lst))))
-    (t (cons (car lst) (flatten (cdr lst))))))
-
-(defun product (lst)
-  (reduce #'* lst :initial-value 1))
-
-(defun partition (lst size)
-  (when lst
-    (cons (subseq lst 0 size)
-          (partition (nthcdr size lst) size))))
-
-(defun reshape-rec (shape flat)
-  (let ((dim (car shape))
-        (rest (cdr shape)))
-    (if (null rest)
-        (partition flat dim) ;; Base case: just partition
-        (let ((chunks (partition flat (* dim (product rest)))))
-          (mapcar (lambda (chunk)
-                    (reshape-rec rest chunk))
-                  chunks)))))
-
-(defun reshape (shape data)
-  (let* ((flat (flatten data))
-         (expected (product shape)))
-    (unless (= (length flat) expected)
-      (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
-    (first (reshape-rec (reverse shape) flat))))
-
-
-;; Stack manipulation functions
-(defun dup ()
-  "Duplicate the top element of the stack."
-  (let ((top (pop-stack)))
-    (push-stack top)
-    (peek-stack)))
-
-
-;; Constants
-(defparameter *constants*
-  `((pi . ,(coerce pi 'double-float))
-    (e . ,(exp 1.0d0))))
-
-;; Variables and functions storage
-(defparameter *variables* (make-hash-table))
-
-(defparameter *functions* (make-hash-table))
-
-(defparameter *ops* (make-hash-table))
-
-;; Symbol list
-(defun register-op (name function arity)
-  "Register a new operation with the given name, function, and arity."
-  (setf (gethash name *ops*)
-	(cons function arity)))
-
-(register-op '+ #'add-fn 2)
-(register-op '- #'sub-fn 2)
-(register-op '* #'mul-fn 2)
-(register-op '% #'div-fn 2)
-(register-op 'range #'range-fn 1)
-(register-op 'sin #'sin-fn 1)
-(register-op 'cos #'cos-fn 1)
-(register-op 'tan #'tan-fn 1)
-(register-op 'rotate #'rotate 1)
-(register-op 'transpose #'transpose 1)
-(register-op 'reshape #'reshape 2)
-(register-op 'dup #'dup 0)
 
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
@@ -173,6 +112,10 @@
      (let ((filename (pop-stack)))
        (push-stack (load-numbers filename))))
 
+    ;; Stack operations
+    ((gethash token *stack-ops*)
+     (funcall (car (gethash token *stack-ops*))))
+
     ;; Nullary operations
     ((= (cdr (gethash token *ops*)) 0)
      (let ((op-fn (car (gethash token *ops*))))
@@ -196,6 +139,7 @@
 (defun parse-array (tokens)
   "Parses the last well-formed bracketed matrix in TOKENS from right to left.
 Returns (values tokens-before-matrix matrix).
+Can only handle arrays of numerical values.
 Signals an error on invalid tokens or unmatched brackets."
   (labels
       ((scan-right (tokens)
@@ -320,32 +264,6 @@ Signals an error on invalid tokens or unmatched brackets."
 	(setf (gethash name *variables*) result))
     result))
 
-;; Simple file I/O functions
-(defun load-numbers (filename)
-  "Load numbers from a text file (one per line)"
-  (with-open-file (stream filename :direction :input)
-    (let ((result '()))
-      (loop for line = (read-line stream nil nil)
-	    while line
-	    do (push (parse-number line) result))
-      (nreverse result))))
-
-(defun parse-number (str)
-  "Parse a string as a number"
-  (handler-case (read-from-string str)
-    (error () 0)))
-
-(defun run-script (filename)
-  "Execute a script file line by line"
-   (with-open-file (stream filename :direction :input)
-     (loop for line = (read-line stream nil nil)
-	   while line
-	   when (and (> (length line) 0)
-		     (not (char= (char line 0) #\;))) ; Skip comments
-	     do (evaluate (string-trim " " line)))))
-
-
-;; Add file operations
-(register-op 'load #'load-numbers 1)
-(register-op 'run #'run-script 1)
-
+(load "arrays.lisp")
+(load "math.lisp")
+(load "io.lisp")

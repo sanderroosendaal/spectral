@@ -1,0 +1,19 @@
+;; basics
+(defun add-fn (a b) (array-op #'+ b a))
+(defun sub-fn (a b) (array-op #'- b a))
+(defun mul-fn (a b) (array-op #'* b a))
+(defun div-fn (a b) (array-op #'/ b a))
+
+(register-op '+ #'add-fn 2)
+(register-op '- #'sub-fn 2)
+(register-op '* #'mul-fn 2)
+(register-op '% #'div-fn 2)
+
+;; trigonometry (element-wise)
+(defun sin-fn (a) (array-fn #'sin a))
+(defun cos-fn (a) (array-fn #'cos a))
+(defun tan-fn (a) (array-fn #'tan a))
+
+(register-op 'sin #'sin-fn 1)
+(register-op 'cos #'cos-fn 1)
+(register-op 'tan #'tan-fn 1)
