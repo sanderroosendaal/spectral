@@ -49,6 +49,21 @@
      (pop-stack)
      (peek-stack))))
 
+
+(defun dup ()
+  "Duplicate the top element of the stack."
+  (let ((top (pop-stack)))
+    (push-stack top)
+    (push-stack top)
+    (peek-stack)))
+
+(defun swap ()
+  "Swap top and second element of the stack"
+  (let ((top (pop-stack))
+	(second (pop-stack)))
+    (push-stack top)
+    (push-stack second)))
+
 ;; could be better, but it's better than nothing
 (defun pretty-print-stack-item (item)
   (cond
@@ -71,22 +86,9 @@
   (loop for item in (reverse *stack*)
 	do (pretty-print-stack-item item)))
 
-(defun dup ()
-  "Duplicate the top element of the stack."
-  (let ((top (pop-stack)))
-    (push-stack top)
-    (push-stack top)
-    (peek-stack)))
-
-(defun swap ()
-  "Swap top and second element of the stack"
-  (let ((top (pop-stack))
-	(second (pop-stack)))
-    (push-stack top)
-    (push-stack second)))
-
 (register-stack-op 'dup #'dup 0)
 (register-stack-op 'swap #'swap 0)
+(register-stack-op 'pop #'pop-stack 0)
 
 ;; Array operations
 (defun array-op (op a b)
