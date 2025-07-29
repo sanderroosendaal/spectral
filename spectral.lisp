@@ -1,3 +1,10 @@
+(require "asdf")
+
+(defpackage :spectral
+  (:export :evaluate))
+
+(in-package :spectral)
+
 (defparameter *stack* nil)
 
 ;; Constants
@@ -41,9 +48,32 @@
      (pop-stack)
      (peek-stack))))
 
+;; could be better, but it's better than nothing
+(defun pretty-print-stack-item (item)
+  (cond
+    ((null item) "")
+    ((numberp item) (format t "~A~%" item))
+    ((stringp item) (format t "~A~%" item))
+    ((and (listp item) (numberp (first item)))
+     (format t "[ ~{~A~^ ~} ]~%" item))
+    ((listp item)
+     (format t "[~%")
+     (loop for v in item
+	   for i from 0
+	   do (progn
+		(when (> i 0) (format t ""))
+		(pretty-print-stack-item v)))
+     (format t "]~%"))
+    (t (format t "~A~%" item))))
+
+(defun pretty-print-stack ()
+  (loop for item in (reverse *stack*)
+	do (pretty-print-stack-item item)))
+
 (defun dup ()
   "Duplicate the top element of the stack."
   (let ((top (pop-stack)))
+    (push-stack top)
     (push-stack top)
     (peek-stack)))
 
@@ -89,6 +119,29 @@
     ((listp a) (reduce op a))
     (t (error "Invalid input for reduce: ~S" a))))
 
+(defun scan (op initial lst)
+  (let ((results nil)
+	(acc initial))
+    (dolist (item lst (nreverse results))
+	   (setf acc (funcall op acc item))
+      (push acc results))))
+
+(defun scan1 (op lst)
+  (when (null lst)
+    (error "scan1 requires a non-empty list"))
+  (let ((results (list (first lst)))
+	(acc (first lst)))
+    (dolist (item (rest lst) (nreverse results))
+      (setf acc (funcall op acc item))
+      (push acc results))))
+
+(defun scan-array (op a)
+  (format t "Entering scan-array with ~A on ~A~%" op a)
+  (cond
+    ((numberp a) (error "Invalid input for scan: ~A" a))
+    ((listp a) (scan1 op a))
+    (t (error "Invalid input for scan: ~A" a))))
+
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
   (when debug
@@ -130,6 +183,16 @@
 	   (let* ((a (pop-stack))
 		  (op-fn (car (gethash op *ops*)))
 		  (value (reduce-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+
+    ;; Scan - using & for now, as \ is escaping
+    ((char= (char (symbol-name token) 0) #\&)
+     (let ((op (strip-token token #\&)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (scan-array op-fn a)))
 	     (push-stack value))
 	   (error "Unknown operation: ~A" op))))
 
@@ -226,8 +289,6 @@ Signals an error on invalid tokens or unmatched brackets."
 	(when leftover
 	  (error "Extra tokens after parsing: ~S" leftover))
 	(values prefix (first matrix))))))
-
-
 
 (defun tokenize (expr-string)
   "Simple tokenizer"

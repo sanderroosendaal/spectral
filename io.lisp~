@@ -20,8 +20,7 @@
 	   while line
 	   when (and (> (length line) 0)
 		     (not (char= (char line 0) #\;))) ; Skip comments
-	     do (evaluate (string-trim " " line)))
-     (peek-stack)))
+	     do (evaluate (string-trim " " line)))))
 
 
 ;; Add file operations
