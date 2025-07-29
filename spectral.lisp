@@ -75,8 +75,19 @@
     ((numberp a) (funcall op a))
     ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
     (t (error "Invalid input for array operation: ~S" a))))
-     
 
+(defun strip-token (token char)
+  (let* ((name (symbol-name token)))
+    (if (and (> (length name) 0)
+	     (char= (char name 0) char))
+	(intern (subseq name 1))
+	token)))
+
+(defun reduce-array (op a)
+  (cond
+    ((numberp a) (error "Invalid input for reduce: ~S" a))
+    ((listp a) (reduce op a))
+    (t (error "Invalid input for reduce: ~S" a))))
 
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
@@ -112,27 +123,40 @@
      (let ((filename (pop-stack)))
        (push-stack (load-numbers filename))))
 
+    ;; Reduction
+    ((char= (char (symbol-name token) 0) #\/)
+     (let ((op (strip-token token #\/)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (reduce-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+
     ;; Stack operations
     ((gethash token *stack-ops*)
      (funcall (car (gethash token *stack-ops*))))
 
     ;; Nullary operations
     ((= (cdr (gethash token *ops*)) 0)
-     (let ((op-fn (car (gethash token *ops*))))
-       (push-stack (funcall op-fn))))
+     (let* ((op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn))))
+       (loop for value in values do (push-stack value))))
     
     ;; Unary operations
     ((= (cdr (gethash token *ops*)) 1)
-     (let ((a (pop-stack))
-	   (op-fn (car (gethash token *ops*))))
-       (push-stack (funcall op-fn a))))
+     (let* ((a (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a))))
+       (loop for value in values do (push-stack value))))
 
     ;; Binary operations
     ((= (cdr (gethash token *ops*)) 2)
-     (let ((a (pop-stack))
-	   (b (pop-stack))
-	   (op-fn (car (gethash token *ops*))))
-       (push-stack (funcall op-fn a b))))
+     (let* ((a (pop-stack))
+	    (b (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a b))))
+       (loop for value in values do (push-stack value))))
 
     (t (error "Unknown token:: ~A" token))))
 

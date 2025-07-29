@@ -25,6 +25,13 @@
 (register-op 'frac #'frac-fn 1)
 (register-op 'rnd #'rnd-fn 1)
 
+;; max, min
+(defun max-fn (a b) (array-op #'max a b))
+(defun min-fn (a b) (array-op #'min a b))
+
+(register-op 'max #'max-fn 2)
+(register-op 'min #'min-fn 2)
+
 ;; power, roots, logarithms
 (defun sqr-fn (a) (array-fn (lambda (x) (* x x)) a))
 (defun sqrt-fn (a) (array-fn #'sqrt a))

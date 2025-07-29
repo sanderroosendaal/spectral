@@ -90,7 +90,7 @@ sbcl --load spectral.lisp
 
 - [x] Core syntax and semantics
 - [x] Basic mathematical operations
-- [ ] Reduction operators (`/+`, `/*`, `/max`)
+- [X] Reduction operators (`/+`, `/*`, `/max`)
 - [X] Array manipulation (`dup`, `swap`, `transpose`)
 - [ ] Control flow and conditionals
 
