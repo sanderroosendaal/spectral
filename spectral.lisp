@@ -71,24 +71,40 @@
     ((numberp item) (format t "~A~%" item))
     ((stringp item) (format t "~A~%" item))
     ((and (listp item) (numberp (first item)))
-     (format t "[ ~{~A~^ ~} ]~%" item))
+     (if (< (length item) 10)
+	 (format t "[ ~{~A~^ ~} ]~%" item)
+	 (format t "[ ~{~A~^ ~} ... ]~%" (subseq item 0 10))))
     ((listp item)
-     (format t "[~%")
-     (loop for v in item
-	   for i from 0
-	   do (progn
-		(when (> i 0) (format t ""))
-		(pretty-print-stack-item v)))
-     (format t "]~%"))
+     (if (< (length item) 10)
+	 (progn
+	   (format t "[~%")
+	   (loop for v in item
+		 for i from 0
+		 do (progn
+		      (when (> i 0) (format t ""))
+		      (pretty-print-stack-item v)))
+	   (format t "]~%"))
+	 (let ((new-item (subseq item 0 10)))
+	   (format t "[~%")
+	   (loop for v in new-item
+		 for i from 0
+		 do (progn
+		      (when (> i 0) (format t ""))
+		      (pretty-print-stack-item v)))
+	   (format t " ... ]~%"))))
     (t (format t "~A~%" item))))
 
 (defun pretty-print-stack ()
-  (loop for item in (reverse *stack*)
-	do (pretty-print-stack-item item)))
+  (if (null *stack*)
+      (format t "Empty Stack")
+      (let ((n (min (length *stack*) 5)))
+	(loop for item in (reverse (subseq *stack* 0 n))
+	      do (pretty-print-stack-item item)))))
 
 (register-stack-op 'dup #'dup 0)
 (register-stack-op 'swap #'swap 0)
 (register-stack-op 'pop #'pop-stack 0)
+(register-stack-op 'peek #'pretty-print-stack 0)
 
 ;; Array operations
 (defun array-op (op a b)

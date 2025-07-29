@@ -1,4 +1,6 @@
 ;; Simple file I/O functions
+(ql:quickload :cl-csv)
+
 (defun parse-number (str)
   "Parse a string as a number"
   (handler-case (read-from-string str)
