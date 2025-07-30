@@ -99,7 +99,9 @@
       (format t "Empty Stack")
       (let ((n (min (length *stack*) 5)))
 	(loop for item in (reverse (subseq *stack* 0 n))
-	      do (pretty-print-stack-item item)))))
+	      do
+		 (format t "--~%")
+		 (pretty-print-stack-item item)))))
 
 (register-stack-op 'dup #'dup 0)
 (register-stack-op 'swap #'swap 0)

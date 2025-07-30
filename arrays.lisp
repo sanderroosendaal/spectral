@@ -15,7 +15,9 @@
 
 (defun transpose (matrix)
   "Transpose a matrix (list of lists)"
-  (apply #'mapcar #'list matrix))
+  (if (listp (first matrix))
+      (apply #'mapcar #'list matrix)
+      matrix))
 
 (defun count-elements (array)
   "Count the number of elements in an array"
@@ -113,7 +115,10 @@
   (if (not (member value array :test #'equal))
       (length array)
       (position value array :test #'equal)))
-;(defun position (value array))
+
+(defun position-fn (value array)
+  (let ((p (position value array)))
+    (if p p (length array))))
 
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
@@ -127,3 +132,4 @@
 (register-op 'drop #'drop 2)
 (register-op 'where #'where 1)
 (register-op 'idx #'indexof 2)
+(register-op 'position #'position-fn 2)

@@ -1,8 +1,19 @@
 ;; basics
-(defun add-fn (a b) (array-op #'+ b a))
-(defun sub-fn (a b) (array-op #'- b a))
-(defun mul-fn (a b) (array-op #'* b a))
-(defun div-fn (a b) (array-op #'/ b a))
+(defun add-fn (a b)
+  "Addition"
+  (array-op #'+ b a))
+
+(defun sub-fn (a b)
+  "Subtraction"
+  (array-op #'- b a))
+
+(defun mul-fn (a b)
+  "Multiplication"
+  (array-op #'* b a))
+
+(defun div-fn (a b)
+  "Division"
+  (array-op #'/ b a))
 
 
 (register-op '+ #'add-fn 2)
@@ -11,12 +22,29 @@
 (register-op '% #'div-fn 2)
 
 ;; change-sign, abs, intg, frac, rnd
-(defun complex-fn (a b) (array-op #'complex a b))
-(defun chs (a) (array-fn (lambda (x) (- 0 x)) a))
-(defun abs-fn (a) (array-fn #'abs a))
-(defun intg-fn (a) (array-fn #'floor a))
-(defun frac-fn (a) (array-fn (lambda (x) (mod x 1)) a))
-(defun rnd-fn (a) (array-fn #'round a))
+(defun complex-fn (a b)
+  "Creates complex number a+ib"
+  (array-op #'complex a b))
+
+(defun chs (a)
+  "Change sign a -> -a"
+  (array-fn (lambda (x) (- 0 x)) a))
+
+(defun abs-fn (a)
+  "Absolute value, also works for complex numbers"
+  (array-fn #'abs a))
+
+(defun intg-fn (a)
+  "Floor"
+  (array-fn #'floor a))
+
+(defun frac-fn (a)
+  "Returns the fractional part 1.23 -> .23"
+  (array-fn (lambda (x) (mod x 1)) a))
+
+(defun rnd-fn (a)
+  "Round"
+  (array-fn #'round a))
 
 (register-op 'complex #'complex-fn 2)
 (register-op 'chs #'chs 1)
@@ -26,21 +54,49 @@
 (register-op 'rnd #'rnd-fn 1)
 
 ;; max, min
-(defun max-fn (a b) (array-op #'max a b))
-(defun min-fn (a b) (array-op #'min a b))
+(defun max-fn (a b)
+  "Maximum"
+  (array-op #'max a b))
+
+(defun min-fn (a b)
+  "Minimum"
+  (array-op #'min a b))
 
 (register-op 'max #'max-fn 2)
 (register-op 'min #'min-fn 2)
 
 ;; power, roots, logarithms
-(defun sqr-fn (a) (array-fn (lambda (x) (* x x)) a))
-(defun sqrt-fn (a) (array-fn #'sqrt a))
-(defun exp-fn (a) (array-fn #'exp a))
-(defun log-fn (a) (array-fn #'log a))
-(defun 10^x (a) (array-fn (lambda (x) (expt 10 x)) a))
-(defun 10log-fn (a) (array-fn (lambda (x) (log x 10)) a))
-(defun y^x-fn (a b) (array-op (lambda (x y) (expt x y)) b a))
-(defun 1/x-fn (a) (array-fn (lambda (x) (coerce (/ x) 'double-float)) a))
+(defun sqr-fn (a)
+  "Square a^2"
+  (array-fn (lambda (x) (* x x)) a))
+
+(defun sqrt-fn (a)
+  "Square root"
+  (array-fn #'sqrt a))
+
+(defun exp-fn (a)
+  "Exponential: e^a"
+  (array-fn #'exp a))
+
+(defun log-fn (a)
+  "Natural logarithm ln a"
+  (array-fn #'log a))
+
+(defun 10^x (a)
+  "10^a"
+  (array-fn (lambda (x) (expt 10 x)) a))
+
+(defun 10log-fn (a)
+  "10log a"
+  (array-fn (lambda (x) (log x 10)) a))
+
+(defun y^x-fn (a b)
+  "y^x first on stack is exponent, second is base: y^x 3 2 --> 8"
+  (array-op (lambda (x y) (expt x y)) b a))
+
+(defun 1/x-fn (a)
+  "Reciprocal: 1/a"
+  (array-fn (lambda (x) (coerce (/ x) 'double-float)) a))
 
 (register-op 'square #'sqr-fn 1)
 (register-op 'sqrt #'sqrt-fn 1)
@@ -52,18 +108,52 @@
 (register-op '1/x #'1/x-fn 1)
 
 ;; trigonometry 
-(defun sin-fn (a) (array-fn #'sin a))
-(defun cos-fn (a) (array-fn #'cos a))
-(defun tan-fn (a) (array-fn #'tan a))
-(defun asin-fn (a) (array-fn #'asin a))
-(defun acos-fn (a) (array-fn #'acos a))
-(defun atan-fn (a) (array-fn #'atan a))
-(defun sinh-fn (a) (array-fn #'sinh a))
-(defun cosh-fn (a) (array-fn #'cosh a))
-(defun tanh-fn (a) (array-fn #'tanh a))
-(defun asinh-fn (a) (array-fn #'asinh a))
-(defun acosh-fn (a) (array-fn #'acosh a))
-(defun atanh-fn (a) (array-fn #'atanh a))
+(defun sin-fn (a)
+  "Sin"
+  (array-fn #'sin a))
+
+(defun cos-fn (a)
+  "Cos"
+  (array-fn #'cos a))
+(defun tan-fn (a)
+  "Tan"
+  (array-fn #'tan a))
+
+(defun asin-fn (a)
+  "Asin"
+  (array-fn #'asin a))
+
+(defun acos-fn (a)
+  "Acos"
+  (array-fn #'acos a))
+
+(defun atan-fn (a)
+  "Atan"
+  (array-fn #'atan a))
+
+(defun sinh-fn (a)
+  "Sinh"
+  (array-fn #'sinh a))
+
+(defun cosh-fn (a)
+  "Cosh"
+  (array-fn #'cosh a))
+
+(defun tanh-fn (a)
+  "Tanh"
+  (array-fn #'tanh a))
+
+(defun asinh-fn (a)
+  "Asinh"
+  (array-fn #'asinh a))
+
+(defun acosh-fn (a)
+  "Acosh"
+  (array-fn #'acosh a))
+
+(defun atanh-fn (a)
+  "Atanh"
+  (array-fn #'atanh a))
 
 
 (register-op 'sin #'sin-fn 1)
@@ -81,6 +171,7 @@
 
 ;; miscellaneous
 (defun fact-fn (a)
+  "Factorial ! 8 -> 40320"
   (labels ((fact (n)
 	     (cond
 	       ((= n 0) 1)
