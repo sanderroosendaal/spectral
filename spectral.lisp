@@ -382,4 +382,5 @@ Signals an error on invalid tokens or unmatched brackets."
 (load "arrays.lisp")
 (load "math.lisp")
 (load "io.lisp")
+(load "filters.lisp")
 

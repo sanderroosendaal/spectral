@@ -67,6 +67,54 @@
       (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
     (first (reshape-rec (reverse shape) flat))))
 
+(defun pick (index array)
+  (cond
+    ((numberp index)
+     (let ((v (nth index array)))
+       (if v v (error "Invalid index ~A for ~A" index array))))
+    ((listp index)
+     (let ((array-c (copy-list array)))
+       (loop for i in index do
+	 (setf array-c (nth i array-c)))
+       (if array-c array-c (error "Invalid index ~A for ~A" index array))))
+    (t (error "Invalid inputs to pick: ~A, ~A" index array))))
+
+(defun take (index array)
+  (cond
+    ((numberp index)
+     (handler-case
+	 (let ((v (subseq array 0 index)))
+	   (if v v (error "Invalid index: take ~A ~A" index array)))
+       (error
+	   (condition)
+	 (declare (ignore condition))
+	 (error "Invalid index: take ~A ~A" index array))))
+     (t (error "Invalid inputs to take: ~A, ~A" index array))))
+
+(defun drop (index array)
+  (cond
+    ((numberp index)
+     (handler-case
+	 (let ((v (subseq array index)))
+	   (if v v (error "Invalid index: drop ~A ~A" index array)))
+       (error
+	   (condition)
+	 (declare (ignore condition))
+	 (error "Invalid index: drop ~A ~A" index array))))
+    (t (error "Invalid inputs to drop: ~A, ~A" index array))))
+
+(defun where (array)
+  (loop for item in array
+	for i from 0
+	unless (zerop item)
+	  collect i))
+
+(defun indexof (value array)
+  (if (not (member value array :test #'equal))
+      (length array)
+      (position value array :test #'equal)))
+;(defun position (value array))
+
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
 (register-op 'shape #'shape-fn 1)
@@ -74,3 +122,8 @@
 (register-op 'rotate #'rotate 1)
 (register-op 'transpose #'transpose 1)
 (register-op 'reshape #'reshape 2)
+(register-op 'pick #'pick 2)
+(register-op 'take #'take 2)
+(register-op 'drop #'drop 2)
+(register-op 'where #'where 1)
+(register-op 'idx #'indexof 2)

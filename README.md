@@ -95,7 +95,8 @@ sbcl --load load-spectral.lisp
 - [x] Core syntax and semantics
 - [x] Basic mathematical operations
 - [X] Reduction operators (`/+`, `/*`, `/max`)
-- [X] Array manipulation (`dup`, `swap`, `transpose`)
+- [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
+- [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
 - [ ] Control flow and conditionals
 
 ### Phase 2: Scientific Computing
