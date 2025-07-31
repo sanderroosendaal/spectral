@@ -23,6 +23,8 @@ Generated from Lisp source files.
 
 Count the number of elements in an array
 
+---
+
 #### `drop`
 
 - **Function:** `drop`
@@ -34,6 +36,8 @@ Count the number of elements in an array
 **Description:**
 
 Drop the first N elements from an array.
+
+---
 
 #### `flatten`
 
@@ -47,6 +51,8 @@ Drop the first N elements from an array.
 
 Flatten a nested list structure into a single list.
 
+---
+
 #### `idx`
 
 - **Function:** `indexof`
@@ -59,11 +65,15 @@ Flatten a nested list structure into a single list.
 
 Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
 
+---
+
 #### `length`
 
 - **Function:** `length`
 - **Arity:** 1
 - **Source:** arrays.lisp
+
+---
 
 #### `pick`
 
@@ -77,6 +87,8 @@ Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not 
 
 Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
+---
+
 #### `range`
 
 - **Function:** `range-fn`
@@ -84,6 +96,8 @@ Pick an element from an array based on the index.    If index is a number, it r
 - **Source:** arrays.lisp
 
 **Parameters:** `(N)`
+
+---
 
 #### `reshape`
 
@@ -97,6 +111,8 @@ Pick an element from an array based on the index.    If index is a number, it r
 
 Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
+---
+
 #### `rotate`
 
 - **Function:** `rotate`
@@ -108,6 +124,8 @@ Reshape a flat list into a multi-dimensional array based on the given shape.   
 **Description:**
 
 Rotate clockwise, i.e. last element becomes first element
+
+---
 
 #### `shape`
 
@@ -121,6 +139,8 @@ Rotate clockwise, i.e. last element becomes first element
 
 Return the shape of an array
 
+---
+
 #### `take`
 
 - **Function:** `take`
@@ -132,6 +152,8 @@ Return the shape of an array
 **Description:**
 
 Take the first N elements from an array.
+
+---
 
 #### `transpose`
 
@@ -145,6 +167,8 @@ Take the first N elements from an array.
 
 Transpose a matrix (list of lists)
 
+---
+
 #### `where`
 
 - **Function:** `where`
@@ -156,6 +180,8 @@ Transpose a matrix (list of lists)
 **Description:**
 
 Return the indices of non-zero elements in an array.
+
+---
 
 ### filters.lisp 
 
@@ -171,6 +197,8 @@ Return the indices of non-zero elements in an array.
 
 Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 
+---
+
 #### `>=`
 
 - **Function:** `greater-equal-fn`
@@ -182,6 +210,8 @@ Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 **Description:**
 
 Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
+
+---
 
 #### `>`
 
@@ -195,6 +225,8 @@ Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
 
 Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
+---
+
 #### `neq`
 
 - **Function:** `not-eql-fn`
@@ -206,6 +238,8 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 **Description:**
 
 Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
 
 #### `<=`
 
@@ -219,6 +253,8 @@ Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
 
 Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 
+---
+
 #### `<`
 
 - **Function:** `smaller-fn`
@@ -230,6 +266,8 @@ Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 **Description:**
 
 Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
+
+---
 
 ### io.lisp 
 
@@ -245,6 +283,8 @@ Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 
 Loads a table from a CSV file, comma separated, row oriented
 
+---
+
 #### `load`
 
 - **Function:** `load-numbers`
@@ -257,6 +297,8 @@ Loads a table from a CSV file, comma separated, row oriented
 
 Load numbers from a text file (one per line)
 
+---
+
 #### `run`
 
 - **Function:** `run-script`
@@ -268,6 +310,8 @@ Load numbers from a text file (one per line)
 **Description:**
 
 Execute a script file line by line
+
+---
 
 ### math.lisp 
 
@@ -283,6 +327,8 @@ Execute a script file line by line
 
 Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
 
+---
+
 #### `->r`
 
 - **Function:** `->r`
@@ -294,6 +340,8 @@ Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
 **Description:**
 
 Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
+
+---
 
 #### `1/x`
 
@@ -307,6 +355,8 @@ Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
 Reciprocal: 1/a
 
+---
+
 #### `10^x`
 
 - **Function:** `10^x`
@@ -318,6 +368,8 @@ Reciprocal: 1/a
 **Description:**
 
 10^a
+
+---
 
 #### `log`
 
@@ -331,6 +383,8 @@ Reciprocal: 1/a
 
 10log a
 
+---
+
 #### `abs`
 
 - **Function:** `abs-fn`
@@ -342,6 +396,8 @@ Reciprocal: 1/a
 **Description:**
 
 Absolute value, also works for complex numbers
+
+---
 
 #### `acos`
 
@@ -355,6 +411,8 @@ Absolute value, also works for complex numbers
 
 Acos
 
+---
+
 #### `acosh`
 
 - **Function:** `acosh-fn`
@@ -366,6 +424,8 @@ Acos
 **Description:**
 
 Acosh
+
+---
 
 #### `+`
 
@@ -379,6 +439,8 @@ Acosh
 
 Addition
 
+---
+
 #### `asin`
 
 - **Function:** `asin-fn`
@@ -390,6 +452,8 @@ Addition
 **Description:**
 
 Asin
+
+---
 
 #### `asinh`
 
@@ -403,6 +467,8 @@ Asin
 
 Asinh
 
+---
+
 #### `atan`
 
 - **Function:** `atan-fn`
@@ -414,6 +480,8 @@ Asinh
 **Description:**
 
 Atan
+
+---
 
 #### `atanh`
 
@@ -427,6 +495,8 @@ Atan
 
 Atanh
 
+---
+
 #### `chs`
 
 - **Function:** `chs`
@@ -438,6 +508,8 @@ Atanh
 **Description:**
 
 Change sign a -> -a
+
+---
 
 #### `complex`
 
@@ -451,6 +523,8 @@ Change sign a -> -a
 
 Creates complex number a+ib
 
+---
+
 #### `cos`
 
 - **Function:** `cos-fn`
@@ -462,6 +536,8 @@ Creates complex number a+ib
 **Description:**
 
 Cos
+
+---
 
 #### `cosh`
 
@@ -475,6 +551,8 @@ Cos
 
 Cosh
 
+---
+
 #### `%`
 
 - **Function:** `div-fn`
@@ -486,6 +564,8 @@ Cosh
 **Description:**
 
 Division
+
+---
 
 #### `exp`
 
@@ -499,6 +579,8 @@ Division
 
 Exponential: e^a
 
+---
+
 #### `!`
 
 - **Function:** `fact-fn`
@@ -510,6 +592,8 @@ Exponential: e^a
 **Description:**
 
 Factorial ! 8 -> 40320
+
+---
 
 #### `frac`
 
@@ -523,6 +607,8 @@ Factorial ! 8 -> 40320
 
 Returns the fractional part 1.23 -> .23
 
+---
+
 #### `intg`
 
 - **Function:** `intg-fn`
@@ -534,6 +620,8 @@ Returns the fractional part 1.23 -> .23
 **Description:**
 
 Floor
+
+---
 
 #### `ln`
 
@@ -547,6 +635,8 @@ Floor
 
 Natural logarithm ln a
 
+---
+
 #### `max`
 
 - **Function:** `max-fn`
@@ -558,6 +648,8 @@ Natural logarithm ln a
 **Description:**
 
 Maximum
+
+---
 
 #### `min`
 
@@ -571,6 +663,8 @@ Maximum
 
 Minimum
 
+---
+
 #### `*`
 
 - **Function:** `mul-fn`
@@ -582,6 +676,8 @@ Minimum
 **Description:**
 
 Multiplication
+
+---
 
 #### `rnd`
 
@@ -595,6 +691,8 @@ Multiplication
 
 Round
 
+---
+
 #### `sin`
 
 - **Function:** `sin-fn`
@@ -606,6 +704,8 @@ Round
 **Description:**
 
 Sin
+
+---
 
 #### `sinh`
 
@@ -619,6 +719,8 @@ Sin
 
 Sinh
 
+---
+
 #### `square`
 
 - **Function:** `sqr-fn`
@@ -630,6 +732,8 @@ Sinh
 **Description:**
 
 Square a^2
+
+---
 
 #### `sqrt`
 
@@ -643,6 +747,8 @@ Square a^2
 
 Square root
 
+---
+
 #### `-`
 
 - **Function:** `sub-fn`
@@ -654,6 +760,8 @@ Square root
 **Description:**
 
 Subtraction
+
+---
 
 #### `tan`
 
@@ -667,6 +775,8 @@ Subtraction
 
 Tan
 
+---
+
 #### `tanh`
 
 - **Function:** `tanh-fn`
@@ -678,6 +788,8 @@ Tan
 **Description:**
 
 Tanh
+
+---
 
 #### `y^x`
 
@@ -691,6 +803,8 @@ Tanh
 
 y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 
+---
+
 ### stack.lisp 
 
 #### `dup`
@@ -703,11 +817,15 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 
 Duplicate the top element of the stack.
 
+---
+
 #### `pop`
 
 - **Function:** `pop-stack`
 - **Arity:** 0
 - **Source:** stack.lisp
+
+---
 
 #### `peek`
 
@@ -718,6 +836,8 @@ Duplicate the top element of the stack.
 **Description:**
 
 Print the top 5 items of the stack in a readable format.
+
+---
 
 #### `swap`
 
@@ -730,8 +850,6 @@ Print the top 5 items of the stack in a readable format.
 Swap top and second element of the stack
 
 ---
-
-No registered operations found.
 
 ## All Documented Functions
 

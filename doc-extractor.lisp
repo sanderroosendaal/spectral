@@ -179,10 +179,9 @@
 			    (format-parameters (func-info-parameters func-info))))
 		  (when (func-info-docstring func-info)
 		    (format t "**Description:**~%~%~A~%~%" 
-			    (escape-markdown (func-info-docstring func-info))))))))
-
-	    (format t "---~%~%")))
-	(format t "No registered operations found.~%~%"))
+			    (escape-markdown (func-info-docstring func-info))))))
+	      (format t "---~%~%"))))
+	(format t "No registered operations found.~%~%")))
 
     ;; Also list all functions with documentation
     (let ((documented-funcs '()))
