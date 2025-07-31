@@ -1,7 +1,9 @@
 #!/usr/bin/env sbcl -–script
+(load "~/.sbclrc")
 
 ;; Robust Lisp documentation extractor
 ;; Usage: sbcl -–script doc-extractor.lisp *.lisp > documentation.md
+(ql:quickload :cl-csv)
 
 (defvar *functions* (make-hash-table :test 'equal))
 (defvar *registered-ops* '())
@@ -110,10 +112,11 @@
 			  (error (c)
 			    (format *error-output* "Warning: Error reading form in ~A: ~A~%"
 				    filename c)
-			    :eof))))
+			    nil))))
 	      (if (eq form :eof)
 		  (return forms)
-		  (push form forms))))))
+		  (if form
+		      (push form forms)))))))
     (error (c)
       (format *error-output* "Error reading file ~A: ~A~%" filename c)
       nil)))
@@ -141,33 +144,42 @@
       ;; Remove excessive whitespace
       (string-trim " " result))))
 
+(defun group-and-sort-ops (ops)
+  (let ((table (make-hash-table :test #'equal)))
+    (dolist (o ops)
+      (push o (gethash (op-info-file o) table)))
+    (mapcar (lambda (file)
+	      (cons file
+		    (sort (gethash file table) #'string< :key #'op-info-function)))
+	    (sort (loop for k being the hash-keys of table collect k) #'string<))))
+
 (defun generate-markdown ()
   "Generate markdown documentation."
   (format t "# API Documentation~%~%")
   (format t "Generated from Lisp source files.~%~%")
 
   ;; Sort operations by name for consistent output
-  (let ((sorted-ops (sort (copy-list *registered-ops*)
-			  #'string< :key #'op-info-name)))
-
+  (let ((sorted-ops (group-and-sort-ops *registered-ops*)))
     (if sorted-ops
 	(progn
 	  (format t "## Registered Operations~%~%")
-	  (dolist (op sorted-ops)
-	    (format t "### `~A`~%~%" (op-info-name op))
-	    (format t "- **Function:** `~A`~%" (op-info-function op))
-	    (format t "- **Arity:** ~A~%" (op-info-arity op))
-	    (format t "- **Source:** ~A~%~%" (op-info-file op))
+	  (dolist (file-lst sorted-ops)
+	    (format t "### ~A ~%~%" (car file-lst))
+	    (dolist (op (cdr file-lst))
+	      (format t "#### `~A`~%~%" (op-info-name op))
+	      (format t "- **Function:** `~A`~%" (op-info-function op))
+	      (format t "- **Arity:** ~A~%" (op-info-arity op))
+	      (format t "- **Source:** ~A~%~%" (op-info-file op))
 
-	    ;; Look up function documentation
-	    (let ((func-info (gethash (op-info-function op) *functions*)))
-	      (when func-info
-		(when (func-info-parameters func-info)
-		  (format t "**Parameters:** `~A`~%~%" 
-			  (format-parameters (func-info-parameters func-info))))
-		(when (func-info-docstring func-info)
-		  (format t "**Description:**~%~%~A~%~%" 
-			  (escape-markdown (func-info-docstring func-info))))))
+	      ;; Look up function documentation
+	      (let ((func-info (gethash (op-info-function op) *functions*)))
+		(when func-info
+		  (when (func-info-parameters func-info)
+		    (format t "**Parameters:** `~A`~%~%" 
+			    (format-parameters (func-info-parameters func-info))))
+		  (when (func-info-docstring func-info)
+		    (format t "**Description:**~%~%~A~%~%" 
+			    (escape-markdown (func-info-docstring func-info))))))))
 
 	    (format t "---~%~%")))
 	(format t "No registered operations found.~%~%"))
@@ -188,7 +200,7 @@
 		  (format-parameters (func-info-parameters func)))
 	  (format t "**Source:** ~A~%~%" (func-info-file func))
 	  (format t "~A~%~%" (escape-markdown (func-info-docstring func)))
-	  (format t "---~%~%"))))))
+	  (format t "---~%~%")))))
 
 (defun main ()
   "Main entry point."

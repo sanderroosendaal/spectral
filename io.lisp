@@ -33,25 +33,16 @@
 	  (null (parse-number-safe cell)))
 	row))
 
-(defun load-csv (filename &key (has-headers :auto))
+(defun load-csv (filename)
   "Loads a table from a CSV file, comma separated, row oriented"
   (let* ((all-rows (cl-csv:read-csv (pathname filename)))
 	 (first-row (first all-rows))
 	 (headers nil)
 	 (data-rows nil))
-    (cond
-      ;; auto-detect headers
-      ((eq has-headers :auto)
-       (if (is-header-row first-row)
-	   (setf headers first-row
-		 data-rows (rest all-rows))
-	   (setf data-rows all-rows)))
-      ;; explicitly has headers
-      (has-headers
-       (setf headers first-row
-	     data-rows (rest all-rows)))
-      ;; No headers
-      (t (setf data-rows all-rows)))
+    (if (is-header-row first-row)
+	(setf headers first-row
+	      data-rows (rest all-rows))
+	(setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
