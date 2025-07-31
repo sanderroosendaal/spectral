@@ -154,6 +154,7 @@ Spectral draws inspiration from:
 
 - **APL/J/K/uiua**: Dense array notation and mathematical thinking
 - **Forth/Factor**: Stack-based execution and composability
+- **The HP 15-C Calculator**: Stack-based execution, mathematical function selection. See also [SwissMicros DM15C](https://www.swissmicros.com/product/dm15c)
 - **MATLAB/NumPy**: Scientific computing workflows
 - **Unix pipes**: Data flowing through transformations
 
