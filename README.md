@@ -159,7 +159,7 @@ Spectral draws inspiration from:
 
 ## Documentation
 
-See [DOCUMENTATION]("https://github.com/sanderroosendaal/spectral/blob/main/documentation.md").
+See [DOCUMENTATION](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md).
 
 ## License
 
