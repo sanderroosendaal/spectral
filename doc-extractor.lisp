@@ -165,6 +165,7 @@
 	  (format t "## Registered Operations~%~%")
 	  (dolist (file-lst sorted-ops)
 	    (format t "### ~A ~%~%" (car file-lst))
+	    (format t "---~%")
 	    (dolist (op (cdr file-lst))
 	      (format t "#### `~A`~%~%" (op-info-name op))
 	      (format t "- **Function:** `~A`~%" (op-info-function op))

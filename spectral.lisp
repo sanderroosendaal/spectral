@@ -32,7 +32,7 @@
   "Registers a new stack operation with the given name, function and arity"
   (setf (gethash name *stack-ops*)
 	(cons function arity)))
-(load "stack.lisp")
+(load "std/stack.lisp")
 
 ;; Array operations
 (defun array-op (op a b)
@@ -307,8 +307,8 @@ Signals an error on invalid tokens or unmatched brackets."
 	(t (evaluate line)
 	   (pretty-print-stack))))))
 
-(load "arrays.lisp")
-(load "math.lisp")
-(load "io.lisp")
-(load "filters.lisp")
+(load "std/arrays.lisp")
+(load "std/math.lisp")
+(load "std/io.lisp")
+(load "std/filters.lisp")
 
