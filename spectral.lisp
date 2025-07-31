@@ -254,10 +254,13 @@ Signals an error on invalid tokens or unmatched brackets."
 		   (format out " ~C " char)
 		   (write-char char out)))))
 
+(defun preprocess (s)
+  (add-spaces-around-brackets s))
+
 (defun tokenize (expr-string)
   "Simple tokenizer"
   (let ((tokens '())
-	(expr-string (add-spaces-around-brackets expr-string)))
+	(expr-string (preprocess expr-string)))
     (with-input-from-string (s expr-string)
       (loop for token = (read s nil nil)
 	    while token
