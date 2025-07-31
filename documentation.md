@@ -130,6 +130,62 @@ Reciprocal: 1/a
 
 ---
 
+### `<`
+
+- **Function:** `smaller-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
+
+---
+
+### `<=`
+
+- **Function:** `smaller-equal-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
+
+---
+
+### `>`
+
+- **Function:** `greater-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
+
+---
+
+### `>=`
+
+- **Function:** `greater-equal-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
+
+---
+
 ### `abs`
 
 - **Function:** `abs-fn`
@@ -284,6 +340,46 @@ Cosh
 
 ---
 
+### `drop`
+
+- **Function:** `drop`
+- **Arity:** 2
+- **Source:** arrays.lisp
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Description:**
+
+Drop the first N elements from an array.
+
+---
+
+### `dup`
+
+- **Function:** `dup`
+- **Arity:** 0
+- **Source:** stack.lisp
+
+**Description:**
+
+Duplicate the top element of the stack.
+
+---
+
+### `eq`
+
+- **Function:** `eql-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
+
+---
+
 ### `exp`
 
 - **Function:** `exp-fn`
@@ -295,6 +391,20 @@ Cosh
 **Description:**
 
 Exponential: e^a
+
+---
+
+### `flatten`
+
+- **Function:** `flatten`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(LST)`
+
+**Description:**
+
+Flatten a nested list structure into a single list.
 
 ---
 
@@ -312,6 +422,20 @@ Returns the fractional part 1.23 -> .23
 
 ---
 
+### `idx`
+
+- **Function:** `indexof`
+- **Arity:** 2
+- **Source:** arrays.lisp
+
+**Parameters:** `(VALUE ARRAY)`
+
+**Description:**
+
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
+
+---
+
 ### `intg`
 
 - **Function:** `intg-fn`
@@ -323,6 +447,14 @@ Returns the fractional part 1.23 -> .23
 **Description:**
 
 Floor
+
+---
+
+### `length`
+
+- **Function:** `length`
+- **Arity:** 1
+- **Source:** arrays.lisp
 
 ---
 
@@ -382,6 +514,78 @@ Minimum
 
 ---
 
+### `neq`
+
+- **Function:** `not-eql-fn`
+- **Arity:** 2
+- **Source:** filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
+
+### `peek`
+
+- **Function:** `pretty-print-stack`
+- **Arity:** 0
+- **Source:** stack.lisp
+
+**Description:**
+
+Print the top 5 items of the stack in a readable format.
+
+---
+
+### `pick`
+
+- **Function:** `pick`
+- **Arity:** 2
+- **Source:** arrays.lisp
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Description:**
+
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+
+---
+
+### `pop`
+
+- **Function:** `pop-stack`
+- **Arity:** 0
+- **Source:** stack.lisp
+
+---
+
+### `range`
+
+- **Function:** `range-fn`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(N)`
+
+---
+
+### `reshape`
+
+- **Function:** `reshape`
+- **Arity:** 2
+- **Source:** arrays.lisp
+
+**Parameters:** `(SHAPE DATA)`
+
+**Description:**
+
+Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+
+---
+
 ### `rnd`
 
 - **Function:** `rnd-fn`
@@ -393,6 +597,34 @@ Minimum
 **Description:**
 
 Round
+
+---
+
+### `rotate`
+
+- **Function:** `rotate`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Rotate clockwise, i.e. last element becomes first element
+
+---
+
+### `shape`
+
+- **Function:** `shape-fn`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Return the shape of an array
 
 ---
 
@@ -424,6 +656,20 @@ Sinh
 
 ---
 
+### `size`
+
+- **Function:** `count-elements`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Count the number of elements in an array
+
+---
+
 ### `sqrt`
 
 - **Function:** `sqrt-fn`
@@ -452,6 +698,32 @@ Square a^2
 
 ---
 
+### `swap`
+
+- **Function:** `swap`
+- **Arity:** 0
+- **Source:** stack.lisp
+
+**Description:**
+
+Swap top and second element of the stack
+
+---
+
+### `take`
+
+- **Function:** `take`
+- **Arity:** 2
+- **Source:** arrays.lisp
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Description:**
+
+Take the first N elements from an array.
+
+---
+
 ### `tan`
 
 - **Function:** `tan-fn`
@@ -477,6 +749,34 @@ Tan
 **Description:**
 
 Tanh
+
+---
+
+### `transpose`
+
+- **Function:** `transpose`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(MATRIX)`
+
+**Description:**
+
+Transpose a matrix (list of lists)
+
+---
+
+### `where`
+
+- **Function:** `where`
+- **Arity:** 1
+- **Source:** arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Return the indices of non-zero elements in an array.
 
 ---
 
@@ -666,6 +966,16 @@ Cosh
 
 ---
 
+### `count-elements`
+
+**Parameters:** `(ARRAY)`
+
+**Source:** arrays.lisp
+
+Count the number of elements in an array
+
+---
+
 ### `div-fn`
 
 **Parameters:** `(A B)`
@@ -673,6 +983,36 @@ Cosh
 **Source:** math.lisp
 
 Division
+
+---
+
+### `drop`
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Source:** arrays.lisp
+
+Drop the first N elements from an array.
+
+---
+
+### `dup`
+
+**Parameters:** `()`
+
+**Source:** stack.lisp
+
+Duplicate the top element of the stack.
+
+---
+
+### `eql-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 
 ---
 
@@ -696,6 +1036,16 @@ Factorial ! 8 -> 40320
 
 ---
 
+### `flatten`
+
+**Parameters:** `(LST)`
+
+**Source:** arrays.lisp
+
+Flatten a nested list structure into a single list.
+
+---
+
 ### `frac-fn`
 
 **Parameters:** `(A)`
@@ -703,6 +1053,36 @@ Factorial ! 8 -> 40320
 **Source:** math.lisp
 
 Returns the fractional part 1.23 -> .23
+
+---
+
+### `greater-equal-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
+
+---
+
+### `greater-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
+
+---
+
+### `indexof`
+
+**Parameters:** `(VALUE ARRAY)`
+
+**Source:** arrays.lisp
+
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
 
 ---
 
@@ -756,6 +1136,46 @@ Multiplication
 
 ---
 
+### `not-eql-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
+
+### `pick`
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Source:** arrays.lisp
+
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+
+---
+
+### `pretty-print-stack`
+
+**Parameters:** `()`
+
+**Source:** stack.lisp
+
+Print the top 5 items of the stack in a readable format.
+
+---
+
+### `reshape`
+
+**Parameters:** `(SHAPE DATA)`
+
+**Source:** arrays.lisp
+
+Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+
+---
+
 ### `rnd-fn`
 
 **Parameters:** `(A)`
@@ -763,6 +1183,26 @@ Multiplication
 **Source:** math.lisp
 
 Round
+
+---
+
+### `rotate`
+
+**Parameters:** `(ARRAY)`
+
+**Source:** arrays.lisp
+
+Rotate clockwise, i.e. last element becomes first element
+
+---
+
+### `shape-fn`
+
+**Parameters:** `(ARRAY)`
+
+**Source:** arrays.lisp
+
+Return the shape of an array
 
 ---
 
@@ -783,6 +1223,26 @@ Sin
 **Source:** math.lisp
 
 Sinh
+
+---
+
+### `smaller-equal-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
+
+---
+
+### `smaller-fn`
+
+**Parameters:** `(A B)`
+
+**Source:** filters.lisp
+
+Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 
 ---
 
@@ -816,6 +1276,26 @@ Subtraction
 
 ---
 
+### `swap`
+
+**Parameters:** `()`
+
+**Source:** stack.lisp
+
+Swap top and second element of the stack
+
+---
+
+### `take`
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Source:** arrays.lisp
+
+Take the first N elements from an array.
+
+---
+
 ### `tan-fn`
 
 **Parameters:** `(A)`
@@ -833,6 +1313,26 @@ Tan
 **Source:** math.lisp
 
 Tanh
+
+---
+
+### `transpose`
+
+**Parameters:** `(MATRIX)`
+
+**Source:** arrays.lisp
+
+Transpose a matrix (list of lists)
+
+---
+
+### `where`
+
+**Parameters:** `(ARRAY)`
+
+**Source:** arrays.lisp
+
+Return the indices of non-zero elements in an array.
 
 ---
 
