@@ -237,9 +237,27 @@ Signals an error on invalid tokens or unmatched brackets."
 	  (error "Extra tokens after parsing: ~S" leftover))
 	(values prefix (first matrix))))))
 
+(defparameter *single-character-tokens*
+  '(#\[ #\] #\+ #\- #\% #\* #\< #\> #\!))
+
+(defparameter *square-brackets*
+  '(#\] #\[))
+
+(defun is-digit-p (c)
+  (char<= #\0 c #\9))
+
+
+(defun add-spaces-around-brackets (s)
+    (with-output-to-string (out)
+      (loop for char across s
+	    do (if (member char *square-brackets*)
+		   (format out " ~C " char)
+		   (write-char char out)))))
+
 (defun tokenize (expr-string)
   "Simple tokenizer"
-  (let ((tokens '()))
+  (let ((tokens '())
+	(expr-string (add-spaces-around-brackets expr-string)))
     (with-input-from-string (s expr-string)
       (loop for token = (read s nil nil)
 	    while token
@@ -299,7 +317,7 @@ Signals an error on invalid tokens or unmatched brackets."
 (defun spectral-repl ()
   (format t "Spectral REPL - type exit to exit")
   (loop 
-    (format t "~&> ")
+    (format t "~&ΣpectraΛ > ")
     (finish-output)
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
