@@ -1,15 +1,38 @@
+(require "asdf")
+
+(defpackage :spectral
+  (:use :cl)
+  (:export :evaluate))
+
+(in-package :spectral)
+
 (defparameter *stack* nil)
 
-(defun push-stack (value)
-  (push value *stack*))
+;; Constants
+(defparameter *constants*
+  `((pi . ,(coerce pi 'double-float))
+    (e . ,(exp 1.0d0))))
 
-(defun pop-stack ()
-  (if (null *stack*)
-      (error "Stack underflow: cannot pop from an empty stack")
-      (pop *stack*)))
+;; Variables and functions storage
+(defparameter *variables* (make-hash-table))
 
-(defun peek-stack ()
-  (first *stack*))
+(defparameter *functions* (make-hash-table))
+
+(defparameter *ops* (make-hash-table))
+
+(defparameter *stack-ops* (make-hash-table))
+
+;; Symbol list
+(defun register-op (name function arity)
+  "Register a new operation with the given name, function, and arity."
+  (setf (gethash name *ops*)
+	(cons function arity)))
+
+(defun register-stack-op (name function arity)
+  "Registers a new stack operation with the given name, function and arity"
+  (setf (gethash name *stack-ops*)
+	(cons function arity)))
+(load "stack.lisp")
 
 ;; Array operations
 (defun array-op (op a b)
@@ -23,41 +46,48 @@
        (error "Mismatched array lengths: ~S and ~S" a b))
      (mapcar #'(lambda (x y) (array-op op x y)) a b))
     (t (error "Invalid inputs: ~S and ~S" a b))))
-     
-;; Built-in functions
-(defun range-fn (n)
-  (loop for i from 0 below n collect i))
 
-(defun add-fn (a b) (array-op #'+ b a))
-(defun sub-fn (a b) (array-op #'- b a))
-(defun mul-fn (a b) (array-op #'* b a))
-(defun div-fn (a b) (array-op #'/ b a))
+(defun array-fn (op a)
+  (cond
+    ((numberp a) (funcall op a))
+    ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
+    (t (error "Invalid input for array operation: ~S" a))))
 
-;; trigonometry (element-wise)
-(defun sin-fn (a) (if (numberp a) (sin a) (mapcar #'sin a)))
-(defun cos-fn (a) (if (numberp a) (cos a) (mapcar #'cos a)))
-(defun tan-fn (a) (if (numberp a) (tan a) (mapcar #'tan a)))
+(defun strip-token (token char)
+  (let* ((name (symbol-name token)))
+    (if (and (> (length name) 0)
+	     (char= (char name 0) char))
+	(intern (subseq name 1))
+	token)))
 
-;; Constants
-(defparameter *constants*
-  `((pi . ,(coerce pi 'double-float))
-    (e . ,(exp 1.0d0))))
+(defun reduce-array (op a)
+  (cond
+    ((numberp a) (error "Invalid input for reduce: ~S" a))
+    ((listp a) (reduce op a))
+    (t (error "Invalid input for reduce: ~S" a))))
 
-;; Variables and functions storage
-(defparameter *variables* (make-hash-table))
+(defun scan (op initial lst)
+  (let ((results nil)
+	(acc initial))
+    (dolist (item lst (nreverse results))
+	   (setf acc (funcall op acc item))
+      (push acc results))))
 
-(defparameter *functions* (make-hash-table))
+(defun scan1 (op lst)
+  (when (null lst)
+    (error "scan1 requires a non-empty list"))
+  (let ((results (list (first lst)))
+	(acc (first lst)))
+    (dolist (item (rest lst) (nreverse results))
+      (setf acc (funcall op acc item))
+      (push acc results))))
 
-;; Symbol table
-(defparameter *ops*
-  (list (cons '+ #'add-fn)
-	(cons '- #'sub-fn)
-	(cons '* #'mul-fn)
-	(cons '% #'div-fn)
-	(cons 'range #'range-fn)
-	(cons 'sin #'sin-fn)
-	(cons 'cos #'cos-fn)
-	(cons 'tan #'tan-fn)))
+(defun scan-array (op a)
+  (format t "Entering scan-array with ~A on ~A~%" op a)
+  (cond
+    ((numberp a) (error "Invalid input for scan: ~A" a))
+    ((listp a) (scan1 op a))
+    (t (error "Invalid input for scan: ~A" a))))
 
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
@@ -71,6 +101,10 @@
     ;; Arrays push themselves
     ((and (listp token) (eq (first token) 'array))
      (push-stack (rest token)))
+
+    ;; Strings push themselves
+    ((stringp token)
+     (push-stack token))
 
     ;; Constants
     ((assoc token *constants*)
@@ -89,27 +123,61 @@
      (let ((filename (pop-stack)))
        (push-stack (load-numbers filename))))
 
+    ;; Reduction
+    ((char= (char (symbol-name token) 0) #\/)
+     (let ((op (strip-token token #\/)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (reduce-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+
+    ;; Scan - using & for now, as \ is escaping
+    ((char= (char (symbol-name token) 0) #\&)
+     (let ((op (strip-token token #\&)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (scan-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+
+    ;; Stack operations
+    ((gethash token *stack-ops*)
+     (funcall (car (gethash token *stack-ops*))))
+
+    ;; Nullary operations
+    ((= (cdr (gethash token *ops*)) 0)
+     (let* ((op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn))))
+       (loop for value in values do (push-stack value))))
+    
     ;; Unary operations
-    ((member token '(range sin cos tan))
-     (let ((a (pop-stack)))
-       (push-stack (funcall (cdr (assoc token *ops*)) a))))
+    ((= (cdr (gethash token *ops*)) 1)
+     (let* ((a (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a))))
+       (loop for value in values do (push-stack value))))
 
     ;; Binary operations
-    ((member token '(+ - * %))
-     (let ((a (pop-stack))
-	   (b (pop-stack)))
-       (push-stack (funcall (cdr (assoc token *ops*)) a b))))
+    ((= (cdr (gethash token *ops*)) 2)
+     (let* ((a (pop-stack))
+	    (b (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a b))))
+       (loop for value in values do (push-stack value))))
 
     (t (error "Unknown token:: ~A" token))))
 
 (defun parse-array (tokens)
   "Parses the last well-formed bracketed matrix in TOKENS from right to left.
 Returns (values tokens-before-matrix matrix).
+Can only handle arrays of numerical values.
 Signals an error on invalid tokens or unmatched brackets."
   (labels
       ((scan-right (tokens)
-	 (let ((stack '())
-	       (matrix-tokens '())
+	 (let ((matrix-tokens '())
 	       (depth 0))
 	   (loop for token in (reverse tokens)
 		 do (cond
@@ -169,8 +237,6 @@ Signals an error on invalid tokens or unmatched brackets."
 	  (error "Extra tokens after parsing: ~S" leftover))
 	(values prefix (first matrix))))))
 
-
-
 (defun tokenize (expr-string)
   "Simple tokenizer"
   (let ((tokens '()))
@@ -179,29 +245,6 @@ Signals an error on invalid tokens or unmatched brackets."
 	    while token
 	    do (push token tokens)))
     (reverse tokens)))
-
-(defun evaluate (expr-string &optional (debug nil))
-  "Main evaluation function"
-  ;;(setf *stack* nil)
-  (let ((tokens (tokenize expr-string)))
-    ;; Check for assignment
-    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
-	(handle-assignment (first tokens) (cddr tokens))
-	;; Normal evaluation: process tokens right to left
-	(progn
-	  (loop while tokens do
-	    (let ((token (first (reverse tokens))))
-	      (when debug
-		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
-	      (cond
-		(( eq token '])
-		 (multiple-value-bind (rest array-literal) (parse-array tokens)
-		   (push-stack array-literal)
-		   (setf tokens rest)))
-		(t
-		 (execute-token token)
-		 (setf tokens (reverse (cdr (reverse tokens))))))))
-	  (peek-stack)))))
 
 (defun handle-assignment (name expr-tokens &optional (debug nil))
   "Handle variable/function assignment"
@@ -230,32 +273,42 @@ Signals an error on invalid tokens or unmatched brackets."
 	(setf (gethash name *variables*) result))
     result))
 
-;; Simple file I/O functions
-(defun load-numbers (filename)
-  "Load numbers from a text file (one per line)"
-  (with-open-file (stream filename :direction :input)
-    (loop for line = (read-line stream nil nil)
-	  while line
-	  collect (parse-number line))))
+(defun evaluate (expr-string &optional (debug nil))
+  "Main evaluation function"
+  ;;(setf *stack* nil)
+  (let ((tokens (tokenize expr-string)))
+    ;; Check for assignment
+    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
+	(handle-assignment (first tokens) (cddr tokens))
+	;; Normal evaluation: process tokens right to left
+	(progn
+	  (loop while tokens do
+	    (let ((token (first (reverse tokens))))
+	      (when debug
+		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
+	      (cond
+		(( eq token '])
+		 (multiple-value-bind (rest array-literal) (parse-array tokens)
+		   (push-stack array-literal)
+		   (setf tokens rest)))
+		(t
+		 (execute-token token)
+		 (setf tokens (reverse (cdr (reverse tokens))))))))
+	  (peek-stack)))))
 
-(defun parse-number (str)
-  "Parse a string as a number"
-  (handler-case (read-from-string str)
-    (error () 0)))
+(defun spectral-repl ()
+  (format t "Spectral REPL - type exit to exit")
+  (loop 
+    (format t "~&> ")
+    (finish-output)
+    (let ((line (read-line *standard-input* nil :eof)))
+      (cond
+	((or (null line) (string= line "exit")) (return))
+	(t (evaluate line)
+	   (pretty-print-stack))))))
 
-(defun run-script (filename)
-  "Execute a script file line by line"
-   (with-open-file (stream filename :direction :input)
-     (let ((results '()))
-       (loop for line = (read-line stream nil nil)
-	     while line
-	     when (and (> (length line) 0)
-		       (not (char= (char line 0) #\;))) ; Skip comments
-	       do (let ((result (evaluate (string-trim " " line))))
-		    (when result
-		      (push (list line result) results))))
-       (reverse results))))
+(load "arrays.lisp")
+(load "math.lisp")
+(load "io.lisp")
+(load "filters.lisp")
 
-;; Add file operations
-(setf *ops* (append *ops* (list (cons 'load #'load-numbers)
-				(cons 'run #'run-script))))

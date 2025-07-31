@@ -63,7 +63,7 @@ This eliminates parentheses and makes data flow explicit.
 This repository contains a Lisp prototype (<500 lines) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
-- ✅ Trigonometry (`sin`, `cos`, `tan`)
+- ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
 - ✅ Constants (`pi`, `e`)
 - ✅ Array operations with broadcasting
 - ✅ Variables and function definitions
@@ -75,13 +75,17 @@ This repository contains a Lisp prototype (<500 lines) implementing:
 ```bash
 git clone https://github.com/sanderroosendaal/spectral.git
 cd spectral
-sbcl --load spectral.lisp
+sbcl --load load-spectral.lisp
 ```
 
-```lisp
-* (evaluate "sin * 2 * pi % 20 range 20") ; Sine wave
-* (evaluate "AddFive = + 5") ; Define function
-* (evaluate "AddFive 10") ; Use function → 15
+```spectral
+> load "numbers.dat" ; load a list of numbers
+> sin * 2 * pi % 20 range 20 ; Sine wave
+> AddFive = + 5 ; Define function
+> AddFive 10 ; Use function → 15
+> run "tests.spec" ; run a script
+> exit ; to exit
+* (exit) ; to exit from lisp
 ```
 
 ## Roadmap
@@ -90,8 +94,9 @@ sbcl --load spectral.lisp
 
 - [x] Core syntax and semantics
 - [x] Basic mathematical operations
-- [ ] Reduction operators (`/+`, `/*`, `/max`)
-- [ ] Array manipulation (`dup`, `swap`, `transpose`)
+- [X] Reduction operators (`/+`, `/*`, `/max`)
+- [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
+- [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
 - [ ] Control flow and conditionals
 
 ### Phase 2: Scientific Computing
@@ -151,6 +156,10 @@ Spectral draws inspiration from:
 - **Forth/Factor**: Stack-based execution and composability
 - **MATLAB/NumPy**: Scientific computing workflows
 - **Unix pipes**: Data flowing through transformations
+
+## Documentation
+
+See [DOCUMENTATION]("https://github.com/sanderroosendaal/spectral/blob/main/documentation.md").
 
 ## License
 
