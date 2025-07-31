@@ -55,12 +55,14 @@
 
 (defun run-script (filename)
   "Execute a script file line by line"
-   (with-open-file (stream filename :direction :input)
-     (loop for line = (read-line stream nil nil)
-	   while line
-	   when (and (> (length line) 0)
-		     (not (char= (char line 0) #\;))) ; Skip comments
-	     do (evaluate (string-trim " " line)))
+  (with-open-file (stream filename :direction :input)
+    (let ((line-count 1))
+      (loop for line = (read-line stream nil nil)
+	    while line
+	    when (and (> (length line) 0)
+		      (not (char= (char line 0) #\;))) ; Skip comments
+	      do (evaluate (string-trim " " line) filename line-count)
+	    (incf line-count)))
      (peek-stack)))
 
 

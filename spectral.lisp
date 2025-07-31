@@ -21,6 +21,7 @@
 (defparameter *ops* (make-hash-table))
 
 (defparameter *stack-ops* (make-hash-table))
+(defparameter *error-stream* t)
 
 ;; Symbol list
 (defun register-op (name function arity)
@@ -89,153 +90,159 @@
     ((listp a) (scan1 op a))
     (t (error "Invalid input for scan: ~A" a))))
 
-(defun execute-token (token &optional (debug nil))
+(load "errors.lisp")
+
+(defun execute-token (token &optional (filename nil) (line-number nil) (debug nil))
   "Execute a single token"
   (when debug
     (format t "Execute-token ~A, stack ~A%" token *stack*))
-  (cond
-    ;; Numbers push themselves
-    ((numberp token)
-     (push-stack token))
+  (handler-case 
+      (cond
+	;; Numbers push themselves
+	((numberp token)
+	 (push-stack token))
+	
+	;; Arrays push themselves
+	((and (listp token) (eq (first token) 'array))
+	 (push-stack (rest token)))
+	
+	;; Strings push themselves
+	((stringp token)
+	 (push-stack token))
+	
+	;; Constants
+	((assoc token *constants*)
+	 (push-stack (cdr (assoc token *constants*))))
+	
+	;; Variables
+	((gethash token *variables*)
+	 (push-stack (gethash token *variables*)))
+	
+	;; Functions - check if it's a user-defined function
+	((gethash token *functions*)
+	 (funcall (gethash token *functions*)))
+	
+	;; File operations (special case - take filename from stack)
+	((eq token 'load)
+	 (let ((filename (pop-stack)))
+	   (push-stack (load-numbers filename))))
+	
+	;; Reduction
+	((char= (char (symbol-name token) 0) #\/)
+	 (let ((op (strip-token token #\/)))
+	   (if (gethash op *ops*)
+	       (let* ((a (pop-stack))
+		      (op-fn (car (gethash op *ops*)))
+		      (value (reduce-array op-fn a)))
+		 (push-stack value))
+	       (error "Unknown operation: ~A" op))))
+	
+	;; Scan - using & for now, as \ is escaping
+	((char= (char (symbol-name token) 0) #\&)
+	 (let ((op (strip-token token #\&)))
+	   (if (gethash op *ops*)
+	       (let* ((a (pop-stack))
+		      (op-fn (car (gethash op *ops*)))
+		      (value (scan-array op-fn a)))
+		 (push-stack value))
+	       (error "Unknown operation: ~A" op))))
+	
+	;; Stack operations
+	((gethash token *stack-ops*)
+	 (funcall (car (gethash token *stack-ops*))))
+	
+	;; Nullary operations
+	((= (cdr (gethash token *ops*)) 0)
+	 (let* ((op-fn (car (gethash token *ops*)))
+		(values (multiple-value-list (funcall op-fn))))
+	   (loop for value in values do (push-stack value))))
+	
+	;; Unary operations
+	((= (cdr (gethash token *ops*)) 1)
+	 (let* ((a (pop-stack))
+		(op-fn (car (gethash token *ops*)))
+		(values (multiple-value-list (funcall op-fn a))))
+	   (loop for value in values do (push-stack value))))
+	
+	;; Binary operations
+	((= (cdr (gethash token *ops*)) 2)
+	 (let* ((a (pop-stack))
+		(b (pop-stack))
+		(op-fn (car (gethash token *ops*)))
+		(values (multiple-value-list (funcall op-fn a b))))
+	   (loop for value in values do (push-stack value))))
 
-    ;; Arrays push themselves
-    ((and (listp token) (eq (first token) 'array))
-     (push-stack (rest token)))
+	(t (error "Unknown token: ~A" token)))
+    (error (condition) (handle-error condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
 
-    ;; Strings push themselves
-    ((stringp token)
-     (push-stack token))
-
-    ;; Constants
-    ((assoc token *constants*)
-     (push-stack (cdr (assoc token *constants*))))
-
-    ;; Variables
-    ((gethash token *variables*)
-     (push-stack (gethash token *variables*)))
-
-    ;; Functions - check if it's a user-defined function
-    ((gethash token *functions*)
-     (funcall (gethash token *functions*)))
-
-    ;; File operations (special case - take filename from stack)
-    ((eq token 'load)
-     (let ((filename (pop-stack)))
-       (push-stack (load-numbers filename))))
-
-    ;; Reduction
-    ((char= (char (symbol-name token) 0) #\/)
-     (let ((op (strip-token token #\/)))
-       (if (gethash op *ops*)
-	   (let* ((a (pop-stack))
-		  (op-fn (car (gethash op *ops*)))
-		  (value (reduce-array op-fn a)))
-	     (push-stack value))
-	   (error "Unknown operation: ~A" op))))
-
-    ;; Scan - using & for now, as \ is escaping
-    ((char= (char (symbol-name token) 0) #\&)
-     (let ((op (strip-token token #\&)))
-       (if (gethash op *ops*)
-	   (let* ((a (pop-stack))
-		  (op-fn (car (gethash op *ops*)))
-		  (value (scan-array op-fn a)))
-	     (push-stack value))
-	   (error "Unknown operation: ~A" op))))
-
-    ;; Stack operations
-    ((gethash token *stack-ops*)
-     (funcall (car (gethash token *stack-ops*))))
-
-    ;; Nullary operations
-    ((= (cdr (gethash token *ops*)) 0)
-     (let* ((op-fn (car (gethash token *ops*)))
-	    (values (multiple-value-list (funcall op-fn))))
-       (loop for value in values do (push-stack value))))
-    
-    ;; Unary operations
-    ((= (cdr (gethash token *ops*)) 1)
-     (let* ((a (pop-stack))
-	    (op-fn (car (gethash token *ops*)))
-	    (values (multiple-value-list (funcall op-fn a))))
-       (loop for value in values do (push-stack value))))
-
-    ;; Binary operations
-    ((= (cdr (gethash token *ops*)) 2)
-     (let* ((a (pop-stack))
-	    (b (pop-stack))
-	    (op-fn (car (gethash token *ops*)))
-	    (values (multiple-value-list (funcall op-fn a b))))
-       (loop for value in values do (push-stack value))))
-
-    (t (error "Unknown token:: ~A" token))))
-
-(defun parse-array (tokens)
+(defun parse-array (tokens &optional (filename nil) (line-number nil))
   "Parses the last well-formed bracketed matrix in TOKENS from right to left.
 Returns (values tokens-before-matrix matrix).
 Can only handle arrays of numerical values.
 Signals an error on invalid tokens or unmatched brackets."
-  (labels
-      ((scan-right (tokens)
-	 (let ((matrix-tokens '())
-	       (depth 0))
-	   (loop for token in (reverse tokens)
-		 do (cond
-		      ((eql token '])
-		       (incf depth)
-		       (push token matrix-tokens))
-		      ((eql token '[)
-		       (decf depth)
-		       (push token matrix-tokens)
-		       (when (< depth 0)
-			 (error "Unmatched [")))
-		      ((or (numberp token)
-			   (member token '(] [)))
-		       (push token matrix-tokens))
-		      (t (error "Invalid token ~S" token)))
-		 while (> depth 0))
-	   (if (/= depth 0)
-	       (error "Unmatched brackets in matrix")
-	       (let ((matrix-len (length matrix-tokens)))
-		 (values
-		  (subseq tokens 0 (- (length tokens) matrix-len))
-		  (reverse matrix-tokens))))))
-       
-       (parse (tokens)
-	 (cond
-	   ((null tokens)
-	    (values nil nil))
-	   ((eql (first tokens) '[)
-	    (multiple-value-bind (sublist rest)
-		(parse-list (rest tokens))
-	      (multiple-value-bind (tail result)
-		  (parse rest)
-		(values (cons sublist tail) result))))
-	   (t (values nil tokens))))
-       
-       (parse-list (tokens)
-	 (let ((result '()))
-	   (loop
+  (handler-case
+      (labels
+	  ((scan-right (tokens)
+	     (let ((matrix-tokens '())
+		   (depth 0))
+	       (loop for token in (reverse tokens)
+		     do (cond
+			  ((eql token '])
+			   (incf depth)
+			   (push token matrix-tokens))
+			  ((eql token '[)
+			   (decf depth)
+			   (push token matrix-tokens)
+			   (when (< depth 0)
+			     (error "Unmatched [")))
+			  ((or (numberp token)
+			       (member token '(] [)))
+			   (push token matrix-tokens))
+			  (t (error "Invalid token ~S" token)))
+		     while (> depth 0))
+	       (if (/= depth 0)
+		   (error "Unmatched brackets in matrix")
+		   (let ((matrix-len (length matrix-tokens)))
+		     (values
+		      (subseq tokens 0 (- (length tokens) matrix-len))
+		      (reverse matrix-tokens))))))
+	   
+	   (parse (tokens)
 	     (cond
 	       ((null tokens)
-		(error "Unmatched ["))
-	       ((eql (first tokens) '])
-		(return (values (nreverse result) (rest tokens))))
-	       ((numberp (first tokens))
-		(push (first tokens) result)
-		(setf tokens (rest tokens)))
+		(values nil nil))
 	       ((eql (first tokens) '[)
 		(multiple-value-bind (sublist rest)
 		    (parse-list (rest tokens))
-		  (push sublist result)
-		  (setf tokens rest)))
-	       (t (error "Invalid token ~S" (first tokens))))))))
-    ;; Main logic:
-    (multiple-value-bind (prefix matrix-tokens) (scan-right tokens)
-      (multiple-value-bind (matrix leftover) (parse (reverse matrix-tokens))
-	(when leftover
-	  (error "Extra tokens after parsing: ~S" leftover))
-	(values prefix (first matrix))))))
+		  (multiple-value-bind (tail result)
+		      (parse rest)
+		    (values (cons sublist tail) result))))
+	       (t (values nil tokens))))
+	   
+	   (parse-list (tokens)
+	     (let ((result '()))
+	       (loop
+		 (cond
+		   ((null tokens)
+		    (error "Unmatched ["))
+		   ((eql (first tokens) '])
+		    (return (values (nreverse result) (rest tokens))))
+		   ((numberp (first tokens))
+		    (push (first tokens) result)
+		    (setf tokens (rest tokens)))
+		   ((eql (first tokens) '[)
+		    (multiple-value-bind (sublist rest)
+			(parse-list (rest tokens))
+		      (push sublist result)
+		      (setf tokens rest)))
+		   (t (error "Invalid token ~S" (first tokens))))))))
+	;; Main logic:
+	(multiple-value-bind (prefix matrix-tokens) (scan-right tokens)
+	  (multiple-value-bind (matrix leftover) (parse (reverse matrix-tokens))
+	    (when leftover
+	      (error "Extra tokens after parsing: ~S" leftover))
+	    (values prefix (first matrix)))))
+    (error (condition) (handle-error condition *error-stream* filename line-number))))
 
 (defparameter *single-character-tokens*
   '(#\[ #\] #\+ #\- #\% #\* #\< #\> #\!))
@@ -294,7 +301,7 @@ Signals an error on invalid tokens or unmatched brackets."
 	(setf (gethash name *variables*) result))
     result))
 
-(defun evaluate (expr-string &optional (debug nil))
+(defun evaluate (expr-string &optional (filename nil) (line-number) (debug nil))
   "Main evaluation function"
   ;;(setf *stack* nil)
   (let ((tokens (tokenize expr-string)))
@@ -309,11 +316,11 @@ Signals an error on invalid tokens or unmatched brackets."
 		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
 	      (cond
 		(( eq token '])
-		 (multiple-value-bind (rest array-literal) (parse-array tokens)
+		 (multiple-value-bind (rest array-literal) (parse-array tokens filename line-number)
 		   (push-stack array-literal)
 		   (setf tokens rest)))
 		(t
-		 (execute-token token)
+		 (execute-token token filename line-number)
 		 (setf tokens (reverse (cdr (reverse tokens))))))))
 	  (peek-stack)))))
 
