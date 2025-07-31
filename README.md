@@ -157,6 +157,10 @@ Spectral draws inspiration from:
 - **MATLAB/NumPy**: Scientific computing workflows
 - **Unix pipes**: Data flowing through transformations
 
+## Documentation
+
+See [DOCUMENTATION]("https://github.com/sanderroosendaal/spectral/blob/main/documentation.md").
+
 ## License
 
 MIT License - See [LICENSE](https://github.com/sanderroosendaal/spectral/blob/main/LICENSE "Standard MIT License") for details.
