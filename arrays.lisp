@@ -39,6 +39,7 @@
 
 
 (defun flatten (lst)
+  "Flatten a nested list structure into a single list."
   (cond
     ((null lst) nil)
     ((listp (car lst)) (append (flatten (car lst)) (flatten (cdr lst))))
@@ -63,6 +64,8 @@
                   chunks)))))
 
 (defun reshape (shape data)
+  "Reshape a flat list into a multi-dimensional array based on the given shape.
+   The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix."
   (let* ((flat (flatten data))
          (expected (product shape)))
     (unless (= (length flat) expected)
@@ -70,6 +73,9 @@
     (first (reshape-rec (reverse shape) flat))))
 
 (defun pick (index array)
+  "Pick an element from an array based on the index.
+   If index is a number, it returns the nth element.
+   If index is a list, it traverses the array according to the indices in the list."
   (cond
     ((numberp index)
      (let ((v (nth index array)))
@@ -82,6 +88,7 @@
     (t (error "Invalid inputs to pick: ~A, ~A" index array))))
 
 (defun take (index array)
+  "Take the first N elements from an array."
   (cond
     ((numberp index)
      (handler-case
@@ -94,6 +101,7 @@
      (t (error "Invalid inputs to take: ~A, ~A" index array))))
 
 (defun drop (index array)
+  "Drop the first N elements from an array."
   (cond
     ((numberp index)
      (handler-case
@@ -106,19 +114,19 @@
     (t (error "Invalid inputs to drop: ~A, ~A" index array))))
 
 (defun where (array)
+  "Return the indices of non-zero elements in an array."
   (loop for item in array
 	for i from 0
 	unless (zerop item)
 	  collect i))
 
 (defun indexof (value array)
+  "Return the index of the first occurrence of VALUE in ARRAY.
+   If VALUE is not found, return the length of the array."
   (if (not (member value array :test #'equal))
       (length array)
       (position value array :test #'equal)))
 
-(defun position-fn (value array)
-  (let ((p (position value array)))
-    (if p p (length array))))
 
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
@@ -132,4 +140,4 @@
 (register-op 'drop #'drop 2)
 (register-op 'where #'where 1)
 (register-op 'idx #'indexof 2)
-(register-op 'position #'position-fn 2)
+(register-op 'flatten #'flatten 1)

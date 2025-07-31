@@ -6,329 +6,491 @@ Generated from Lisp source files.
 
 ### `!`
 
-- **Function:** `#'FACT-FN`
+- **Function:** `fact-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Factorial ! 8 -> 40320
 
 ---
 
 ### `%`
 
-- **Function:** `#'DIV-FN`
+- **Function:** `div-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Division
 
 ---
 
 ### `*`
 
-- **Function:** `#'MUL-FN`
+- **Function:** `mul-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Multiplication
 
 ---
 
 ### `+`
 
-- **Function:** `#'ADD-FN`
+- **Function:** `add-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Addition
 
 ---
 
 ### `-`
 
-- **Function:** `#'SUB-FN`
+- **Function:** `sub-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Subtraction
 
 ---
 
 ### `->p`
 
-- **Function:** `#'->P`
+- **Function:** `->p`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
 
 ---
 
 ### `->r`
 
-- **Function:** `#'->R`
+- **Function:** `->r`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
 ---
 
 ### `1/x`
 
-- **Function:** `#'1/X-FN`
+- **Function:** `1/x-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Reciprocal: 1/a
 
 ---
 
 ### `10^x`
 
-- **Function:** `#'10^X`
+- **Function:** `10^x`
 - **Arity:** 1
 - **Source:** math.lisp
 
----
+**Parameters:** `(A)`
 
-### `<`
+**Description:**
 
-- **Function:** `#'SMALLER-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
-
----
-
-### `<=`
-
-- **Function:** `#'SMALLER-EQUAL-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
-
----
-
-### `>`
-
-- **Function:** `#'GREATER-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
-
----
-
-### `>=`
-
-- **Function:** `#'GREATER-EQUAL-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
+10^a
 
 ---
 
 ### `abs`
 
-- **Function:** `#'ABS-FN`
+- **Function:** `abs-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Absolute value, also works for complex numbers
 
 ---
 
 ### `acos`
 
-- **Function:** `#'ACOS-FN`
+- **Function:** `acos-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Acos
 
 ---
 
 ### `acosh`
 
-- **Function:** `#'ACOSH-FN`
+- **Function:** `acosh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Acosh
 
 ---
 
 ### `asin`
 
-- **Function:** `#'ASIN-FN`
+- **Function:** `asin-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Asin
 
 ---
 
 ### `asinh`
 
-- **Function:** `#'ASINH-FN`
+- **Function:** `asinh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Asinh
 
 ---
 
 ### `atan`
 
-- **Function:** `#'ATAN-FN`
+- **Function:** `atan-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Atan
 
 ---
 
 ### `atanh`
 
-- **Function:** `#'ATANH-FN`
+- **Function:** `atanh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Atanh
 
 ---
 
 ### `chs`
 
-- **Function:** `#'CHS`
+- **Function:** `chs`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Change sign a -> -a
 
 ---
 
 ### `complex`
 
-- **Function:** `#'COMPLEX-FN`
+- **Function:** `complex-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Creates complex number a+ib
 
 ---
 
 ### `cos`
 
-- **Function:** `#'COS-FN`
+- **Function:** `cos-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Cos
 
 ---
 
 ### `cosh`
 
-- **Function:** `#'COSH-FN`
+- **Function:** `cosh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
 
----
+**Parameters:** `(A)`
 
-### `eq`
+**Description:**
 
-- **Function:** `#'EQL-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
+Cosh
 
 ---
 
 ### `exp`
 
-- **Function:** `#'EXP-FN`
+- **Function:** `exp-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Exponential: e^a
 
 ---
 
 ### `frac`
 
-- **Function:** `#'FRAC-FN`
+- **Function:** `frac-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Returns the fractional part 1.23 -> .23
 
 ---
 
 ### `intg`
 
-- **Function:** `#'INTG-FN`
+- **Function:** `intg-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Floor
 
 ---
 
 ### `ln`
 
-- **Function:** `#'LOG-FN`
+- **Function:** `log-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Natural logarithm ln a
 
 ---
 
 ### `log`
 
-- **Function:** `#'10LOG-FN`
+- **Function:** `10log-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+10log a
 
 ---
 
 ### `max`
 
-- **Function:** `#'MAX-FN`
+- **Function:** `max-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Maximum
 
 ---
 
 ### `min`
 
-- **Function:** `#'MIN-FN`
+- **Function:** `min-fn`
 - **Arity:** 2
 - **Source:** math.lisp
 
----
+**Parameters:** `(A B)`
 
-### `neq`
+**Description:**
 
-- **Function:** `#'NOT-EQL-FN`
-- **Arity:** 2
-- **Source:** filters.lisp
+Minimum
 
 ---
 
 ### `rnd`
 
-- **Function:** `#'RND-FN`
+- **Function:** `rnd-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Round
 
 ---
 
 ### `sin`
 
-- **Function:** `#'SIN-FN`
+- **Function:** `sin-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Sin
 
 ---
 
 ### `sinh`
 
-- **Function:** `#'SINH-FN`
+- **Function:** `sinh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Sinh
 
 ---
 
 ### `sqrt`
 
-- **Function:** `#'SQRT-FN`
+- **Function:** `sqrt-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Square root
 
 ---
 
 ### `square`
 
-- **Function:** `#'SQR-FN`
+- **Function:** `sqr-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Square a^2
 
 ---
 
 ### `tan`
 
-- **Function:** `#'TAN-FN`
+- **Function:** `tan-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Tan
 
 ---
 
 ### `tanh`
 
-- **Function:** `#'TANH-FN`
+- **Function:** `tanh-fn`
 - **Arity:** 1
 - **Source:** math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Tanh
 
 ---
 
 ### `y^x`
 
-- **Function:** `#'Y^X-FN`
+- **Function:** `y^x-fn`
 - **Arity:** 2
 - **Source:** math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 
 ---
 
@@ -514,16 +676,6 @@ Division
 
 ---
 
-### `eql-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
-
----
-
 ### `exp-fn`
 
 **Parameters:** `(A)`
@@ -551,26 +703,6 @@ Factorial ! 8 -> 40320
 **Source:** math.lisp
 
 Returns the fractional part 1.23 -> .23
-
----
-
-### `greater-equal-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
-
----
-
-### `greater-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
 ---
 
@@ -624,16 +756,6 @@ Multiplication
 
 ---
 
-### `not-eql-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
-
----
-
 ### `rnd-fn`
 
 **Parameters:** `(A)`
@@ -661,26 +783,6 @@ Sin
 **Source:** math.lisp
 
 Sinh
-
----
-
-### `smaller-equal-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
-
----
-
-### `smaller-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** filters.lisp
-
-Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 
 ---
 

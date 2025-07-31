@@ -50,10 +50,14 @@
 			    :parameters params
 			    :file filename)))))
 
+(defun strip-hash-quote (s)
+  (subseq s 2))
+
 (defun process-register-op (form filename)
   "Process a register-op form and store its information."
+  (format *error-output* "Processing register-op: ~A~%" form)
   (when (and (listp form)
-	     (eq (first form) 'register-op)
+	     (or (eq (first form) 'register-op) (eq (first form) 'register-stack-op))
 	     (= (length form) 4))
     (let ((name (second form))
 	  (function (third form))
@@ -67,14 +71,15 @@
       (let ((name-str (cond ((stringp name) name)
 			    ((symbolp name) (string-downcase (symbol-name name)))
 			    (t (format nil "~A" name))))
-	    (function-str (cond ((stringp function) function)
-				((symbolp function) (string-downcase (symbol-name function)))
-				(t (format nil "~A" function))))
+	    (function-str (cond ((stringp function) function) ; Handle #\ escape)
+				((symbolp function) (strip-hash-quote (string-downcase (symbol-name function))))
+				(t (strip-hash-quote (string-downcase (format nil "~A" function))) )))
 	    (arity-val (cond ((numberp arity) arity)
 			     ((and (listp arity) (eq (first arity) 'quote))
 			      (second arity))
 			     (t arity))))
-
+	(format *error-output* "Registering operation: ~A, function: ~A, arity: ~A~%"
+		name-str function-str arity-val)
 	(push (make-op-info :name name-str
 			    :function function-str
 			    :arity arity-val
@@ -88,7 +93,7 @@
     ((atom form) nil)
     ((eq (first form) 'defun)
      (process-defun form filename))
-    ((eq (first form) 'register-op)
+    ((or (eq (first form) 'register-op) (eq (first form) 'register-stack-op))
      (process-register-op form filename))
     (t
      ;; Recursively process sublists
