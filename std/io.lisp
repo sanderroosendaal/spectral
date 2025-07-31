@@ -33,25 +33,16 @@
 	  (null (parse-number-safe cell)))
 	row))
 
-(defun load-csv (filename &key (has-headers :auto))
+(defun load-csv (filename)
   "Loads a table from a CSV file, comma separated, row oriented"
   (let* ((all-rows (cl-csv:read-csv (pathname filename)))
 	 (first-row (first all-rows))
 	 (headers nil)
 	 (data-rows nil))
-    (cond
-      ;; auto-detect headers
-      ((eq has-headers :auto)
-       (if (is-header-row first-row)
-	   (setf headers first-row
-		 data-rows (rest all-rows))
-	   (setf data-rows all-rows)))
-      ;; explicitly has headers
-      (has-headers
-       (setf headers first-row
-	     data-rows (rest all-rows)))
-      ;; No headers
-      (t (setf data-rows all-rows)))
+    (if (is-header-row first-row)
+	(setf headers first-row
+	      data-rows (rest all-rows))
+	(setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
@@ -64,12 +55,14 @@
 
 (defun run-script (filename)
   "Execute a script file line by line"
-   (with-open-file (stream filename :direction :input)
-     (loop for line = (read-line stream nil nil)
-	   while line
-	   when (and (> (length line) 0)
-		     (not (char= (char line 0) #\;))) ; Skip comments
-	     do (evaluate (string-trim " " line)))
+  (with-open-file (stream filename :direction :input)
+    (let ((line-count 1))
+      (loop for line = (read-line stream nil nil)
+	    while line
+	    when (and (> (length line) 0)
+		      (not (char= (char line 0) #\;))) ; Skip comments
+	      do (evaluate (string-trim " " line) filename line-count)
+	    (incf line-count)))
      (peek-stack)))
 
 

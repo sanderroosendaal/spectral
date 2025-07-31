@@ -1,666 +1,22 @@
+To load "cl-csv":
+  Load 1 ASDF system:
+    cl-csv
+; Loading "cl-csv"
+.....
 # API Documentation
 
 Generated from Lisp source files.
 
 ## Registered Operations
 
-### `!`
-
-- **Function:** `fact-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Factorial ! 8 -> 40320
+### std/arrays.lisp 
 
 ---
-
-### `%`
-
-- **Function:** `div-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Division
-
----
-
-### `*`
-
-- **Function:** `mul-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Multiplication
-
----
-
-### `+`
-
-- **Function:** `add-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Addition
-
----
-
-### `-`
-
-- **Function:** `sub-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Subtraction
-
----
-
-### `->p`
-
-- **Function:** `->p`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
-
----
-
-### `->r`
-
-- **Function:** `->r`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
-
----
-
-### `1/x`
-
-- **Function:** `1/x-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Reciprocal: 1/a
-
----
-
-### `10^x`
-
-- **Function:** `10^x`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-10^a
-
----
-
-### `<`
-
-- **Function:** `smaller-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
-
----
-
-### `<=`
-
-- **Function:** `smaller-equal-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
-
----
-
-### `>`
-
-- **Function:** `greater-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
-
----
-
-### `>=`
-
-- **Function:** `greater-equal-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
-
----
-
-### `abs`
-
-- **Function:** `abs-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Absolute value, also works for complex numbers
-
----
-
-### `acos`
-
-- **Function:** `acos-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Acos
-
----
-
-### `acosh`
-
-- **Function:** `acosh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Acosh
-
----
-
-### `asin`
-
-- **Function:** `asin-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Asin
-
----
-
-### `asinh`
-
-- **Function:** `asinh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Asinh
-
----
-
-### `atan`
-
-- **Function:** `atan-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Atan
-
----
-
-### `atanh`
-
-- **Function:** `atanh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Atanh
-
----
-
-### `chs`
-
-- **Function:** `chs`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Change sign a -> -a
-
----
-
-### `complex`
-
-- **Function:** `complex-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Creates complex number a+ib
-
----
-
-### `cos`
-
-- **Function:** `cos-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Cos
-
----
-
-### `cosh`
-
-- **Function:** `cosh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Cosh
-
----
-
-### `drop`
-
-- **Function:** `drop`
-- **Arity:** 2
-- **Source:** arrays.lisp
-
-**Parameters:** `(INDEX ARRAY)`
-
-**Description:**
-
-Drop the first N elements from an array.
-
----
-
-### `dup`
-
-- **Function:** `dup`
-- **Arity:** 0
-- **Source:** stack.lisp
-
-**Description:**
-
-Duplicate the top element of the stack.
-
----
-
-### `eq`
-
-- **Function:** `eql-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
-
----
-
-### `exp`
-
-- **Function:** `exp-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Exponential: e^a
-
----
-
-### `flatten`
-
-- **Function:** `flatten`
-- **Arity:** 1
-- **Source:** arrays.lisp
-
-**Parameters:** `(LST)`
-
-**Description:**
-
-Flatten a nested list structure into a single list.
-
----
-
-### `frac`
-
-- **Function:** `frac-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Returns the fractional part 1.23 -> .23
-
----
-
-### `idx`
-
-- **Function:** `indexof`
-- **Arity:** 2
-- **Source:** arrays.lisp
-
-**Parameters:** `(VALUE ARRAY)`
-
-**Description:**
-
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
-
----
-
-### `intg`
-
-- **Function:** `intg-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Floor
-
----
-
-### `length`
-
-- **Function:** `length`
-- **Arity:** 1
-- **Source:** arrays.lisp
-
----
-
-### `ln`
-
-- **Function:** `log-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Natural logarithm ln a
-
----
-
-### `log`
-
-- **Function:** `10log-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-10log a
-
----
-
-### `max`
-
-- **Function:** `max-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Maximum
-
----
-
-### `min`
-
-- **Function:** `min-fn`
-- **Arity:** 2
-- **Source:** math.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Minimum
-
----
-
-### `neq`
-
-- **Function:** `not-eql-fn`
-- **Arity:** 2
-- **Source:** filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
-
----
-
-### `peek`
-
-- **Function:** `pretty-print-stack`
-- **Arity:** 0
-- **Source:** stack.lisp
-
-**Description:**
-
-Print the top 5 items of the stack in a readable format.
-
----
-
-### `pick`
-
-- **Function:** `pick`
-- **Arity:** 2
-- **Source:** arrays.lisp
-
-**Parameters:** `(INDEX ARRAY)`
-
-**Description:**
-
-Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
-
----
-
-### `pop`
-
-- **Function:** `pop-stack`
-- **Arity:** 0
-- **Source:** stack.lisp
-
----
-
-### `range`
-
-- **Function:** `range-fn`
-- **Arity:** 1
-- **Source:** arrays.lisp
-
-**Parameters:** `(N)`
-
----
-
-### `reshape`
-
-- **Function:** `reshape`
-- **Arity:** 2
-- **Source:** arrays.lisp
-
-**Parameters:** `(SHAPE DATA)`
-
-**Description:**
-
-Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
-
----
-
-### `rnd`
-
-- **Function:** `rnd-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Round
-
----
-
-### `rotate`
-
-- **Function:** `rotate`
-- **Arity:** 1
-- **Source:** arrays.lisp
-
-**Parameters:** `(ARRAY)`
-
-**Description:**
-
-Rotate clockwise, i.e. last element becomes first element
-
----
-
-### `shape`
-
-- **Function:** `shape-fn`
-- **Arity:** 1
-- **Source:** arrays.lisp
-
-**Parameters:** `(ARRAY)`
-
-**Description:**
-
-Return the shape of an array
-
----
-
-### `sin`
-
-- **Function:** `sin-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Sin
-
----
-
-### `sinh`
-
-- **Function:** `sinh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Sinh
-
----
-
-### `size`
+#### `size`
 
 - **Function:** `count-elements`
 - **Arity:** 1
-- **Source:** arrays.lisp
+- **Source:** std/arrays.lisp
 
 **Parameters:** `(ARRAY)`
 
@@ -670,51 +26,127 @@ Count the number of elements in an array
 
 ---
 
-### `sqrt`
+#### `drop`
 
-- **Function:** `sqrt-fn`
+- **Function:** `drop`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(INDEX ARRAY)`
+
+**Description:**
+
+Drop the first N elements from an array.
+
+---
+
+#### `flatten`
+
+- **Function:** `flatten`
 - **Arity:** 1
-- **Source:** math.lisp
+- **Source:** std/arrays.lisp
 
-**Parameters:** `(A)`
+**Parameters:** `(LST)`
 
 **Description:**
 
-Square root
+Flatten a nested list structure into a single list.
 
 ---
 
-### `square`
+#### `idx`
 
-- **Function:** `sqr-fn`
+- **Function:** `indexof`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(VALUE ARRAY)`
+
+**Description:**
+
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
+
+---
+
+#### `length`
+
+- **Function:** `length`
 - **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Square a^2
+- **Source:** std/arrays.lisp
 
 ---
 
-### `swap`
+#### `pick`
 
-- **Function:** `swap`
-- **Arity:** 0
-- **Source:** stack.lisp
+- **Function:** `pick`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(INDEX ARRAY)`
 
 **Description:**
 
-Swap top and second element of the stack
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
 ---
 
-### `take`
+#### `range`
+
+- **Function:** `range-fn`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(N)`
+
+---
+
+#### `reshape`
+
+- **Function:** `reshape`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(SHAPE DATA)`
+
+**Description:**
+
+Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+
+---
+
+#### `rotate`
+
+- **Function:** `rotate`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Rotate clockwise, i.e. last element becomes first element
+
+---
+
+#### `shape`
+
+- **Function:** `shape-fn`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+**Description:**
+
+Return the shape of an array
+
+---
+
+#### `take`
 
 - **Function:** `take`
 - **Arity:** 2
-- **Source:** arrays.lisp
+- **Source:** std/arrays.lisp
 
 **Parameters:** `(INDEX ARRAY)`
 
@@ -724,39 +156,11 @@ Take the first N elements from an array.
 
 ---
 
-### `tan`
-
-- **Function:** `tan-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Tan
-
----
-
-### `tanh`
-
-- **Function:** `tanh-fn`
-- **Arity:** 1
-- **Source:** math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Tanh
-
----
-
-### `transpose`
+#### `transpose`
 
 - **Function:** `transpose`
 - **Arity:** 1
-- **Source:** arrays.lisp
+- **Source:** std/arrays.lisp
 
 **Parameters:** `(MATRIX)`
 
@@ -766,11 +170,11 @@ Transpose a matrix (list of lists)
 
 ---
 
-### `where`
+#### `where`
 
 - **Function:** `where`
 - **Arity:** 1
-- **Source:** arrays.lisp
+- **Source:** std/arrays.lisp
 
 **Parameters:** `(ARRAY)`
 
@@ -780,11 +184,622 @@ Return the indices of non-zero elements in an array.
 
 ---
 
-### `y^x`
+### std/filters.lisp 
+
+---
+#### `eq`
+
+- **Function:** `eql-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
+
+---
+
+#### `>=`
+
+- **Function:** `greater-equal-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
+
+---
+
+#### `>`
+
+- **Function:** `greater-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
+
+---
+
+#### `neq`
+
+- **Function:** `not-eql-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
+
+#### `<=`
+
+- **Function:** `smaller-equal-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
+
+---
+
+#### `<`
+
+- **Function:** `smaller-fn`
+- **Arity:** 2
+- **Source:** std/filters.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
+
+---
+
+### std/io.lisp 
+
+---
+#### `load-csv`
+
+- **Function:** `load-csv`
+- **Arity:** 1
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME)`
+
+**Description:**
+
+Loads a table from a CSV file, comma separated, row oriented
+
+---
+
+#### `load`
+
+- **Function:** `load-numbers`
+- **Arity:** 1
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME)`
+
+**Description:**
+
+Load numbers from a text file (one per line)
+
+---
+
+#### `run`
+
+- **Function:** `run-script`
+- **Arity:** 1
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME)`
+
+**Description:**
+
+Execute a script file line by line
+
+---
+
+### std/math.lisp 
+
+---
+#### `->p`
+
+- **Function:** `->p`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
+
+---
+
+#### `->r`
+
+- **Function:** `->r`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
+
+---
+
+#### `1/x`
+
+- **Function:** `1/x-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Reciprocal: 1/a
+
+---
+
+#### `10^x`
+
+- **Function:** `10^x`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+10^a
+
+---
+
+#### `log`
+
+- **Function:** `10log-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+10log a
+
+---
+
+#### `abs`
+
+- **Function:** `abs-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Absolute value, also works for complex numbers
+
+---
+
+#### `acos`
+
+- **Function:** `acos-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Acos
+
+---
+
+#### `acosh`
+
+- **Function:** `acosh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Acosh
+
+---
+
+#### `+`
+
+- **Function:** `add-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Addition
+
+---
+
+#### `asin`
+
+- **Function:** `asin-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Asin
+
+---
+
+#### `asinh`
+
+- **Function:** `asinh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Asinh
+
+---
+
+#### `atan`
+
+- **Function:** `atan-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Atan
+
+---
+
+#### `atanh`
+
+- **Function:** `atanh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Atanh
+
+---
+
+#### `chs`
+
+- **Function:** `chs`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Change sign a -> -a
+
+---
+
+#### `complex`
+
+- **Function:** `complex-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Creates complex number a+ib
+
+---
+
+#### `cos`
+
+- **Function:** `cos-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Cos
+
+---
+
+#### `cosh`
+
+- **Function:** `cosh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Cosh
+
+---
+
+#### `%`
+
+- **Function:** `div-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Division
+
+---
+
+#### `exp`
+
+- **Function:** `exp-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Exponential: e^a
+
+---
+
+#### `!`
+
+- **Function:** `fact-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Factorial ! 8 -> 40320
+
+---
+
+#### `frac`
+
+- **Function:** `frac-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Returns the fractional part 1.23 -> .23
+
+---
+
+#### `intg`
+
+- **Function:** `intg-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Floor
+
+---
+
+#### `ln`
+
+- **Function:** `log-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Natural logarithm ln a
+
+---
+
+#### `max`
+
+- **Function:** `max-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Maximum
+
+---
+
+#### `min`
+
+- **Function:** `min-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Minimum
+
+---
+
+#### `*`
+
+- **Function:** `mul-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Multiplication
+
+---
+
+#### `rnd`
+
+- **Function:** `rnd-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Round
+
+---
+
+#### `sin`
+
+- **Function:** `sin-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Sin
+
+---
+
+#### `sinh`
+
+- **Function:** `sinh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Sinh
+
+---
+
+#### `square`
+
+- **Function:** `sqr-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Square a^2
+
+---
+
+#### `sqrt`
+
+- **Function:** `sqrt-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Square root
+
+---
+
+#### `-`
+
+- **Function:** `sub-fn`
+- **Arity:** 2
+- **Source:** std/math.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+Subtraction
+
+---
+
+#### `tan`
+
+- **Function:** `tan-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Tan
+
+---
+
+#### `tanh`
+
+- **Function:** `tanh-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Tanh
+
+---
+
+#### `y^x`
 
 - **Function:** `y^x-fn`
 - **Arity:** 2
-- **Source:** math.lisp
+- **Source:** std/math.lisp
 
 **Parameters:** `(A B)`
 
@@ -794,13 +809,60 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 
 ---
 
+### std/stack.lisp 
+
+---
+#### `dup`
+
+- **Function:** `dup`
+- **Arity:** 0
+- **Source:** std/stack.lisp
+
+**Description:**
+
+Duplicate the top element of the stack.
+
+---
+
+#### `pop`
+
+- **Function:** `pop-stack`
+- **Arity:** 0
+- **Source:** std/stack.lisp
+
+---
+
+#### `peek`
+
+- **Function:** `pretty-print-stack`
+- **Arity:** 0
+- **Source:** std/stack.lisp
+
+**Description:**
+
+Print the top 5 items of the stack in a readable format.
+
+---
+
+#### `swap`
+
+- **Function:** `swap`
+- **Arity:** 0
+- **Source:** std/stack.lisp
+
+**Description:**
+
+Swap top and second element of the stack
+
+---
+
 ## All Documented Functions
 
 ### `->p`
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
 
@@ -810,7 +872,7 @@ Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
@@ -820,7 +882,7 @@ Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Reciprocal: 1/a
 
@@ -830,7 +892,7 @@ Reciprocal: 1/a
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 10^a
 
@@ -840,7 +902,7 @@ Reciprocal: 1/a
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 10log a
 
@@ -850,7 +912,7 @@ Reciprocal: 1/a
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Absolute value, also works for complex numbers
 
@@ -860,7 +922,7 @@ Absolute value, also works for complex numbers
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Acos
 
@@ -870,7 +932,7 @@ Acos
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Acosh
 
@@ -880,7 +942,7 @@ Acosh
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Addition
 
@@ -890,7 +952,7 @@ Addition
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Asin
 
@@ -900,7 +962,7 @@ Asin
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Asinh
 
@@ -910,7 +972,7 @@ Asinh
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Atan
 
@@ -920,7 +982,7 @@ Atan
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Atanh
 
@@ -930,7 +992,7 @@ Atanh
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Change sign a -> -a
 
@@ -940,7 +1002,7 @@ Change sign a -> -a
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Creates complex number a+ib
 
@@ -950,7 +1012,7 @@ Creates complex number a+ib
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Cos
 
@@ -960,7 +1022,7 @@ Cos
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Cosh
 
@@ -970,7 +1032,7 @@ Cosh
 
 **Parameters:** `(ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Count the number of elements in an array
 
@@ -980,7 +1042,7 @@ Count the number of elements in an array
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Division
 
@@ -990,7 +1052,7 @@ Division
 
 **Parameters:** `(INDEX ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Drop the first N elements from an array.
 
@@ -1000,7 +1062,7 @@ Drop the first N elements from an array.
 
 **Parameters:** `()`
 
-**Source:** stack.lisp
+**Source:** std/stack.lisp
 
 Duplicate the top element of the stack.
 
@@ -1010,7 +1072,7 @@ Duplicate the top element of the stack.
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 
@@ -1020,7 +1082,7 @@ Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Exponential: e^a
 
@@ -1030,7 +1092,7 @@ Exponential: e^a
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Factorial ! 8 -> 40320
 
@@ -1040,7 +1102,7 @@ Factorial ! 8 -> 40320
 
 **Parameters:** `(LST)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Flatten a nested list structure into a single list.
 
@@ -1050,7 +1112,7 @@ Flatten a nested list structure into a single list.
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Returns the fractional part 1.23 -> .23
 
@@ -1060,7 +1122,7 @@ Returns the fractional part 1.23 -> .23
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
 
@@ -1070,7 +1132,7 @@ Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
@@ -1080,9 +1142,9 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
 **Parameters:** `(VALUE ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
 
 ---
 
@@ -1090,9 +1152,39 @@ Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not f
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Floor
+
+---
+
+### `is-header-row`
+
+**Parameters:** `(ROW)`
+
+**Source:** std/io.lisp
+
+Check if a row contains headers
+
+---
+
+### `load-csv`
+
+**Parameters:** `(FILENAME)`
+
+**Source:** std/io.lisp
+
+Loads a table from a CSV file, comma separated, row oriented
+
+---
+
+### `load-numbers`
+
+**Parameters:** `(FILENAME)`
+
+**Source:** std/io.lisp
+
+Load numbers from a text file (one per line)
 
 ---
 
@@ -1100,7 +1192,7 @@ Floor
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Natural logarithm ln a
 
@@ -1110,7 +1202,7 @@ Natural logarithm ln a
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Maximum
 
@@ -1120,7 +1212,7 @@ Maximum
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Minimum
 
@@ -1130,7 +1222,7 @@ Minimum
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Multiplication
 
@@ -1140,9 +1232,29 @@ Multiplication
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
+
+### `parse-number`
+
+**Parameters:** `(STR)`
+
+**Source:** std/io.lisp
+
+Parse a string as a number
+
+---
+
+### `parse-number-safe`
+
+**Parameters:** `(STRING)`
+
+**Source:** std/io.lisp
+
+Safely parse a string to number
 
 ---
 
@@ -1150,9 +1262,9 @@ Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
 
 **Parameters:** `(INDEX ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
-Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
 ---
 
@@ -1160,7 +1272,7 @@ Pick an element from an array based on the index.    If index is a number, it re
 
 **Parameters:** `()`
 
-**Source:** stack.lisp
+**Source:** std/stack.lisp
 
 Print the top 5 items of the stack in a readable format.
 
@@ -1170,9 +1282,9 @@ Print the top 5 items of the stack in a readable format.
 
 **Parameters:** `(SHAPE DATA)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
-Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -1180,7 +1292,7 @@ Reshape a flat list into a multi-dimensional array based on the given shape.    
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Round
 
@@ -1190,9 +1302,19 @@ Round
 
 **Parameters:** `(ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Rotate clockwise, i.e. last element becomes first element
+
+---
+
+### `run-script`
+
+**Parameters:** `(FILENAME)`
+
+**Source:** std/io.lisp
+
+Execute a script file line by line
 
 ---
 
@@ -1200,7 +1322,7 @@ Rotate clockwise, i.e. last element becomes first element
 
 **Parameters:** `(ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Return the shape of an array
 
@@ -1210,7 +1332,7 @@ Return the shape of an array
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Sin
 
@@ -1220,7 +1342,7 @@ Sin
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Sinh
 
@@ -1230,7 +1352,7 @@ Sinh
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 
@@ -1240,7 +1362,7 @@ Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 
 **Parameters:** `(A B)`
 
-**Source:** filters.lisp
+**Source:** std/filters.lisp
 
 Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 
@@ -1250,7 +1372,7 @@ Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Square a^2
 
@@ -1260,7 +1382,7 @@ Square a^2
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Square root
 
@@ -1270,7 +1392,7 @@ Square root
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Subtraction
 
@@ -1280,7 +1402,7 @@ Subtraction
 
 **Parameters:** `()`
 
-**Source:** stack.lisp
+**Source:** std/stack.lisp
 
 Swap top and second element of the stack
 
@@ -1290,7 +1412,7 @@ Swap top and second element of the stack
 
 **Parameters:** `(INDEX ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Take the first N elements from an array.
 
@@ -1300,7 +1422,7 @@ Take the first N elements from an array.
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Tan
 
@@ -1310,7 +1432,7 @@ Tan
 
 **Parameters:** `(A)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 Tanh
 
@@ -1320,7 +1442,7 @@ Tanh
 
 **Parameters:** `(MATRIX)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Transpose a matrix (list of lists)
 
@@ -1330,7 +1452,7 @@ Transpose a matrix (list of lists)
 
 **Parameters:** `(ARRAY)`
 
-**Source:** arrays.lisp
+**Source:** std/arrays.lisp
 
 Return the indices of non-zero elements in an array.
 
@@ -1340,7 +1462,7 @@ Return the indices of non-zero elements in an array.
 
 **Parameters:** `(A B)`
 
-**Source:** math.lisp
+**Source:** std/math.lisp
 
 y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 

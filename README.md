@@ -79,12 +79,12 @@ sbcl --load load-spectral.lisp
 ```
 
 ```spectral
-> load "numbers.dat" ; load a list of numbers
-> sin * 2 * pi % 20 range 20 ; Sine wave
-> AddFive = + 5 ; Define function
-> AddFive 10 ; Use function → 15
-> run "tests.spec" ; run a script
-> exit ; to exit
+ΣpectraΛ > load "numbers.dat" ; load a list of numbers
+ΣpectraΛ > sin * 2 * pi % 20 range 20 ; Sine wave
+ΣpectraΛ > AddFive = + 5 ; Define function
+ΣpectraΛ > AddFive 10 ; Use function → 15
+ΣpectraΛ > run "examples/tests.spec" ; run a script
+ΣpectraΛ > exit ; to exit
 * (exit) ; to exit from lisp
 ```
 
@@ -147,6 +147,7 @@ This is an experimental language exploring new ideas. Contributions welcome:
 
 - What’s the right balance of built-in vs user-defined functions?
 - Integration strategies with existing scientific libraries?
+- postfix/RPN notation and left-to-right or prefix notation and right-to-left code execution?
 
 ## Inspiration
 
@@ -154,6 +155,7 @@ Spectral draws inspiration from:
 
 - **APL/J/K/uiua**: Dense array notation and mathematical thinking
 - **Forth/Factor**: Stack-based execution and composability
+- **The HP 15-C Calculator**: Stack-based execution, mathematical function selection. See also [SwissMicros DM15C](https://www.swissmicros.com/product/dm15c)
 - **MATLAB/NumPy**: Scientific computing workflows
 - **Unix pipes**: Data flowing through transformations
 
