@@ -48,32 +48,18 @@
     (dotimes (i size flat)
       (setf (aref flat i) (row-major-aref array i)))))
 
-(defun product (lst)
-  (reduce #'* lst :initial-value 1))
 
-(defun partition (lst size)
-  (when lst
-    (cons (subseq lst 0 size)
-          (partition (nthcdr size lst) size))))
-
-(defun reshape-rec (shape flat)
-  (let ((dim (car shape))
-        (rest (cdr shape)))
-    (if (null rest)
-        (partition flat dim) ;; Base case: just partition
-        (let ((chunks (partition flat (* dim (product rest)))))
-          (mapcar (lambda (chunk)
-                    (reshape-rec rest chunk))
-                  chunks)))))
-
-(defun reshape (shape data)
-  "Reshape a flat list into a multi-dimensional array based on the given shape.
+(defun reshape (shape array)
+  "Reshape an array into a multi-dimensional array based on the given shape.
    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix."
-  (let* ((flat (flatten data))
-         (expected (product shape)))
-    (unless (= (length flat) expected)
-      (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
-    (first (reshape-rec (reverse shape) flat))))
+  (let* ((size (array-total-size array))
+	 (new-dims (coerce shape 'list))
+	 (result (make-array new-dims)))
+    (if (/= (array-total-size result) size)
+	(error "Non-matching shape ~A" new-dims)
+	(dotimes (i size)
+	  (setf (row-major-aref result i) (row-major-aref array i))))
+    result))
 
 (defun pick (index array)
   "Pick an element from an array based on the index.
