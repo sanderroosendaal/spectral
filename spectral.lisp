@@ -4,6 +4,8 @@
   (:use :cl)
   (:export :evaluate))
 
+(ql:quickload :cl-ansi-text)
+
 (in-package :spectral)
 
 (defparameter *stack* nil)
@@ -324,10 +326,39 @@ Signals an error on invalid tokens or unmatched brackets."
 		 (setf tokens (reverse (cdr (reverse tokens))))))))
 	  (peek-stack)))))
 
+(defun in-slime-p ()
+  (and (find-package :swank)
+       (symbol-value (find-symbol "*EMACS-CONNECTION*" :swank))))
+
+(defun colors-supported-p ()
+  (not (string= (uiop:getenv "TERM") "dumb")))
+
+(defun should-colorize-p ()
+  (and (not (in-slime-p)) (colors-supported-p)))
+
+(defparameter *spectral-colors*
+  '("ff4500" "ff8c00" "ffd700" "32cd32" "00ced1" "1e90ff" "4b0082" "9400d3"))
+
+(defun spectral-color-text (text)
+  (let ((result "")
+	(colors *spectral-colors*))
+    (loop for char across text
+	  for i from 0
+	  do (let ((color (nth (mod i (length colors)) colors)))
+	       (setf result
+		     (concatenate 'string result
+				  (cl-ansi-text:make-color-string color)
+				  (string char)))))
+    result))
+
 (defun spectral-repl ()
-  (format t "Spectral REPL - type exit to exit")
-  (loop 
-    (format t "~&ΣpectraΛ > ")
+  (if (should-colorize-p)
+      (format t (cl-ansi-text:green (format nil "Spectral REPL - type exit to exit")))
+      (format t "Spectral REPL - type exit to exit"))
+  (loop
+    (if (should-colorize-p)
+	(format t "~&~A ~A~A" (spectral-color-text (format nil "ΣpectraΛ")) (format nil "~C[0m" #\Escape) " > ")
+	(format t "~&ΣpectraΛ > "))
     (finish-output)
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
