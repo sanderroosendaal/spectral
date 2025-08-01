@@ -31,15 +31,17 @@
 	(setf (aref result j i) (aref matrix i j))))
     result))
 
-(defun count-elements (array)
-  "Count the number of elements in an array"
-  (array-total-size array))
-
 ;; shape, length
 (defun shape-fn (array)
   "Return the shape of an array"
   (array-dimensions array))
 
+(defun count-elements (array)
+  "Count the number of elements in an array"
+  (array-total-size array))
+
+(defun rank-fn (array)
+  (array-rank array))
 
 (defun flatten (array)
   "Flatten a nested list structure into a single list."
@@ -160,3 +162,4 @@
 (register-op 'where #'where 1)
 (register-op 'idx #'indexof 2)
 (register-op 'flatten #'flatten 1)
+(register-op 'rank #'rank-fn 1)
