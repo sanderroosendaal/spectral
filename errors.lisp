@@ -17,5 +17,8 @@
 	    (line-number
 	     (format stream "Line ~D: " line-number))
 	    (t ""))))
-     (setf error-message (format stream "~A ~A: ~A" error-message message error)))
+    (if (should-colorize-p)
+	(setf error-message (format stream (cl-ansi-text:red
+			     (format nil "~A ~A: ~A" error-message message error))))
+	(setf error-message (format stream "~A ~A: ~A" error-message message error))))
   nil)
