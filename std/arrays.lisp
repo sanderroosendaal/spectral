@@ -1,4 +1,4 @@
-;; Array functions
+; Array functions
 (defun range-fn (n)
   (let ((arr (make-array n :element-type 'number)))
     (dotimes (i n arr)
@@ -76,6 +76,12 @@
 	     (apply #'aref array (coerce index 'list))))
        (if array-c array-c (error "Invalid index ~A for ~A" index array))))
     (t (error "Invalid inputs to pick: ~A, ~A" index array))))
+
+(defun array-slice (n arr)
+  "Pick nth row from array"
+  (make-array (array-dimension arr 1)
+	      :displaced-to arr
+	      :displaced-index-offset (* n (array-dimension arr 1))))
 
 (defun take (index array)
   "Take the first N elements from an array."
@@ -157,6 +163,7 @@
 (register-op 'transpose #'transpose 1)
 (register-op 'reshape #'reshape 2)
 (register-op 'pick #'pick 2)
+(register-op 'slice #'array-slice 2)
 (register-op 'take #'take 2)
 (register-op 'drop #'drop 2)
 (register-op 'where #'where 1)
@@ -165,30 +172,10 @@
 (register-op 'rank #'rank-fn 1)
 
 ;; Magicl stuff
-(ql:quickload :magicl)
+(handler-case (progn
+		(ql:quickload :magicl)
+		(load "linear_algebra.lisp"))
+  (error ()
+    (format t "Linear Algebra Not Loaded~%")))
+  
 
-(defun array-to-magicl-fast (arr)
-  (let* ((dims (array-dimensions arr))
-	 (flat-data (map 'vector
-			 (lambda (x) (coerce x 'double-float))
-			 (make-array (array-total-size arr) :displaced-to arr))))
-    (magicl:from-list (coerce flat-data 'list) dims)))
-
-(defun magicl-matrix-to-array (magicl-matrix)
-  (let* ((dims (magicl:shape magicl-matrix))
-	 (result (make-array dims :element-type 'double-float)))
-    (dotimes (i (first dims))
-      (dotimes (j (second dims))
-	(setf (aref result i j)
-	      (magicl:tref magicl-matrix i j))))
-    result))
-
-(defun matrix-multiply (a b)
-  "Multiply two matrices A and B using Magicl."
-  (let* ((magicl-a (array-to-magicl-fast a))
-	 (magicl-b (array-to-magicl-fast b))
-	 (result-magicl (magicl:@ magicl-a magicl-b)))
-    (magicl-matrix-to-array result-magicl)))
-
-(register-op 'mmult #'matrix-multiply 2)
-(register-op '@ #'matrix-multiply 2)

@@ -173,4 +173,4 @@ MIT License - See [LICENSE](https://github.com/sanderroosendaal/spectral/blob/ma
 
 **Status**: Exploring the intersection of language design and scientific computing. Join the experiment!
 
-**Note**: Readme written with help of LLM, approved by roosendaalsander
+**Note**: Readme written with help of LLM, approved by "roosendaalsander". However, secretly, this is just here because I want to be able to claim that I have developed an array language. 
