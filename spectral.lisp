@@ -349,7 +349,7 @@ Signals an error on invalid tokens or unmatched brackets."
     (error (condition) (handle-error condition *error-stream* filename line-number))))
 
 (defparameter *single-character-tokens*
-  '(#\[ #\] #\+ #\- #\% #\* #\< #\> #\!))
+  '(#\+ #\- #\% #\* #\< #\> #\!))
 
 (defparameter *square-brackets*
   '(#\] #\[))
@@ -365,8 +365,27 @@ Signals an error on invalid tokens or unmatched brackets."
 		   (format out " ~C " char)
 		   (write-char char out)))))
 
+(defun add-spaces-around-single-char-tokens (s)
+  (with-output-to-string (out)
+    (loop for char across s
+	  do (if (member char *single-character-tokens*)
+		 (format out " ~C " char)
+		 (write-char char out)))))
+
+(defmacro preprocess-s (string &body expressions)
+  "Execute a equence of expressions on a string, threading the
+result through each expression using 's' as the placeholder for the current value."
+  (let ((result-var (gensym "RESULT")))
+    `(let ((,result-var ,string))
+       ,@(mapcar (lambda (expr)
+		   `(setf ,result-var ,(substitute result-var 's expr)))
+		 expressions)
+       ,result-var)))
+
 (defun preprocess (s)
-  (add-spaces-around-brackets s))
+  (preprocess-s s
+   (add-spaces-around-brackets s)
+   (add-spaces-around-single-char-tokens s)))
 
 (defun tokenize (expr-string)
   "Simple tokenizer"

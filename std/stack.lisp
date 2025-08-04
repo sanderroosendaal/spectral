@@ -102,6 +102,7 @@ a maximum of 10 items per dimension."
 		 (pretty-print-stack-item item)))))
 
 (register-stack-op 'dup #'dup 0)
+(register-stack-op 'd #'dup 0)
 (register-stack-op 'swap #'swap 0)
 (register-stack-op 'pop #'pop-stack 0)
 (register-stack-op 'peek #'pretty-print-stack 0)
