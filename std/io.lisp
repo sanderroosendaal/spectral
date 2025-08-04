@@ -40,15 +40,16 @@
 	 (headers nil)
 	 (data-rows nil))
     (if (is-header-row first-row)
-	(setf headers first-row
+	(setf headers (coerce first-row 'vector)
 	      data-rows (rest all-rows))
 	(setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
-	    (mapcar (lambda (row)
-		      (mapcar #'parse-number-safe row))
-		    data-rows)))
+	    (coerce
+	     (mapcar (lambda (row)
+		       (mapcar #'parse-number-safe row))
+		     data-rows) 'vector)))
       (if headers
 	  (values headers parsed-data)
 	  parsed-data))))

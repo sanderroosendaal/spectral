@@ -46,7 +46,7 @@ Drop the first N elements from an array.
 - **Arity:** 1
 - **Source:** std/arrays.lisp
 
-**Parameters:** `(LST)`
+**Parameters:** `(ARRAY)`
 
 **Description:**
 
@@ -64,7 +64,7 @@ Flatten a nested list structure into a single list.
 
 **Description:**
 
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -100,17 +100,27 @@ Pick an element from an array based on the index.    If index is a number, it r
 
 ---
 
+#### `rank`
+
+- **Function:** `rank-fn`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(ARRAY)`
+
+---
+
 #### `reshape`
 
 - **Function:** `reshape`
 - **Arity:** 2
 - **Source:** std/arrays.lisp
 
-**Parameters:** `(SHAPE DATA)`
+**Parameters:** `(SHAPE ARRAY)`
 
 **Description:**
 
-Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -180,7 +190,7 @@ Transpose a matrix (list of lists)
 
 **Description:**
 
-Return the indices of non-zero elements in an array.
+Return the 1D array of index vectors of non-zero elements in an array.
 
 ---
 
@@ -313,6 +323,25 @@ Load numbers from a text file (one per line)
 **Description:**
 
 Execute a script file line by line
+
+---
+
+### std/linear_algebra.lisp 
+
+---
+#### `@`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
+
+---
+
+#### `mmult`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
 
 ---
 
@@ -948,6 +977,16 @@ Addition
 
 ---
 
+### `array-row-major-index-to-subscript`
+
+**Parameters:** `(DIMS INDEX)`
+
+**Source:** std/arrays.lisp
+
+Convert row-major index to a list of subscripts for the given DIMS.
+
+---
+
 ### `asin-fn`
 
 **Parameters:** `(A)`
@@ -1100,7 +1139,7 @@ Factorial ! 8 -> 40320
 
 ### `flatten`
 
-**Parameters:** `(LST)`
+**Parameters:** `(ARRAY)`
 
 **Source:** std/arrays.lisp
 
@@ -1144,7 +1183,7 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
 **Source:** std/arrays.lisp
 
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the length of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -1268,6 +1307,16 @@ Pick an element from an array based on the index.    If index is a number, it r
 
 ---
 
+### `pretty-print-array`
+
+**Parameters:** `(ARRAY &OPTIONAL (STREAM *STANDARD-OUTPUT*))`
+
+**Source:** std/stack.lisp
+
+Pretty-print an n-dimensional ARRAY with square brackets, showing a maximum of 10 items per dimension.
+
+---
+
 ### `pretty-print-stack`
 
 **Parameters:** `()`
@@ -1280,11 +1329,11 @@ Print the top 5 items of the stack in a readable format.
 
 ### `reshape`
 
-**Parameters:** `(SHAPE DATA)`
+**Parameters:** `(SHAPE ARRAY)`
 
 **Source:** std/arrays.lisp
 
-Reshape a flat list into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -1454,7 +1503,7 @@ Transpose a matrix (list of lists)
 
 **Source:** std/arrays.lisp
 
-Return the indices of non-zero elements in an array.
+Return the 1D array of index vectors of non-zero elements in an array.
 
 ---
 

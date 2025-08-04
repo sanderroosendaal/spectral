@@ -63,7 +63,7 @@
 (load "std/stack.lisp")
 
 ;; Array operations
-(defun array-op (op a b)
+(defun array-op-list (op a b)
   "Apply binary operation element-wise"
   (cond
     ((and (numberp a) (numberp b)) (funcall op a b))
@@ -75,11 +75,54 @@
      (mapcar #'(lambda (x y) (array-op op x y)) a b))
     (t (error "Invalid inputs: ~S and ~S" a b))))
 
-(defun array-fn (op a)
+(defun array-fn-list (op a)
   (cond
     ((numberp a) (funcall op a))
     ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
     (t (error "Invalid input for array operation: ~S" a))))
+
+(defun array-op (op a b)
+  "Apply binary operation element-wise on n-dimensional arrays."
+  (cond
+    ((and (numberp a) (numberp b)) (funcall op a b))
+    ((and (numberp a) (arrayp b))
+     (let* ((dimensions (array-dimensions b))
+	    (result-array (make-array dimensions)))
+       (dotimes (i (array-total-size b))
+	 (setf (row-major-aref result-array i)
+	       (funcall op a (row-major-aref b i))))
+       result-array))
+    ((and (numberp b) (arrayp a))
+     (let* ((dimensions (array-dimensions a))
+	    (result-array (make-array dimensions)))
+       (dotimes (i (array-total-size a))
+	 (setf (row-major-aref result-array i)
+	       (funcall op (row-major-aref a i) b)))
+       result-array))
+    ((and (arrayp a) (arrayp b))
+     (let* ((dimensions (array-dimensions a))
+	    (result-array (make-array dimensions)))
+       (unless (equal dimensions (array-dimensions b))
+	 (error "Mismatched array dimensions: arrays must have the same dimensions"))
+       (dotimes (i (array-total-size a))
+	 (setf (row-major-aref result-array i)
+	       (funcall op (row-major-aref a i) (row-major-aref b i))))
+       result-array))))
+    
+
+(defun array-fn (op a)
+  "Apply a unary operation element-wise on an n-dimensional array."
+  (cond
+    ((numberp a) (funcall op a))
+    ((arrayp a)
+     (let* ((dimensions (array-dimensions a))
+	    (result-array (make-array dimensions)))
+       (dotimes (i (array-total-size a))
+	 (setf (row-major-aref result-array i)
+	       (funcall op (row-major-aref a i))))
+       result-array))
+    (t (error "Invalid input for array operation: ~S" a))))
+
 
 (defun strip-token (token char)
   (let* ((name (symbol-name token)))
@@ -91,7 +134,23 @@
 (defun reduce-array (op a)
   (cond
     ((numberp a) (error "Invalid input for reduce: ~S" a))
-    ((listp a) (reduce op a))
+    ((and (arrayp a) (> (length (array-dimensions a)) 1))
+     (let* ((dims (array-dimensions a))
+	    (rest-dims (subseq dims 1))
+	    (result (make-array rest-dims)))
+       (dotimes (i (array-total-size result))
+	 (let* ((idx (array-row-major-index-to-subscript rest-dims i))
+		(values (loop for i below (first dims)
+			      collect (apply #'aref a (cons i idx))))
+		(v (reduce op values)))
+	   (setf (row-major-aref result i) v)))
+       result))
+    ((arrayp a) 
+     (let* ((result (row-major-aref a 0))
+	    (ntot (array-total-size a)))
+       (loop for i from 1 to (1- ntot) do
+	 (setf result (funcall op result (row-major-aref a i))))
+       result))
     (t (error "Invalid input for reduce: ~S" a))))
 
 (defun scan (op initial lst)
@@ -202,6 +261,24 @@
 	(t (error "Unknown token: ~A" token)))
     (error (condition) (handle-error condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
 
+;; temp before we move to arrays in parse-array
+(defun list-to-n-dimensional-array (nested-lists)
+  "Convert a nested list into a fully rectangular N-dimensionl array."
+  (labels ((shape (lst)
+	     (if (listp lst)
+		 (cons (length lst) (shape (first lst)))
+		 nil))
+	   (flatten (lst)
+	     (if (listp lst)
+		 (mapcan #'flatten lst)
+		 (list lst))))
+    (let* ((dims (shape nested-lists))
+	   (flat (flatten nested-lists))
+	   (array (make-array dims)))
+      (loop for idx from 0 below (length flat)
+	    do (setf (row-major-aref array idx) (nth idx flat)))
+      array)))
+
 (defun parse-array (tokens &optional (filename nil) (line-number nil))
   "Parses the last well-formed bracketed matrix in TOKENS from right to left.
 Returns (values tokens-before-matrix matrix).
@@ -268,7 +345,7 @@ Signals an error on invalid tokens or unmatched brackets."
 	  (multiple-value-bind (matrix leftover) (parse (reverse matrix-tokens))
 	    (when leftover
 	      (error "Extra tokens after parsing: ~S" leftover))
-	    (values prefix (first matrix)))))
+	    (values prefix (list-to-n-dimensional-array (first matrix))))))
     (error (condition) (handle-error condition *error-stream* filename line-number))))
 
 (defparameter *single-character-tokens*
