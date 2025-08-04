@@ -179,3 +179,32 @@
     (format t "Linear Algebra Not Loaded~%")))
   
 
+
+;; Array-ops stuff
+(ql:quickload :array-operations)
+
+(defun nrow (a)
+  "Number of rows in matrix"
+  (aops:nrow a))
+
+(defun ncol (a)
+  "Number of columns in matrix"
+  (aops:ncol a))
+
+(defun sub (idx a)
+  "Returns sub-array composed of the elements that would start with given subscripts"
+  (aops:split a idx))
+
+(defun zeros (dims)
+  "Creates an array of dimensions DIMS filled with zeros"
+  (aops:zeros (coerce dims 'list)))
+
+(defun ones (dims)
+  "Creates an array of dimensions DIMS filled with ones"
+  (aops:ones (coerce dims 'list)))
+
+(register-op 'nrow #'nrow 1)
+(register-op 'ncol #'ncol 1)
+(register-op 'sub #'sub 2)
+(register-op 'zeros #'zeros 1)
+(register-op 'ones #'ones 1)

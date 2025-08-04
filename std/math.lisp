@@ -34,6 +34,14 @@
   "Absolute value, also works for complex numbers"
   (array-fn #'abs a))
 
+(defun realpart-fn (a)
+  "Get the real part of complex number"
+  (realpart a))
+
+(defun imagpart-fn (a)
+  "Get the imaginary part of complex number"
+  (imagpart a))
+
 (defun intg-fn (a)
   "Floor"
   (array-fn #'floor a))
@@ -52,6 +60,8 @@
 (register-op 'intg #'intg-fn 1)
 (register-op 'frac #'frac-fn 1)
 (register-op 'rnd #'rnd-fn 1)
+(register-op 're #'realpart-fn 1)
+(register-op 'im #'imagpart-fn 1)
 
 ;; max, min
 (defun max-fn (a b)
@@ -180,6 +190,7 @@
     (array-fn #'fact a)))
 
 (register-op '! #'fact-fn 1)
+
 
 ;; coordinates 0 ->P and ->R
 ;; for now, takes a [x y] coordinate vector and returns [r theta] in radians
