@@ -97,6 +97,7 @@ sbcl --load load-spectral.lisp
 
 ### More Syntax examples
 
+```spectral
 ΣpectraΛ > load-csv "examples/example.csv" ; load a list of numbers
 ΣpectraΛ > fft load "signal.dat" ; fourier transform
 ΣpectraΛ > ifft load "spectrum.dat" ; inverse fourier transform
@@ -108,7 +109,7 @@ sbcl --load load-spectral.lisp
 ΣpectraΛ > * d 2
 ΣpectraΛ > (*2|%2) if det d matrix ; multiply by 2 if determinant is not zero
 ΣpectraΛ > ((%2)(%2)) if det d matrix ; same as above, alternative notation
-
+```
 
 See [REFERENCE](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md) for
 more functions implemented.
