@@ -3,6 +3,7 @@
   (push value *stack*))
 
 (defun pop-stack ()
+  "Pops the top element off the stack"
   (if (null *stack*)
       (error "Stack underflow: cannot pop from an empty stack")
       (pop *stack*)))
