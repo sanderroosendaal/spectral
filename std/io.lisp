@@ -33,6 +33,44 @@
 	  (null (parse-number-safe cell)))
 	row))
 
+(defun write-csv-field (value stream delimiter)
+  "Write a single field to CSV stream, properly escaping if necessary."
+  (let ((string-value (princ-to-string value)))
+    (cond
+      ;; If field contains delimiter, newline, or quote, wrap in quotes and escape internal quotes
+      ((or (find delimiter string-value)
+           (find #\Newline string-value)
+           (find #\" string-value))
+       (write-char #\" stream)
+       (loop for char across string-value do
+         (when (char= char #\")
+           (write-char #\" stream)) ; Escape quotes by doubling them
+         (write-char char stream))
+       (write-char #\" stream))
+      ;; Otherwise, write the value as-is
+      (t
+       (write-string string-value stream)))))
+
+(defun write-csv (matrix filename &optional (delimiter #\,))
+  "Saves a 2D lisp array to a CSV file, comma separated, row oriented"
+  (unless (arrayp matrix)
+    (error "Expected a 2D array, got ~A" (type-of matrix)))
+  (unless (= (array-rank matrix) 2)
+    (error "Expected a 2D array, got ~A" (array-rank matrix)))
+  (with-open-file (stream filename :direction :output :if-exists :supersede
+				   :element-type 'character)
+    (let ((rows (first (array-dimensions matrix)))
+	  (cols (second (array-dimensions matrix))))
+      (dotimes (row rows)
+	(dotimes (col cols)
+	  (let ((value (aref matrix row col)))
+	    (write-csv-field value stream delimiter)
+	    (when (< col (1- cols))
+	      (write-char delimiter stream))))
+	(terpri stream))))
+  matrix)
+
+
 (defun load-csv (filename)
   "Loads a table from a CSV file, comma separated, row oriented"
   (let* ((all-rows (cl-csv:read-csv (pathname filename)))
@@ -40,15 +78,16 @@
 	 (headers nil)
 	 (data-rows nil))
     (if (is-header-row first-row)
-	(setf headers first-row
+	(setf headers (coerce first-row 'vector)
 	      data-rows (rest all-rows))
 	(setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
-	    (mapcar (lambda (row)
-		      (mapcar #'parse-number-safe row))
-		    data-rows)))
+	    (coerce
+	     (mapcar (lambda (row)
+		       (mapcar #'parse-number-safe row))
+		     data-rows) 'vector)))
       (if headers
 	  (values headers parsed-data)
 	  parsed-data))))
@@ -69,5 +108,6 @@
 ;; Add file operations
 (register-op 'load #'load-numbers 1)
 (register-op 'load-csv #'load-csv 1)
+(register-op 'write-csv #'write-csv 2)
 (register-op 'run #'run-script 1)
 

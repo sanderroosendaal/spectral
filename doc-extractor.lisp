@@ -3,7 +3,15 @@
 
 ;; Robust Lisp documentation extractor
 ;; Usage: sbcl -–script doc-extractor.lisp *.lisp > documentation.md
-(ql:quickload :cl-csv)
+(let ((*standard-output* *error-output*))
+  (ql:quickload :cl-csv)
+  (ql:quickload :array-operations)
+  (handler-case
+      (ql:quickload :magicl)
+    (error () (print "a")))
+  (ql:quickload :cffi)
+  (load "std/fftw-ffi.lisp")
+  )
 
 (defvar *functions* (make-hash-table :test 'equal))
 (defvar *registered-ops* '())

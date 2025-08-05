@@ -1,6 +1,9 @@
-;; Array functions
+; Array functions
 (defun range-fn (n)
-  (loop for i from 0 below n collect i))
+  "Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]"
+  (let ((arr (make-array n :element-type 'number)))
+    (dotimes (i n arr)
+      (setf (aref arr i) i))))
 
 
 ;; table operations
@@ -11,66 +14,55 @@
   "Rotate clockwise, i.e. last element becomes first element"
   (if (null array)
       nil
-      (cons (car (last array)) (butlast array))))
+      (let* ((len (length array))
+	     (last (aref array (1- len))))
+	(loop for i downfrom (1- len) above 0
+	      do (setf (aref array i) (aref array (1- i))))
+	(setf (aref array 0) last)
+	array)))
 
 (defun transpose (matrix)
   "Transpose a matrix (list of lists)"
-  (if (listp (first matrix))
-      (apply #'mapcar #'list matrix)
-      matrix))
-
-(defun count-elements (array)
-  "Count the number of elements in an array"
-  (if (listp array)
-      (reduce #'+ (mapcar #'count-elements array))
-      1))
+  (let* ((rows (array-dimension matrix 0))
+	 (cols (array-dimension matrix 1))
+	 (result (make-array (list cols rows)
+			     :element-type (array-element-type matrix))))
+    (dotimes (i rows)
+      (dotimes (j cols)
+	(setf (aref result j i) (aref matrix i j))))
+    result))
 
 ;; shape, length
 (defun shape-fn (array)
   "Return the shape of an array"
-  (labels ((shape-rec (lst)
-	     (if (listp lst)
-		 (cons (length lst)
-		       (if (and lst (every #'listp lst))
-			   (shape-rec (first lst))
-			   '()))
-		 '())))
-    (shape-rec array)))
+  (array-dimensions array))
 
+(defun count-elements (array)
+  "Count the number of elements in an array"
+  (array-total-size array))
 
-(defun flatten (lst)
+(defun rank-fn (array)
+  (array-rank array))
+
+(defun flatten (array)
   "Flatten a nested list structure into a single list."
-  (cond
-    ((null lst) nil)
-    ((listp (car lst)) (append (flatten (car lst)) (flatten (cdr lst))))
-    (t (cons (car lst) (flatten (cdr lst))))))
+  (let* ((size (array-total-size array))
+	 (flat (make-array size :element-type (array-element-type array))))
+    (dotimes (i size flat)
+      (setf (aref flat i) (row-major-aref array i)))))
 
-(defun product (lst)
-  (reduce #'* lst :initial-value 1))
 
-(defun partition (lst size)
-  (when lst
-    (cons (subseq lst 0 size)
-          (partition (nthcdr size lst) size))))
-
-(defun reshape-rec (shape flat)
-  (let ((dim (car shape))
-        (rest (cdr shape)))
-    (if (null rest)
-        (partition flat dim) ;; Base case: just partition
-        (let ((chunks (partition flat (* dim (product rest)))))
-          (mapcar (lambda (chunk)
-                    (reshape-rec rest chunk))
-                  chunks)))))
-
-(defun reshape (shape data)
-  "Reshape a flat list into a multi-dimensional array based on the given shape.
+(defun reshape (shape array)
+  "Reshape an array into a multi-dimensional array based on the given shape.
    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix."
-  (let* ((flat (flatten data))
-         (expected (product shape)))
-    (unless (= (length flat) expected)
-      (error "Cannot reshape ~D elements into shape ~A" (length flat) shape))
-    (first (reshape-rec (reverse shape) flat))))
+  (let* ((size (array-total-size array))
+	 (new-dims (coerce shape 'list))
+	 (result (make-array new-dims)))
+    (if (/= (array-total-size result) size)
+	(error "Non-matching shape ~A" new-dims)
+	(dotimes (i size)
+	  (setf (row-major-aref result i) (row-major-aref array i))))
+    result))
 
 (defun pick (index array)
   "Pick an element from an array based on the index.
@@ -78,22 +70,35 @@
    If index is a list, it traverses the array according to the indices in the list."
   (cond
     ((numberp index)
-     (let ((v (nth index array)))
+     (let ((v (aref array index)))
        (if v v (error "Invalid index ~A for ~A" index array))))
-    ((listp index)
-     (let ((array-c (copy-list array)))
-       (loop for i in index do
-	 (setf array-c (nth i array-c)))
+    ((arrayp index)
+     (let ((array-c
+	     (apply #'aref array (coerce index 'list))))
        (if array-c array-c (error "Invalid index ~A for ~A" index array))))
     (t (error "Invalid inputs to pick: ~A, ~A" index array))))
+
+(defun array-slice (n arr)
+  "Pick nth row from array"
+  (make-array (array-dimension arr 1)
+	      :displaced-to arr
+	      :displaced-index-offset (* n (array-dimension arr 1))))
 
 (defun take (index array)
   "Take the first N elements from an array."
   (cond
     ((numberp index)
      (handler-case
-	 (let ((v (subseq array 0 index)))
-	   (if v v (error "Invalid index: take ~A ~A" index array)))
+	 (let* ((dims (array-dimensions array))
+		(rank (length dims)))
+	   (unless (and (>= (first dims) index) (> rank 0))
+	     (error "Invalid dimensions or too few elements to take."))
+	   (let* ((new-dims (cons index (rest dims)))
+		  (result (make-array new-dims
+				      :element-type (array-element-type array))))
+	     (dotimes (i (array-total-size result) result)
+	       (setf (row-major-aref result i)
+		     (row-major-aref array i)))))
        (error
 	   (condition)
 	 (declare (ignore condition))
@@ -104,29 +109,52 @@
   "Drop the first N elements from an array."
   (cond
     ((numberp index)
-     (handler-case
-	 (let ((v (subseq array index)))
-	   (if v v (error "Invalid index: drop ~A ~A" index array)))
-       (error
-	   (condition)
-	 (declare (ignore condition))
-	 (error "Invalid index: drop ~A ~A" index array))))
+     (let* ((dims (array-dimensions array))
+	    (rank (length dims)))
+       (unless (and (>= (first dims) index) (> rank 0))
+	 (error "Invalid dimensions or too few elements to take."))
+       (let* ((new-dims (cons (- (first dims) index) (rest dims)))
+	      (result (make-array new-dims
+				  :element-type (array-element-type array)))
+	      (element-size (array-total-size result)))
+	 (let ((offset (* index (reduce #'* (rest dims)))))
+	   (dotimes (i element-size result)
+	     (setf (row-major-aref result i)
+		   (row-major-aref array (+ offset i))))))))
     (t (error "Invalid inputs to drop: ~A, ~A" index array))))
 
+(defun array-row-major-index-to-subscript (dims index)
+  "Convert row-major index to a list of subscripts for the given DIMS."
+  (let ((coords ()))
+    (dolist (dim (reverse dims) coords)
+      (multiple-value-bind (q r) (floor index dim)
+	(push r coords)
+	(setf index q)))))
+
 (defun where (array)
-  "Return the indices of non-zero elements in an array."
-  (loop for item in array
-	for i from 0
-	unless (zerop item)
-	  collect i))
+  "Return the 1D array of index vectors of non-zero elements in an array."
+  (let* ((dims (array-dimensions array))
+	 (size (array-total-size array))
+	 (indices '()))
+    (dotimes (i size)
+      (let ((val (row-major-aref array i)))
+	(unless (zerop val)
+	  (push (multiple-value-list (array-row-major-index-to-subscript dims i)) indices))))
+    (make-array (length indices)
+		:element-type 'vector
+		:initial-contents (mapcar #'(lambda (lst) (coerce lst 'vector)) (nreverse indices)))))
 
 (defun indexof (value array)
   "Return the index of the first occurrence of VALUE in ARRAY.
-   If VALUE is not found, return the length of the array."
-  (if (not (member value array :test #'equal))
-      (length array)
-      (position value array :test #'equal)))
-
+   If VALUE is not found, return the dimensions of the array."
+  (let* ((dims (array-dimensions array))
+	 (size (array-total-size array)))
+    (dotimes (i size)
+      (when (= (row-major-aref array i) value)
+	(return-from indexof (coerce (multiple-value-list
+			 (array-row-major-index-to-subscript dims i))
+			'vector))))
+    (coerce dims 'vector)))
 
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
@@ -136,8 +164,48 @@
 (register-op 'transpose #'transpose 1)
 (register-op 'reshape #'reshape 2)
 (register-op 'pick #'pick 2)
+(register-op 'slice #'array-slice 2)
 (register-op 'take #'take 2)
 (register-op 'drop #'drop 2)
 (register-op 'where #'where 1)
 (register-op 'idx #'indexof 2)
 (register-op 'flatten #'flatten 1)
+(register-op 'rank #'rank-fn 1)
+
+;; Magicl stuff
+(handler-case (progn
+		(ql:quickload :magicl)
+		(load "linear_algebra.lisp"))
+  (error ()
+    (format t "Linear Algebra Not Loaded~%")))
+  
+
+
+;; Array-ops stuff
+(ql:quickload :array-operations)
+
+(defun nrow (a)
+  "Number of rows in matrix"
+  (aops:nrow a))
+
+(defun ncol (a)
+  "Number of columns in matrix"
+  (aops:ncol a))
+
+(defun sub (idx a)
+  "Returns sub-array composed of the elements that would start with given subscripts"
+  (aops:split a idx))
+
+(defun zeros (dims)
+  "Creates an array of dimensions DIMS filled with zeros"
+  (aops:zeros (coerce dims 'list)))
+
+(defun ones (dims)
+  "Creates an array of dimensions DIMS filled with ones"
+  (aops:ones (coerce dims 'list)))
+
+(register-op 'nrow #'nrow 1)
+(register-op 'ncol #'ncol 1)
+(register-op 'sub #'sub 2)
+(register-op 'zeros #'zeros 1)
+(register-op 'ones #'ones 1)

@@ -1,0 +1,33 @@
+To load "cl-csv":
+  Load 1 ASDF system:
+    cl-csv
+; Loading "cl-csv"
+.....
+To load "array-operations":
+  Load 1 ASDF system:
+    array-operations
+; Loading "array-operations"
+
+To load "magicl":
+  Load 1 ASDF system:
+    magicl
+; Loading "magicl"
+.............
+To load "cffi":
+  Load 1 ASDF system:
+    cffi
+; Loading "cffi"
+
+To load "cffi":
+  Load 1 ASDF system:
+    cffi
+; Loading "cffi"
+
+Processing std/arrays.lisp…
+Processing std/fftw-ffi.lisp…
+Processing std/filters.lisp…
+Processing std/io.lisp…
+Processing std/linear_algebra.lisp…
+Processing std/math.lisp…
+Processing std/signal_processing.lisp…
+Processing std/stack.lisp…
