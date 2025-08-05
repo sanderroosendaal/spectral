@@ -9,7 +9,9 @@
   (handler-case
       (ql:quickload :magicl)
     (error () (print "a")))
-  (ql:quickload :cffi))
+  (ql:quickload :cffi)
+  (load "std/fftw-ffi.lisp")
+  )
 
 (defvar *functions* (make-hash-table :test 'equal))
 (defvar *registered-ops* '())

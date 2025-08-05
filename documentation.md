@@ -73,7 +73,7 @@ Flatten a nested list structure into a single list.
 
 **Description:**
 
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -137,7 +137,7 @@ Creates an array of dimensions DIMS filled with ones
 
 **Description:**
 
-Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
 ---
 
@@ -148,6 +148,10 @@ Pick an element from an array based on the index.    If index is a number, it r
 - **Source:** std/arrays.lisp
 
 **Parameters:** `(N)`
+
+**Description:**
+
+Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]
 
 ---
 
@@ -171,7 +175,7 @@ Pick an element from an array based on the index.    If index is a number, it r
 
 **Description:**
 
-Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -416,6 +420,149 @@ Execute a script file line by line
 **Description:**
 
 Saves a 2D lisp array to a CSV file, comma separated, row oriented
+
+---
+
+### std/linear_algebra.lisp 
+
+---
+#### `conjugate-transpose`
+
+- **Function:** `dagger`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Conjugate transport of matrix
+
+---
+
+#### `dagger`
+
+- **Function:** `dagger`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Conjugate transport of matrix
+
+---
+
+#### `det`
+
+- **Function:** `det-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Determinant of matrix
+
+---
+
+#### `eig`
+
+- **Function:** `eig-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Returns eigenvalues and eigenvectors of matrix
+
+---
+
+#### `inv`
+
+- **Function:** `matrix-inv`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix inverse
+
+---
+
+#### `@`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
+
+---
+
+#### `mmult`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
+
+---
+
+#### `trace`
+
+- **Function:** `trace-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Trace (sum of diagnoal elements) of matrix
+
+---
+
+#### `tril`
+
+- **Function:** `tril`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Lower triangular part of matrix
+
+---
+
+#### `triu`
+
+- **Function:** `triu`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Upper triangular part of matrix
 
 ---
 
@@ -949,6 +1096,12 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 - **Arity:** 1
 - **Source:** std/signal_processing.lisp
 
+**Parameters:** `(INPUT)`
+
+**Description:**
+
+Fast Fourier Transform of the input signal.
+
 ---
 
 #### `ifft`
@@ -956,6 +1109,12 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 - **Function:** `fft-inverse`
 - **Arity:** 1
 - **Source:** std/signal_processing.lisp
+
+**Parameters:** `(INPUT)`
+
+**Description:**
+
+Inverse Fast Fourier Transform of the input signal.
 
 ---
 
@@ -991,6 +1150,10 @@ Duplicate the top element of the stack.
 - **Function:** `pop-stack`
 - **Arity:** 0
 - **Source:** std/stack.lisp
+
+**Description:**
+
+Pops the top element off the stack
 
 ---
 
@@ -1220,6 +1383,26 @@ Count the number of elements in an array
 
 ---
 
+### `dagger`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Conjugate transport of matrix
+
+---
+
+### `det-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Determinant of matrix
+
+---
+
 ### `div-fn`
 
 **Parameters:** `(A B)`
@@ -1250,6 +1433,16 @@ Duplicate the top element of the stack.
 
 ---
 
+### `eig-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Returns eigenvalues and eigenvectors of matrix
+
+---
+
 ### `eql-fn`
 
 **Parameters:** `(A B)`
@@ -1277,6 +1470,76 @@ Exponential: e^a
 **Source:** std/math.lisp
 
 Factorial ! 8 -> 40320
+
+---
+
+### `fft-backward`
+
+**Parameters:** `(DATA &KEY (NORMALIZE T))`
+
+**Source:** std/fftw-ffi.lisp
+
+Compute backward (inverse) FFT of complex data
+
+---
+
+### `fft-cleanup`
+
+**Parameters:** `()`
+
+**Source:** std/fftw-ffi.lisp
+
+Clean up FFTW internal data structures
+
+---
+
+### `fft-forward`
+
+**Parameters:** `(INPUT)`
+
+**Source:** std/signal_processing.lisp
+
+Fast Fourier Transform of the input signal.
+
+---
+
+### `fft-inverse`
+
+**Parameters:** `(INPUT)`
+
+**Source:** std/signal_processing.lisp
+
+Inverse Fast Fourier Transform of the input signal.
+
+---
+
+### `fft-real-forward`
+
+**Parameters:** `(DATA)`
+
+**Source:** std/fftw-ffi.lisp
+
+Compute forward FFT of real data (returns complex)
+
+---
+
+### `fftw-complex-to-lisp-array`
+
+**Parameters:** `(FFTW-PTR SIZE)`
+
+**Source:** std/fftw-ffi.lisp
+
+Convert FFTW complex array back to Lisp array
+
+---
+
+### `fftw-real-to-lisp-array`
+
+**Parameters:** `(FFTW-PTR SIZE)`
+
+**Source:** std/fftw-ffi.lisp
+
+Convert FFTW real array back to Lisp array
 
 ---
 
@@ -1336,7 +1599,7 @@ Get the imaginary part of complex number
 
 **Source:** std/arrays.lisp
 
-Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -1357,6 +1620,26 @@ Floor
 **Source:** std/io.lisp
 
 Check if a row contains headers
+
+---
+
+### `lisp-array-to-fftw-complex`
+
+**Parameters:** `(LISP-ARRAY FFTW-PTR)`
+
+**Source:** std/fftw-ffi.lisp
+
+Copy Lisp complex array to FFTW complex array
+
+---
+
+### `lisp-array-to-fftw-real`
+
+**Parameters:** `(LISP-ARRAY FFTW-PTR)`
+
+**Source:** std/fftw-ffi.lisp
+
+Copy Lisp real array to FFTW real array
 
 ---
 
@@ -1387,6 +1670,46 @@ Load numbers from a text file (one per line)
 **Source:** std/math.lisp
 
 Natural logarithm ln a
+
+---
+
+### `make-complex-test-signal`
+
+**Parameters:** `(N &KEY (FREQUENCY 1.0) (SAMPLE-RATE 10.0))`
+
+**Source:** std/fftw-ffi.lisp
+
+Generate a complex test signal
+
+---
+
+### `make-test-signal`
+
+**Parameters:** `(N &KEY (FREQUENCY 1.0) (SAMPLE-RATE 10.0))`
+
+**Source:** std/fftw-ffi.lisp
+
+Generate a test sinusoidal signal
+
+---
+
+### `matrix-inv`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Matrix inverse
+
+---
+
+### `matrix-multiply`
+
+**Parameters:** `(A B)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
 
 ---
 
@@ -1486,7 +1809,17 @@ Safely parse a string to number
 
 **Source:** std/arrays.lisp
 
-Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
+
+---
+
+### `pop-stack`
+
+**Parameters:** `()`
+
+**Source:** std/stack.lisp
+
+Pops the top element off the stack
 
 ---
 
@@ -1496,7 +1829,7 @@ Pick an element from an array based on the index.    If index is a number, it r
 
 **Source:** std/stack.lisp
 
-Pretty-print an n-dimensional ARRAY with square brackets, showing a maximum of 10 items per dimension.
+Pretty-print an n-dimensional ARRAY with square brackets, showing a maximum of 10 items per dimension.
 
 ---
 
@@ -1507,6 +1840,16 @@ Pretty-print an n-dimensional ARRAY with square brackets, showing a maximum of 
 **Source:** std/stack.lisp
 
 Print the top 5 items of the stack in a readable format.
+
+---
+
+### `range-fn`
+
+**Parameters:** `(N)`
+
+**Source:** std/arrays.lisp
+
+Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]
 
 ---
 
@@ -1526,7 +1869,7 @@ Get the real part of complex number
 
 **Source:** std/arrays.lisp
 
-Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -1690,6 +2033,16 @@ Tanh
 
 ---
 
+### `trace-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Trace (sum of diagnoal elements) of matrix
+
+---
+
 ### `transpose`
 
 **Parameters:** `(MATRIX)`
@@ -1697,6 +2050,26 @@ Tanh
 **Source:** std/arrays.lisp
 
 Transpose a matrix (list of lists)
+
+---
+
+### `tril`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Lower triangular part of matrix
+
+---
+
+### `triu`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Upper triangular part of matrix
 
 ---
 

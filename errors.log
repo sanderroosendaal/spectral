@@ -13,60 +13,21 @@ To load "magicl":
     magicl
 ; Loading "magicl"
 .............
-; 
-; compilation unit aborted
-;   caught 1 fatal ERROR condition
+To load "cffi":
+  Load 1 ASDF system:
+    cffi
+; Loading "cffi"
 
-"a" To load "cffi":
+To load "cffi":
   Load 1 ASDF system:
     cffi
 ; Loading "cffi"
 
 Processing std/arrays.lisp…
+Processing std/fftw-ffi.lisp…
 Processing std/filters.lisp…
 Processing std/io.lisp…
+Processing std/linear_algebra.lisp…
 Processing std/math.lisp…
 Processing std/signal_processing.lisp…
-Warning: Error reading form in std/signal_processing.lisp: Package FFTW-FFI does not exist.
-
-                                                             Line: 5,
-                                                             Column: 23,
-                                                             File-Position: 129
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
-Warning: Error reading form in std/signal_processing.lisp: unmatched close parenthesis
-
-                                                             Line: 5,
-                                                             Column: 30,
-                                                             File-Position: 136
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
-Warning: Error reading form in std/signal_processing.lisp: unmatched close parenthesis
-
-                                                             Line: 5,
-                                                             Column: 31,
-                                                             File-Position: 137
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
-Warning: Error reading form in std/signal_processing.lisp: Package FFTW-FFI does not exist.
-
-                                                             Line: 9,
-                                                             Column: 24,
-                                                             File-Position: 250
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
-Warning: Error reading form in std/signal_processing.lisp: unmatched close parenthesis
-
-                                                             Line: 9,
-                                                             Column: 31,
-                                                             File-Position: 257
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
-Warning: Error reading form in std/signal_processing.lisp: unmatched close parenthesis
-
-                                                             Line: 9,
-                                                             Column: 32,
-                                                             File-Position: 258
-
-                                                             Stream: #<SB-SYS:FD-STREAM for "file C:\\Users\\sanderr\\portacle\\projects\\spectral\\std\\signal_processing.lisp" {11057B1AF3}>
 Processing std/stack.lisp…
