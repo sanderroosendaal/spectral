@@ -1,8 +1,3 @@
-To load "cl-csv":
-  Load 1 ASDF system:
-    cl-csv
-; Loading "cl-csv"
-.....
 # API Documentation
 
 Generated from Lisp source files.
@@ -12,6 +7,20 @@ Generated from Lisp source files.
 ### std/arrays.lisp 
 
 ---
+#### `slice`
+
+- **Function:** `array-slice`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(N ARR)`
+
+**Description:**
+
+Pick nth row from array
+
+---
+
 #### `size`
 
 - **Function:** `count-elements`
@@ -73,6 +82,48 @@ Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not 
 - **Function:** `length`
 - **Arity:** 1
 - **Source:** std/arrays.lisp
+
+---
+
+#### `ncol`
+
+- **Function:** `ncol`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Number of columns in matrix
+
+---
+
+#### `nrow`
+
+- **Function:** `nrow`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Number of rows in matrix
+
+---
+
+#### `ones`
+
+- **Function:** `ones`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(DIMS)`
+
+**Description:**
+
+Creates an array of dimensions DIMS filled with ones
 
 ---
 
@@ -152,6 +203,20 @@ Return the shape of an array
 
 ---
 
+#### `sub`
+
+- **Function:** `sub`
+- **Arity:** 2
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(IDX A)`
+
+**Description:**
+
+Returns sub-array composed of the elements that would start with given subscripts
+
+---
+
 #### `take`
 
 - **Function:** `take`
@@ -191,6 +256,20 @@ Transpose a matrix (list of lists)
 **Description:**
 
 Return the 1D array of index vectors of non-zero elements in an array.
+
+---
+
+#### `zeros`
+
+- **Function:** `zeros`
+- **Arity:** 1
+- **Source:** std/arrays.lisp
+
+**Parameters:** `(DIMS)`
+
+**Description:**
+
+Creates an array of dimensions DIMS filled with zeros
 
 ---
 
@@ -326,22 +405,17 @@ Execute a script file line by line
 
 ---
 
-### std/linear_algebra.lisp 
+#### `write-csv`
 
----
-#### `@`
-
-- **Function:** `matrix-multiply`
+- **Function:** `write-csv`
 - **Arity:** 2
-- **Source:** std/linear_algebra.lisp
+- **Source:** std/io.lisp
 
----
+**Parameters:** `(MATRIX FILENAME &OPTIONAL (DELIMITER ,))`
 
-#### `mmult`
+**Description:**
 
-- **Function:** `matrix-multiply`
-- **Arity:** 2
-- **Source:** std/linear_algebra.lisp
+Saves a 2D lisp array to a CSV file, comma separated, row oriented
 
 ---
 
@@ -642,6 +716,20 @@ Returns the fractional part 1.23 -> .23
 
 ---
 
+#### `im`
+
+- **Function:** `imagpart-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Get the imaginary part of complex number
+
+---
+
 #### `intg`
 
 - **Function:** `intg-fn`
@@ -709,6 +797,20 @@ Minimum
 **Description:**
 
 Multiplication
+
+---
+
+#### `re`
+
+- **Function:** `realpart-fn`
+- **Arity:** 1
+- **Source:** std/math.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+Get the real part of complex number
 
 ---
 
@@ -838,9 +940,40 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 
 ---
 
+### std/signal_processing.lisp 
+
+---
+#### `fft`
+
+- **Function:** `fft-forward`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+---
+
+#### `ifft`
+
+- **Function:** `fft-inverse`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+---
+
 ### std/stack.lisp 
 
 ---
+#### `d`
+
+- **Function:** `dup`
+- **Arity:** 0
+- **Source:** std/stack.lisp
+
+**Description:**
+
+Duplicate the top element of the stack.
+
+---
+
 #### `dup`
 
 - **Function:** `dup`
@@ -984,6 +1117,16 @@ Addition
 **Source:** std/arrays.lisp
 
 Convert row-major index to a list of subscripts for the given DIMS.
+
+---
+
+### `array-slice`
+
+**Parameters:** `(N ARR)`
+
+**Source:** std/arrays.lisp
+
+Pick nth row from array
 
 ---
 
@@ -1177,6 +1320,16 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
 ---
 
+### `imagpart-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/math.lisp
+
+Get the imaginary part of complex number
+
+---
+
 ### `indexof`
 
 **Parameters:** `(VALUE ARRAY)`
@@ -1267,6 +1420,16 @@ Multiplication
 
 ---
 
+### `ncol`
+
+**Parameters:** `(A)`
+
+**Source:** std/arrays.lisp
+
+Number of columns in matrix
+
+---
+
 ### `not-eql-fn`
 
 **Parameters:** `(A B)`
@@ -1274,6 +1437,26 @@ Multiplication
 **Source:** std/filters.lisp
 
 Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+
+---
+
+### `nrow`
+
+**Parameters:** `(A)`
+
+**Source:** std/arrays.lisp
+
+Number of rows in matrix
+
+---
+
+### `ones`
+
+**Parameters:** `(DIMS)`
+
+**Source:** std/arrays.lisp
+
+Creates an array of dimensions DIMS filled with ones
 
 ---
 
@@ -1324,6 +1507,16 @@ Pretty-print an n-dimensional ARRAY with square brackets, showing a maximum of 
 **Source:** std/stack.lisp
 
 Print the top 5 items of the stack in a readable format.
+
+---
+
+### `realpart-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/math.lisp
+
+Get the real part of complex number
 
 ---
 
@@ -1437,6 +1630,16 @@ Square root
 
 ---
 
+### `sub`
+
+**Parameters:** `(IDX A)`
+
+**Source:** std/arrays.lisp
+
+Returns sub-array composed of the elements that would start with given subscripts
+
+---
+
 ### `sub-fn`
 
 **Parameters:** `(A B)`
@@ -1507,6 +1710,26 @@ Return the 1D array of index vectors of non-zero elements in an array.
 
 ---
 
+### `write-csv`
+
+**Parameters:** `(MATRIX FILENAME &OPTIONAL (DELIMITER ,))`
+
+**Source:** std/io.lisp
+
+Saves a 2D lisp array to a CSV file, comma separated, row oriented
+
+---
+
+### `write-csv-field`
+
+**Parameters:** `(VALUE STREAM DELIMITER)`
+
+**Source:** std/io.lisp
+
+Write a single field to CSV stream, properly escaping if necessary.
+
+---
+
 ### `y^x-fn`
 
 **Parameters:** `(A B)`
@@ -1514,6 +1737,16 @@ Return the 1D array of index vectors of non-zero elements in an array.
 **Source:** std/math.lisp
 
 y^x first on stack is exponent, second is base: y^x 3 2 --> 8
+
+---
+
+### `zeros`
+
+**Parameters:** `(DIMS)`
+
+**Source:** std/arrays.lisp
+
+Creates an array of dimensions DIMS filled with zeros
 
 ---
 

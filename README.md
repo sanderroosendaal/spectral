@@ -107,7 +107,7 @@ sbcl --load load-spectral.lisp
 ΣpectraΛ > re complex 2 3 ; 2 - real part of 2+3i
 ΣpectraΛ > write-csv "spectrum.csv" fft load "signal.dat" ; write calculated spectrum to file
 ΣpectraΛ > * d 2
-ΣpectraΛ > (*2|%2) if det d matrix ; multiply by 2 if determinant is not zero
+ΣpectraΛ > (*2|%2) if det d matrix ; multiply by 2 if determinant is not zero, else divide by 2
 ΣpectraΛ > ((%2)(%2)) if det d matrix ; same as above, alternative notation
 ```
 
@@ -128,7 +128,7 @@ more functions implemented.
 ### Phase 2: Scientific Computing
 
 - [X] Linear algebra (LAPACK integration)
-- [-] Signal processing (FFT, filtering)
+- [ ] Signal processing (FFT, filtering)
 - [ ] Statistics (mean, std, correlation)
 - [ ] File formats (HDF5, CSV, binary)
 - [ ] Plotting and visualization
