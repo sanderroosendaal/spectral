@@ -2,7 +2,7 @@
 
 (defun fft-forward (input)
   "Fast Fourier Transform of the input signal."
-  (fftw-ffi:fft-real-forward input))
+  (fftw-ffi:fft-forward input))
 
 (defun fft-inverse (input)
   "Inverse Fast Fourier Transform of the input signal."

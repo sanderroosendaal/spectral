@@ -365,12 +365,17 @@ Signals an error on invalid tokens or unmatched brackets."
 		   (format out " ~C " char)
 		   (write-char char out)))))
 
-(defun add-spaces-around-single-char-tokens (s)
-  (with-output-to-string (out)
-    (loop for char across s
-	  do (if (member char *single-character-tokens*)
-		 (format out " ~C " char)
-		 (write-char char out)))))
+(defun add-spaces-after-single-char-tokens (s)
+  (let ((result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+    (dotimes (i (length s))
+      (vector-push-extend (char s i) result)
+      (when (and (< i (1- (length s)))
+		 (find (char s i) *single-character-tokens*)
+		 (or
+		  (digit-char-p (char s (1+ i)))
+		  (find (char s (1+ i)) *single-character-tokens*)))
+	(vector-push-extend #\Space result)))
+    (coerce result 'string)))
 
 (defmacro preprocess-s (string &body expressions)
   "Execute a equence of expressions on a string, threading the
@@ -385,7 +390,7 @@ result through each expression using 's' as the placeholder for the current valu
 (defun preprocess (s)
   (preprocess-s s
    (add-spaces-around-brackets s)
-   (add-spaces-around-single-char-tokens s)))
+   (add-spaces-after-single-char-tokens s)))
 
 (defun tokenize (expr-string)
   "Simple tokenizer"
