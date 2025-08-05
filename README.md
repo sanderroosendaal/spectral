@@ -60,14 +60,21 @@ This eliminates parentheses and makes data flow explicit.
 
 ## Current Implementation
 
-This repository contains a Lisp prototype (<500 lines) implementing:
+This repository contains a Lisp prototype (<1000 lines) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
 - ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
 - ✅ Constants (`pi`, `e`)
 - ✅ Array operations with broadcasting
 - ✅ Variables and function definitions
-- ✅ File I/O (text files)
+- ✅ File I/O (text files) (`load`, `load-csv`, `write-csv`)
+- ✅ Stack operations (`pop` to pop, `dup` or `d` to duplicate, `swap` to swap, `peek`)
+- ✅ Conditional (`if`)
+- ✅ Nested groups `((sin % 2 pi) (sin))` - currently only used in combination with `if`
+- ✅ FFT (need FFTW installed)
+- ✅ Matrix operations (need LAPACK installed: `mmult` or `@` for matrix multiplication,
+     `det`, `trace`, `triu` and `tril`, `dagger`, `conjugate-transpose`,
+     `transpose`, `inv`, `eig`)
 - ✅ Script execution
 
 ### Try It
@@ -88,6 +95,24 @@ sbcl --load load-spectral.lisp
 * (exit) ; to exit from lisp
 ```
 
+### More Syntax examples
+
+ΣpectraΛ > load-csv "examples/example.csv" ; load a list of numbers
+ΣpectraΛ > fft load "signal.dat" ; fourier transform
+ΣpectraΛ > ifft load "spectrum.dat" ; inverse fourier transform
+ΣpectraΛ > size [[1 2][3 4]] ; number of elements: 4
+ΣpectraΛ > shape [[1 2][3 4]] ; [2 2]
+ΣpectraΛ > complex 1 1 ; 1+i
+ΣpectraΛ > re complex 2 3 ; 2 - real part of 2+3i
+ΣpectraΛ > write-csv "spectrum.csv" fft load "signal.dat" ; write calculated spectrum to file
+ΣpectraΛ > * d 2
+ΣpectraΛ > (*2|%2) if det d matrix ; multiply by 2 if determinant is not zero
+ΣpectraΛ > ((%2)(%2)) if det d matrix ; same as above, alternative notation
+
+
+See [REFERENCE](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md) for
+more functions implemented.
+
 ## Roadmap
 
 ### Phase 1: Language Design (Current)
@@ -97,12 +122,12 @@ sbcl --load load-spectral.lisp
 - [X] Reduction operators (`/+`, `/*`, `/max`)
 - [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
 - [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
-- [ ] Control flow and conditionals
+- [X] Control flow and conditionals (just `if`)
 
 ### Phase 2: Scientific Computing
 
-- [ ] Linear algebra (LAPACK integration)
-- [ ] Signal processing (FFT, filtering)
+- [X] Linear algebra (LAPACK integration)
+- [-] Signal processing (FFT, filtering)
 - [ ] Statistics (mean, std, correlation)
 - [ ] File formats (HDF5, CSV, binary)
 - [ ] Plotting and visualization
@@ -161,7 +186,7 @@ Spectral draws inspiration from:
 
 ## Documentation
 
-See [DOCUMENTATION](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md).
+See [REFERENCE](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md).
 
 ## License
 

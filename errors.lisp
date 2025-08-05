@@ -1,4 +1,4 @@
-(defun handle-error (error &optional (message "An error occurred") (stream t) (file-name nil) (line-number nil) (column-number nil) (function-name nil))
+(defun handle-error (error &optional  (stream t) (file-name nil) (line-number nil) (column-number nil) (function-name nil))
   "Handle errors by printing a message and returning nil."
   (let ((error-message
 	  (cond
@@ -19,6 +19,6 @@
 	    (t ""))))
     (if (should-colorize-p)
 	(setf error-message (format stream (cl-ansi-text:red
-			     (format nil "~A ~A: ~A~%" error-message message error))))
-	(setf error-message (format stream "~A ~A: ~A~%" error-message message error))))
+			     (format nil "~A: ~A~%" error-message error))))
+	(setf error-message (format stream "~A: ~A~%" error-message error))))
   nil)

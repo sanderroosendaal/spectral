@@ -279,6 +279,23 @@
 	    do (setf (row-major-aref array idx) (nth idx flat)))
       array)))
 
+(defun list-to-group (nested-lists)
+  (print nested-lists)
+  nested-lists)
+
+(defun parse-group (tokens &optional (filename nil) (line-number nil))
+  "Parses the last well-formed parenthesized group in TOKENS from right to left.
+Returns (values tokens-before-group group).
+Group is a (potentially nested) list of token groups.
+Signals an error on invalied tokens or unmatched parentheses."
+  (handler-case
+      (let* ((rest (reverse (rest (reverse tokens))))
+	     (group (first (reverse tokens)))
+	     (first-op (first (reverse group)))
+	     (rest-group (reverse (rest (reverse group)))))
+	(concatenate 'list rest (list rest-group first-op)))	
+    (error (condition) (handle-error condition *error-stream* filename line-number))))
+
 (defun parse-array (tokens &optional (filename nil) (line-number nil))
   "Parses the last well-formed bracketed matrix in TOKENS from right to left.
 Returns (values tokens-before-matrix matrix).
@@ -377,6 +394,46 @@ Signals an error on invalid tokens or unmatched brackets."
 	(vector-push-extend #\Space result)))
     (coerce result 'string)))
 
+
+(ql:quickload :cl-ppcre)
+(ql:quickload :split-sequence)
+
+(defun parse-pipes (s)
+  (with-output-to-string (out)
+    (labels ((process (start end)
+	       ;; Transform "a|b|c" to "((a)(b)(c))"
+	       (let ((parts (split-sequence:split-sequence #\| (subseq s start end))))
+		 (format out "(~{(~a)~})" parts)))
+	     (walk (i)
+	       (loop while (< i (length s)) do
+		 (let ((ch (char s i)))
+		   (cond
+		     ((char= ch #\()
+		      (let ((start i)
+			    (depth 1)
+			    (j (1+ i)))
+			;; Search for matching closing paren
+			(loop while (and (< j (length s)) (> depth 0)) do
+			  (let ((c (char s j)))
+			    (cond
+			      ((char= c #\() (incf depth))
+			      ((char= c #\)) (decf depth))))
+			  (incf j))
+			(if (and (= depth 0)
+				 (find #\| s :start (1+ start) :end (1- j)))
+			    ;; Parenthesized expression with | found
+			    (progn
+			      (process (1+ start) (1- j))
+			      (setf i j))
+			    ;; Not an alternation or unbalanced
+			    (progn
+			      (write-string (subseq s start j) out)
+			      (setf i j)))))
+		     (t (write-char ch out)
+			(incf i)))))))
+	     (walk 0))))
+
+
 (defmacro preprocess-s (string &body expressions)
   "Execute a equence of expressions on a string, threading the
 result through each expression using 's' as the placeholder for the current value."
@@ -389,18 +446,38 @@ result through each expression using 's' as the placeholder for the current valu
 
 (defun preprocess (s)
   (preprocess-s s
-   (add-spaces-around-brackets s)
-   (add-spaces-after-single-char-tokens s)))
+    (parse-pipes s)
+    (add-spaces-around-brackets s)
+    (add-spaces-after-single-char-tokens s)))
 
-(defun tokenize (expr-string)
-  "Simple tokenizer"
-  (let ((tokens '())
-	(expr-string (preprocess expr-string)))
-    (with-input-from-string (s expr-string)
-      (loop for token = (read s nil nil)
-	    while token
-	    do (push token tokens)))
-    (reverse tokens)))
+(defun make-pipe-readtable ()
+  (let ((readtable (copy-readtable nil)))
+    (set-macro-character #\| (lambda (stream char)
+			       (declare (ignore char))
+			       '#\|))
+    readtable))
+
+(defun is-true (value)
+  (cond
+    ((numberp value)
+     (/= value 0))
+    ((arrayp value)
+     (> (length value) 0))
+    ((listp value)
+     (> (length value) 0))
+    (t t)))
+
+(defun handle-if (tokens &optional (filename nil) (line-number nil))
+  (handler-case
+      (let ((then-else (second (reverse tokens))))
+	(unless (and (listp then-else)
+		     (>= (length then-else) 2))
+	  (error "Could not find correct then-else clause for IF"))
+	(let* ((condition (pop-stack))
+	       (next-token (if (is-true condition) (first then-else) (second then-else)))
+	       (rest (subseq tokens 0 (- (length tokens) 2))))
+	  (concatenate 'list rest (list next-token))))
+    (error (condition) (handle-error condition *error-stream* filename line-number))))
 
 (defun handle-assignment (name expr-tokens &optional (debug nil))
   "Handle variable/function assignment"
@@ -443,13 +520,20 @@ result through each expression using 's' as the placeholder for the current valu
 	      (when debug
 		(format t "Tokens ~A, Token: ~A, Stack: ~A~%" tokens token *stack*))
 	      (cond
+		((null token)
+		 (setf tokens (reverse (rest (reverse tokens)))))
+		((eq token 'if)
+		 (setf tokens
+		       (handle-if tokens filename line-number)))
+		((listp token) ;; group, currently discarded
+		 (setf tokens (parse-group tokens)))
 		(( eq token '])
 		 (multiple-value-bind (rest array-literal) (parse-array tokens filename line-number)
 		   (push-stack array-literal)
 		   (setf tokens rest)))
-		(t
-		 (execute-token token filename line-number)
-		 (setf tokens (reverse (cdr (reverse tokens))))))))
+	      (t
+		(execute-token token filename line-number)
+		(setf tokens (reverse (cdr (reverse tokens))))))))
 	  (peek-stack)))))
 
 
