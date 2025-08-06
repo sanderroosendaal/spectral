@@ -261,6 +261,9 @@
 	(t (error "Unknown token: ~A" token)))
     (error (condition) (handle-error condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
 
+;; Need to make array processing smarter. It should handle for example
+;; [0 1 pi]  --> [0 1 3.14xxx]
+;; [range 9] --> [[0 1 2 3 4 5 6 7 8]] etc
 ;; temp before we move to arrays in parse-array
 (defun list-to-n-dimensional-array (nested-lists)
   "Convert a nested list into a fully rectangular N-dimensionl array."
@@ -278,10 +281,6 @@
       (loop for idx from 0 below (length flat)
 	    do (setf (row-major-aref array idx) (nth idx flat)))
       array)))
-
-(defun list-to-group (nested-lists)
-  (print nested-lists)
-  nested-lists)
 
 (defun parse-group (tokens &optional (filename nil) (line-number nil))
   "Parses the last well-formed parenthesized group in TOKENS from right to left.
