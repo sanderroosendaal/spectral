@@ -449,12 +449,16 @@ result through each expression using 's' as the placeholder for the current valu
     (add-spaces-around-brackets s)
     (add-spaces-after-single-char-tokens s)))
 
-(defun make-pipe-readtable ()
-  (let ((readtable (copy-readtable nil)))
-    (set-macro-character #\| (lambda (stream char)
-			       (declare (ignore char))
-			       '#\|))
-    readtable))
+(defun tokenize (expr-string)
+  "Simple tokenizer"
+  (let ((tokens '())
+	(expr-string (preprocess expr-string)))
+    (with-input-from-string (s expr-string)
+      (loop for token = (read s nil nil)
+	    while token
+	    do (push token tokens)))
+    (reverse tokens)))
+
 
 (defun is-true (value)
   (cond
