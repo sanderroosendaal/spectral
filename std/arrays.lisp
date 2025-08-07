@@ -181,6 +181,17 @@
   (let ((dims1 (array-dimensions array1))
 	(dims2 (array-dimensions array2)))
     (cond
+      ((= (length dims1) (length dims2))
+       (cond
+	 ((equal dims1 dims2)
+	  (let* ((size1 (array-total-size array1))
+		 (new-dims (push 2 dims1))
+		 (new-array (make-array new-dims)))
+	    (loop for i from 0 below size1 do
+	      (setf (row-major-aref new-array i) (row-major-aref array1 i))
+	      (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
+	    new-array))
+	 (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
       ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
        (cond
 	 ((= (array-dimension array1 0) (array-dimension array2 0))
