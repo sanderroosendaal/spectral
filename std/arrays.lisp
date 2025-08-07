@@ -12,14 +12,30 @@
 ;; reductions
 (defun rotate (array)
   "Rotate clockwise, i.e. last element becomes first element"
-  (if (null array)
-      nil
-      (let* ((len (length array))
-	     (last (aref array (1- len))))
-	(loop for i downfrom (1- len) above 0
-	      do (setf (aref array i) (aref array (1- i))))
-	(setf (aref array 0) last)
-	array)))
+  (cond
+    ((null array)
+     (error "Got empty input"))
+    ((numberp array) array)
+    ((stringp array) array)
+    ((= (length (array-dimensions array)) 1)
+     (let* ((len (length array))
+	    (last (aref array (1- len))))
+       (loop for i downfrom (1- len) above 0
+	     do (setf (aref array i) (aref array (1- i))))
+       (setf (aref array 0) last)
+       array))
+    ((arrayp array)
+     (let* ((size (array-total-size array))
+	    (dim0 (array-dimension array 1))
+	    (new-array (make-array (array-dimensions array))))
+       (loop for i from 0 below dim0 do
+	 (setf (row-major-aref new-array i)
+	       (row-major-aref array (+ i  (- size dim0)))))
+       (loop for i from dim0 below size do
+	 (setf (row-major-aref new-array i)
+	       (row-major-aref array (- i dim0))))
+       new-array))
+    (t array)))
 
 (defun transpose (matrix)
   "Transpose a matrix (list of lists)"
@@ -156,6 +172,45 @@
 			'vector))))
     (coerce dims 'vector)))
 
+;;; Joining, stacking, concatenating
+(defun array-stack (array1 array2)
+  "Join two arrays along a new axis
+   Dimension analysis will be done and the
+   most intuitive option returned, or an error
+   if dimensions don't match"
+  (let ((dims1 (array-dimensions array1))
+	(dims2 (array-dimensions array2)))
+    (cond
+      ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
+       (cond
+	 ((= (array-dimension array1 0) (array-dimension array2 0))
+	  (let* ((new-dims (concatenate 'list
+					(list (1+ (car dims2)))
+					(cdr dims2)))
+		 (new-array (make-array new-dims))
+		 (size (array-total-size new-array)))
+	    (loop for i from 0 below (array-total-size array1) do
+	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	    (loop for i from (array-total-size array1) below size do
+	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	    new-array))
+	 (t (error "Not implemented or not possible"))))
+      ((= (length dims2) (1- (length dims1)))
+       (cond
+	 ((= (array-dimension array1 0) (array-dimension array2 0))
+	  (let* ((new-dims (concatenate 'list
+					(list (1+ (car dims1)))
+					(cdr dims1)))
+		 (new-array (make-array new-dims))
+		 (size (array-total-size new-array)))
+	    (loop for i from 0 below (array-total-size array1) do
+	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	    (loop for i from (array-total-size array1) below size do
+	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	    new-array))
+	 (t (error "Not implemented or not possible"))))
+      (t (error "Not implemented or not possible")))))
+
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
 (register-op 'shape #'shape-fn 1)
@@ -171,6 +226,7 @@
 (register-op 'idx #'indexof 2)
 (register-op 'flatten #'flatten 1)
 (register-op 'rank #'rank-fn 1)
+(register-op 'stack #'array-stack 2)
 
 ;; Magicl stuff
 (handler-case (progn

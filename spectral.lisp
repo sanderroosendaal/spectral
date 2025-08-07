@@ -181,7 +181,8 @@
 (defun execute-token (token &optional (filename nil) (line-number nil) (debug nil))
   "Execute a single token"
   (when debug
-    (format t "Execute-token ~A, stack ~A%" token *stack*))
+    (format t "Execute-token ~A, stack ~A~%" token *stack*)
+    (format t "Number? ~A~%" (numberp token)))
   (handler-case 
       (cond
 	;; Numbers push themselves
