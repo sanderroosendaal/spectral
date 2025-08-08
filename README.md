@@ -100,9 +100,12 @@ sbcl --load load-spectral.lisp
 ΣpectraΛ > AddFive = + 5 ; Define function
 ΣpectraΛ > AddFive 10 ; Use function → 15
 ΣpectraΛ > run "examples/tests.spec" ; run a script
+ΣpectraΛ > run "examples/sombrero.spec" ; create a nice 3D chart of sin(x)/x
 ΣpectraΛ > exit ; to exit
 * (exit) ; to exit from lisp
 ```
+
+![Sombrero chart](https://github.com/sanderroosendaal/spectral/blob/develop/examples/sombrero.png)
 
 ### More Syntax examples
 

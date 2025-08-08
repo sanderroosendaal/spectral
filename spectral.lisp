@@ -38,7 +38,8 @@
 ;; Constants
 (defparameter *constants*
   `((pi . ,(coerce pi 'double-float))
-    (e . ,(exp 1.0d0))))
+    (e . ,(exp 1.0d0))
+    (epsilon . ,double-float-epsilon)))
 
 ;; Variables and functions storage
 (defparameter *variables* (make-hash-table))
@@ -260,7 +261,7 @@
 	   (loop for value in values do (push-stack value))))
 
 	(t (error "Unknown token: ~A" token)))
-    (error (condition) (handle-error condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
+    (error (condition) (handle-error *error-stream* condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
 
 ;; Need to make array processing smarter. It should handle for example
 ;; [0 1 pi]  --> [0 1 3.14xxx]

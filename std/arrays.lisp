@@ -5,6 +5,19 @@
     (dotimes (i n arr)
       (setf (aref arr i) i))))
 
+(defun meshgrid-y (m n)
+  "Generates a mesh in X direction of dimensions MxN"
+  (let ((array (make-array (list m n) :element-type 'number)))
+    (dotimes (i (* m n) array)
+      (setf (row-major-aref array i) (mod i n)))
+    array))
+
+(defun meshgrid-x (m n)
+  "Generates a mesh in Y direction of dimensions MxN"
+  (let ((array (make-array (list m n) :element-type 'number)))
+    (dotimes (i (* m n) array)
+      (setf (row-major-aref array i) (floor (/ i n))))
+    array))
 
 ;; table operations
 ;; rotate, transpose, reshape, mean, std, median
@@ -147,6 +160,29 @@
 	(push r coords)
 	(setf index q)))))
 
+
+(defun reverse-array-first-axis (array)
+  (cond
+    ((stringp array) array)
+    ((numberp array) array)
+    ((arrayp array)
+     (let* ((dimensions (array-dimensions array))
+	    (first-dim (first dimensions))
+	    (element-type (array-element-type array))
+	    (reversed-array (make-array dimensions :element-type element-type)))
+       (dotimes (i first-dim)
+	 (let ((source-index (- (1- first-dim) i)))
+	   (dotimes (j (reduce #'* (rest dimensions)))
+	     (let ((indices (loop for dim in (rest dimensions)
+				  for index = j then (floor index dim)
+				  collect (mod index dim))))
+	       (setf (apply #'aref reversed-array i indices)
+		     (apply #'aref array source-index indices))))))
+       reversed-array))
+    (t (error "Cannot reverse ~A" array))))
+
+
+
 (defun where (array)
   "Return the 1D array of index vectors of non-zero elements in an array."
   (let* ((dims (array-dimensions array))
@@ -205,6 +241,17 @@
 	    (loop for i from (array-total-size array1) below size do
 	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
 	    new-array))
+	 ((= (array-dimension array1 0) (array-dimension array2 1))
+	  (let* ((new-dims (concatenate 'list
+					(list (1+ (car dims2)))
+					(cdr dims2)))
+		 (new-array (make-array new-dims))
+		 (size (array-total-size new-array)))
+	    (loop for i from 0 below (array-total-size array1) do
+	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	    (loop for i from (array-total-size array1) below size do
+	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	    new-array))
 	 (t (error "Not implemented or not possible"))))
       ((= (length dims2) (1- (length dims1)))
        (cond
@@ -226,6 +273,8 @@
 (register-op 'length #'length 1)
 (register-op 'shape #'shape-fn 1)
 (register-op 'range #'range-fn 1)
+(register-op 'mesh-x #'meshgrid-x 2)
+(register-op 'mesh-y #'meshgrid-y 2)
 (register-op 'rotate #'rotate 1)
 (register-op 'transpose #'transpose 1)
 (register-op 'reshape #'reshape 2)
@@ -271,8 +320,11 @@
   "Creates an array of dimensions DIMS filled with ones"
   (aops:ones (coerce dims 'list)))
 
+
+
 (register-op 'nrow #'nrow 1)
 (register-op 'ncol #'ncol 1)
 (register-op 'sub #'sub 2)
 (register-op 'zeros #'zeros 1)
 (register-op 'ones #'ones 1)
+(register-op 'reverse #'reverse-array-first-axis 1)

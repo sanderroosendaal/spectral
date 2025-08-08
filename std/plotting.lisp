@@ -44,6 +44,28 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
   (vgplot:format-plot nil text)
   (vgplot:replot))
 
+(defun 3D-plot (array)
+  "3D plot. Array should have X, Y, and Z rows"
+  (with-plot-rows-2d array #'vgplot:3d-plot)
+  array)
+
+(defun xyz-array-to-xyz (array)
+  "Takes a (3xMxN) array and returns 3 (MxN) arrays"
+  (unless (= (length (array-dimensions array)) 3)
+    (error "Must be 3xMxN array"))
+  (let* ((dimensions (array-dimensions array))
+	 (xx (make-array (cdr dimensions)))
+	 (yy (make-array (cdr dimensions)))
+	 (zz (make-array (cdr dimensions)))
+	 (m (first (cdr dimensions)))
+	 (n (second (cdr dimensions))))
+    (loop for i from 0 below m do
+      (loop for j from 0 below n do
+	(setf (aref xx i j) (aref array 0 i j))
+	(setf (aref yy i j) (aref array 1 i j))
+	(setf (aref zz i j) (aref array 2 i j))))
+    (values xx yy zz)))
+
 (defun surf-plot (y)
   "Plot 3-D surface mesh. Y could be a 2D table (just Z),
   or a 3D (X, Y, Z) array."
@@ -52,11 +74,13 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
     ((and (arrayp y) (= 2 (length (array-dimensions y))))
      (vgplot:surf y))
     ((and (arrayp y) (= 3 (length (array-dimensions y))))
-     (error "Not implemented yet"))
-    (t (error "Invalid input for surfac plot")))
+     (multiple-value-bind (xx yy zz) (xyz-array-to-xyz y)
+       (vgplot:surf xx yy zz)))
+    (t (error "Invalid input for surface plot")))
   y)
 
 
 (register-op 'plot #'plot-fn 1)
 (register-op 'format-plot #'format-plot 1)
 (register-op 'surf #'surf-plot 1)
+(register-op '3d-plot #'3D-plot 1)
