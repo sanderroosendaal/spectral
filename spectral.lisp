@@ -261,7 +261,7 @@
 	   (loop for value in values do (push-stack value))))
 
 	(t (error "Unknown token: ~A" token)))
-    (error (condition) (handle-error *error-stream* condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
+    (error (condition) (handle-error condition *error-stream* (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
 
 ;; Need to make array processing smarter. It should handle for example
 ;; [0 1 pi]  --> [0 1 3.14xxx]
@@ -375,6 +375,21 @@ Signals an error on invalid tokens or unmatched brackets."
 (defun is-digit-p (c)
   (char<= #\0 c #\9))
 
+(defun remove-comments (string)
+  (let ((in-quote nil)
+	(result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+    (dotimes (i (length string))
+      (let ((char (char string i)))
+	(cond
+	  ((char= char #\")
+	   (setf in-quote (not in-quote))
+	   (vector-push-extend char result))
+	  ((and (not in-quote) (char= char #\;))
+	   (return-from remove-comments (coerce result 'string)))
+	  (t
+	   (vector-push-extend char result)))))
+    (coerce result 'string)))
+
 
 (defun add-spaces-around-brackets (s)
     (with-output-to-string (out)
@@ -447,6 +462,7 @@ result through each expression using 's' as the placeholder for the current valu
 
 (defun preprocess (s)
   (preprocess-s s
+    (remove-comments s)
     (parse-pipes s)
     (add-spaces-around-brackets s)
     (add-spaces-after-single-char-tokens s)))

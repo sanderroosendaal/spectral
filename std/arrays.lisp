@@ -214,60 +214,65 @@
    Dimension analysis will be done and the
    most intuitive option returned, or an error
    if dimensions don't match"
-  (let ((dims1 (array-dimensions array1))
-	(dims2 (array-dimensions array2)))
-    (cond
-      ((= (length dims1) (length dims2))
+  (cond
+    ((and (numberp array1) (numberp array2))
+     (make-array 2 :initial-contents (list array1 array2)))
+    ((and (arrayp array1) (arrayp array2))
+     (let ((dims1 (array-dimensions array1))
+	   (dims2 (array-dimensions array2)))
        (cond
-	 ((equal dims1 dims2)
-	  (let* ((size1 (array-total-size array1))
-		 (new-dims (push 2 dims1))
-		 (new-array (make-array new-dims)))
-	    (loop for i from 0 below size1 do
-	      (setf (row-major-aref new-array i) (row-major-aref array1 i))
-	      (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
-	    new-array))
-	 (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
-      ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
-       (cond
-	 ((= (array-dimension array1 0) (array-dimension array2 0))
-	  (let* ((new-dims (concatenate 'list
-					(list (1+ (car dims2)))
-					(cdr dims2)))
-		 (new-array (make-array new-dims))
-		 (size (array-total-size new-array)))
-	    (loop for i from 0 below (array-total-size array1) do
-	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	    (loop for i from (array-total-size array1) below size do
-	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	    new-array))
-	 ((= (array-dimension array1 0) (array-dimension array2 1))
-	  (let* ((new-dims (concatenate 'list
-					(list (1+ (car dims2)))
-					(cdr dims2)))
-		 (new-array (make-array new-dims))
-		 (size (array-total-size new-array)))
-	    (loop for i from 0 below (array-total-size array1) do
-	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	    (loop for i from (array-total-size array1) below size do
-	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	    new-array))
-	 (t (error "Not implemented or not possible"))))
-      ((= (length dims2) (1- (length dims1)))
-       (cond
-	 ((= (array-dimension array1 0) (array-dimension array2 0))
-	  (let* ((new-dims (concatenate 'list
-					(list (1+ (car dims1)))
-					(cdr dims1)))
-		 (new-array (make-array new-dims))
-		 (size (array-total-size new-array)))
-	    (loop for i from 0 below (array-total-size array1) do
-	      (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	    (loop for i from (array-total-size array1) below size do
-	      (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	    new-array))
-	 (t (error "Not implemented or not possible"))))
-      (t (error "Not implemented or not possible")))))
+	 ((= (length dims1) (length dims2))
+	  (cond
+	    ((equal dims1 dims2)
+	     (let* ((size1 (array-total-size array1))
+		    (new-dims (push 2 dims1))
+		    (new-array (make-array new-dims)))
+	       (loop for i from 0 below size1 do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i))
+		 (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
+	       new-array))
+	    (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
+	 ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
+	  (cond
+	    ((= (array-dimension array1 0) (array-dimension array2 0))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims2)))
+					   (cdr dims2)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    ((= (array-dimension array1 0) (array-dimension array2 1))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims2)))
+					   (cdr dims2)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    (t (error "Not implemented or not possible"))))
+	 ((= (length dims2) (1- (length dims1)))
+	  (cond
+	    ((= (array-dimension array1 0) (array-dimension array2 0))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims1)))
+					   (cdr dims1)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    (t (error "Not implemented or not possible"))))
+	 (t (error "Not implemented or not possible")))))
+     (t (error "Stack works with 2 arrays only"))))
 
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
