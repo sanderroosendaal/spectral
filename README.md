@@ -141,7 +141,7 @@ more functions implemented.
 
 - [X] Linear algebra (LAPACK integration)
 - [ ] Signal processing (FFT, filtering)
-- [ ] Statistics (mean, std, correlation)
+- [X] Statistics (mean, std, correlation)
 - [ ] File formats (HDF5, CSV, binary)
 - [X] Plotting and visualization
 
