@@ -290,11 +290,13 @@
 	(t (calculate-mean-and-std (flatten data)))))
 
 (defun mean-fn (data)
+  "Mean"
   (multiple-value-bind (mean std) (calculate-mean-and-std data)
     (declare (ignore std))
     mean))
 
 (defun std-fn (data)
+  "Standard Deviation"
   (multiple-value-bind (mean std) (calculate-mean-and-std data)
     (declare (ignore mean))
     std))
@@ -314,6 +316,7 @@
     (/ sum-xy (sqrt (* sum-x2 sum-y2)))))
 
 (defun array-of-correlation-coefficients (data)
+  "Assums a 2D array with X values in first row, Y values in other rows. Returns 1D array of correlation coefficients."
   (let* ((num-rows (array-dimension data 0))
 	 (num-cols (array-dimension data 1))
 	 (x (make-array num-cols))
