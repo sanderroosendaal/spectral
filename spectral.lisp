@@ -368,7 +368,7 @@ Signals an error on invalid tokens or unmatched brackets."
     (error (condition) (handle-error condition *error-stream* filename line-number))))
 
 (defparameter *single-character-tokens*
-  '(#\+ #\- #\% #\* #\< #\> #\!))
+  '(#\+ #\% #\* #\< #\> #\!))
 
 (defparameter *square-brackets*
   '(#\] #\[))
