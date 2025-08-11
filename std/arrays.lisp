@@ -296,7 +296,7 @@
 ;; Magicl stuff
 (handler-case (progn
 		(ql:quickload :magicl)
-		(load "linear_algebra.lisp"))
+		(load "std/linear_algebra.lisp"))
   (error ()
     (format t "Linear Algebra Not Loaded~%")))
   
