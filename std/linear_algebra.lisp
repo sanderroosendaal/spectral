@@ -89,6 +89,20 @@
        (list-to-vector eigenvalues)
        (magicl-matrix-to-array eigenvectors)))))
 
+(defun hstack (a b)
+  "BLAS/LAPACK Required: Concatenate matrices A, B horizontally"
+  (let* ((magicl-a (array-to-magicl-fast a))
+	 (magicl-b (array-to-magicl-fast b))
+	 (c (magicl:hstack (list magicl-a magicl-b))))
+    (magicl-matrix-to-array c)))
+
+(defun vstack (a b)
+  "BLAS/LAPACK Required: Concatenate matrices A, B vertically"
+  (let* ((magicl-a (array-to-magicl-fast a))
+	 (magicl-b (array-to-magicl-fast b))
+	 (c (magicl:vstack (list magicl-a magicl-b))))
+    (magicl-matrix-to-array c)))
+
 (register-op 'mmult #'matrix-multiply 2)
 (register-op '@ #'matrix-multiply 2)
 (register-op 'det #'det-fn 1)

@@ -33,15 +33,23 @@ Reading right-to-left, data flows through transformations like a signal processi
 * 2 pi frequency # Convert to angular frequency
 sin + pi range 10 # Sine wave with phase shift
 
-# Variables and functions 
+;; Variables and functions 
 threshold = * 3 mean data
 Normalize = % /max dup # Function: divide by maximum
 clean = Normalize raw # Apply function
 
-# File I/O and processing
+;; File I/O and processing
 data = load "experiment.dat"
 spectrum = log10 magnitude fft bandpass 10Hz 1kHz data
 peaks = find-peaks 3.0 spectrum
+
+;; Plotting
+surf reshape 9 9 range 81
+format-plot "set xlabel 'X'"
+format-plot "set ylabel 'Y'"
+format-plot "set ylabel 'Z'"
+
+plot [1 4 6 7 6 4]
 ```
 
 ## Stack-Based Execution
@@ -76,6 +84,7 @@ This repository contains a Lisp prototype (<1000 lines) implementing:
      `det`, `trace`, `triu` and `tril`, `dagger`, `conjugate-transpose`,
      `transpose`, `inv`, `eig`)
 - ✅ Script execution
+- ✅ Simple plotting (depending on gnuplot)
 
 ### Try It
 
@@ -91,9 +100,12 @@ sbcl --load load-spectral.lisp
 ΣpectraΛ > AddFive = + 5 ; Define function
 ΣpectraΛ > AddFive 10 ; Use function → 15
 ΣpectraΛ > run "examples/tests.spec" ; run a script
+ΣpectraΛ > run "examples/sombrero.spec" ; create a nice 3D chart of sin(x)/x
 ΣpectraΛ > exit ; to exit
 * (exit) ; to exit from lisp
 ```
+
+![Sombrero chart](https://github.com/sanderroosendaal/spectral/blob/develop/examples/sombrero.png)
 
 ### More Syntax examples
 
@@ -129,9 +141,9 @@ more functions implemented.
 
 - [X] Linear algebra (LAPACK integration)
 - [ ] Signal processing (FFT, filtering)
-- [ ] Statistics (mean, std, correlation)
+- [X] Statistics (mean, std, correlation)
 - [ ] File formats (HDF5, CSV, binary)
-- [ ] Plotting and visualization
+- [X] Plotting and visualization
 
 ### Phase 3: Performance
 

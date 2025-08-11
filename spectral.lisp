@@ -38,7 +38,8 @@
 ;; Constants
 (defparameter *constants*
   `((pi . ,(coerce pi 'double-float))
-    (e . ,(exp 1.0d0))))
+    (e . ,(exp 1.0d0))
+    (epsilon . ,double-float-epsilon)))
 
 ;; Variables and functions storage
 (defparameter *variables* (make-hash-table))
@@ -178,89 +179,94 @@
 
 (load "errors.lisp")
 
-(defun execute-token (token &optional (filename nil) (line-number nil) (debug nil))
+(defun execute-token (token &optional (debug nil))
   "Execute a single token"
   (when debug
-    (format t "Execute-token ~A, stack ~A%" token *stack*))
-  (handler-case 
-      (cond
-	;; Numbers push themselves
-	((numberp token)
-	 (push-stack token))
-	
-	;; Arrays push themselves
-	((and (listp token) (eq (first token) 'array))
-	 (push-stack (rest token)))
-	
-	;; Strings push themselves
-	((stringp token)
-	 (push-stack token))
-	
-	;; Constants
-	((assoc token *constants*)
-	 (push-stack (cdr (assoc token *constants*))))
-	
-	;; Variables
-	((gethash token *variables*)
-	 (push-stack (gethash token *variables*)))
-	
-	;; Functions - check if it's a user-defined function
-	((gethash token *functions*)
-	 (funcall (gethash token *functions*)))
-	
-	;; File operations (special case - take filename from stack)
-	((eq token 'load)
-	 (let ((filename (pop-stack)))
-	   (push-stack (load-numbers filename))))
-	
-	;; Reduction
-	((char= (char (symbol-name token) 0) #\/)
-	 (let ((op (strip-token token #\/)))
-	   (if (gethash op *ops*)
-	       (let* ((a (pop-stack))
-		      (op-fn (car (gethash op *ops*)))
-		      (value (reduce-array op-fn a)))
-		 (push-stack value))
-	       (error "Unknown operation: ~A" op))))
-	
-	;; Scan - using & for now, as \ is escaping
-	((char= (char (symbol-name token) 0) #\&)
-	 (let ((op (strip-token token #\&)))
-	   (if (gethash op *ops*)
-	       (let* ((a (pop-stack))
-		      (op-fn (car (gethash op *ops*)))
-		      (value (scan-array op-fn a)))
-		 (push-stack value))
-	       (error "Unknown operation: ~A" op))))
-	
-	;; Stack operations
-	((gethash token *stack-ops*)
-	 (funcall (car (gethash token *stack-ops*))))
-	
-	;; Nullary operations
-	((= (cdr (gethash token *ops*)) 0)
-	 (let* ((op-fn (car (gethash token *ops*)))
-		(values (multiple-value-list (funcall op-fn))))
-	   (loop for value in values do (push-stack value))))
-	
-	;; Unary operations
-	((= (cdr (gethash token *ops*)) 1)
-	 (let* ((a (pop-stack))
-		(op-fn (car (gethash token *ops*)))
-		(values (multiple-value-list (funcall op-fn a))))
-	   (loop for value in values do (push-stack value))))
-	
-	;; Binary operations
-	((= (cdr (gethash token *ops*)) 2)
-	 (let* ((a (pop-stack))
-		(b (pop-stack))
-		(op-fn (car (gethash token *ops*)))
-		(values (multiple-value-list (funcall op-fn a b))))
-	   (loop for value in values do (push-stack value))))
+    (format t "Execute-token ~A, stack ~A~%" token *stack*)
+    (format t "Number? ~A~%" (numberp token)))
+  (cond
+    ;; Numbers push themselves
+    ((numberp token)
+     (push-stack token))
+    
+    ;; Arrays push themselves
+    ((and (listp token) (eq (first token) 'array))
+     (push-stack (rest token)))
+    
+    ;; Strings push themselves
+    ((stringp token)
+     (push-stack token))
+    
+    ;; Constants
+    ((assoc token *constants*)
+     (push-stack (cdr (assoc token *constants*))))
+    
+    ;; Variables
+    ((gethash token *variables*)
+     (push-stack (gethash token *variables*)))
+    
+    ;; Functions - check if it's a user-defined function
+    ((gethash token *functions*)
+     (funcall (gethash token *functions*)))
+    
+    ;; File operations (special case - take filename from stack)
+    ((eq token 'load)
+     (let ((filename (pop-stack)))
+       (push-stack (load-numbers filename))))
+    
+    ;; Reduction
+    ((char= (char (symbol-name token) 0) #\/)
+     (let ((op (strip-token token #\/)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (reduce-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+    
+    ;; Scan - using & for now, as \ is escaping
+    ((char= (char (symbol-name token) 0) #\&)
+     (let ((op (strip-token token #\&)))
+       (if (gethash op *ops*)
+	   (let* ((a (pop-stack))
+		  (op-fn (car (gethash op *ops*)))
+		  (value (scan-array op-fn a)))
+	     (push-stack value))
+	   (error "Unknown operation: ~A" op))))
+    
+    ;; Stack operations
+    ((gethash token *stack-ops*)
+     (funcall (car (gethash token *stack-ops*))))
+    
+    ;; Nullary operations
+    ((= (cdr (gethash token *ops*)) 0)
+     (let* ((op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn))))
+       (loop for value in values do (push-stack value))
+       (first *stack*)))
+    
+    ;; Unary operations
+    ((= (cdr (gethash token *ops*)) 1)
+     (let* ((a (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a))))
+       (loop for value in values do (push-stack value))
+       (first *stack*)))
+    
+    ;; Binary operations
+    ((= (cdr (gethash token *ops*)) 2)
+     (let* ((a (pop-stack))
+	    (b (pop-stack))
+	    (op-fn (car (gethash token *ops*)))
+	    (values (multiple-value-list (funcall op-fn a b))))
+       (loop for value in values do (push-stack value))
+       (first *stack*)))
+    
+    (t (error "Unknown token: ~A" token))))
 
-	(t (error "Unknown token: ~A" token)))
-    (error (condition) (handle-error condition (format nil "Error executing token ~A" token) *error-stream* filename line-number))))
-
+;; Need to make array processing smarter. It should handle for example
+;; [0 1 pi]  --> [0 1 3.14xxx]
+;; [range 9] --> [[0 1 2 3 4 5 6 7 8]] etc
 ;; temp before we move to arrays in parse-array
 (defun list-to-n-dimensional-array (nested-lists)
   "Convert a nested list into a fully rectangular N-dimensionl array."
@@ -278,10 +284,6 @@
       (loop for idx from 0 below (length flat)
 	    do (setf (row-major-aref array idx) (nth idx flat)))
       array)))
-
-(defun list-to-group (nested-lists)
-  (print nested-lists)
-  nested-lists)
 
 (defun parse-group (tokens &optional (filename nil) (line-number nil))
   "Parses the last well-formed parenthesized group in TOKENS from right to left.
@@ -374,6 +376,21 @@ Signals an error on invalid tokens or unmatched brackets."
 (defun is-digit-p (c)
   (char<= #\0 c #\9))
 
+(defun remove-comments (string)
+  (let ((in-quote nil)
+	(result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+    (dotimes (i (length string))
+      (let ((char (char string i)))
+	(cond
+	  ((char= char #\")
+	   (setf in-quote (not in-quote))
+	   (vector-push-extend char result))
+	  ((and (not in-quote) (char= char #\;))
+	   (return-from remove-comments (coerce result 'string)))
+	  (t
+	   (vector-push-extend char result)))))
+    (coerce result 'string)))
+
 
 (defun add-spaces-around-brackets (s)
     (with-output-to-string (out)
@@ -446,16 +463,21 @@ result through each expression using 's' as the placeholder for the current valu
 
 (defun preprocess (s)
   (preprocess-s s
+    (remove-comments s)
     (parse-pipes s)
     (add-spaces-around-brackets s)
     (add-spaces-after-single-char-tokens s)))
 
-(defun make-pipe-readtable ()
-  (let ((readtable (copy-readtable nil)))
-    (set-macro-character #\| (lambda (stream char)
-			       (declare (ignore char))
-			       '#\|))
-    readtable))
+(defun tokenize (expr-string)
+  "Simple tokenizer"
+  (let ((tokens '())
+	(expr-string (preprocess expr-string)))
+    (with-input-from-string (s expr-string)
+      (loop for token = (read s nil nil)
+	    while token
+	    do (push token tokens)))
+    (reverse tokens)))
+
 
 (defun is-true (value)
   (cond
@@ -532,7 +554,7 @@ result through each expression using 's' as the placeholder for the current valu
 		   (push-stack array-literal)
 		   (setf tokens rest)))
 	      (t
-		(execute-token token filename line-number)
+		(execute-token token debug)
 		(setf tokens (reverse (cdr (reverse tokens))))))))
 	  (peek-stack)))))
 
@@ -557,3 +579,4 @@ result through each expression using 's' as the placeholder for the current valu
 (load "std/io.lisp")
 (load "std/filters.lisp")
 (load "std/signal_processing.lisp")
+(load "std/plotting.lisp")

@@ -5,6 +5,19 @@
     (dotimes (i n arr)
       (setf (aref arr i) i))))
 
+(defun meshgrid-y (m n)
+  "Generates a mesh in X direction of dimensions MxN"
+  (let ((array (make-array (list m n) :element-type 'number)))
+    (dotimes (i (* m n) array)
+      (setf (row-major-aref array i) (mod i n)))
+    array))
+
+(defun meshgrid-x (m n)
+  "Generates a mesh in Y direction of dimensions MxN"
+  (let ((array (make-array (list m n) :element-type 'number)))
+    (dotimes (i (* m n) array)
+      (setf (row-major-aref array i) (floor (/ i n))))
+    array))
 
 ;; table operations
 ;; rotate, transpose, reshape, mean, std, median
@@ -12,14 +25,30 @@
 ;; reductions
 (defun rotate (array)
   "Rotate clockwise, i.e. last element becomes first element"
-  (if (null array)
-      nil
-      (let* ((len (length array))
-	     (last (aref array (1- len))))
-	(loop for i downfrom (1- len) above 0
-	      do (setf (aref array i) (aref array (1- i))))
-	(setf (aref array 0) last)
-	array)))
+  (cond
+    ((null array)
+     (error "Got empty input"))
+    ((numberp array) array)
+    ((stringp array) array)
+    ((= (length (array-dimensions array)) 1)
+     (let* ((len (length array))
+	    (last (aref array (1- len))))
+       (loop for i downfrom (1- len) above 0
+	     do (setf (aref array i) (aref array (1- i))))
+       (setf (aref array 0) last)
+       array))
+    ((arrayp array)
+     (let* ((size (array-total-size array))
+	    (dim0 (array-dimension array 1))
+	    (new-array (make-array (array-dimensions array))))
+       (loop for i from 0 below dim0 do
+	 (setf (row-major-aref new-array i)
+	       (row-major-aref array (+ i  (- size dim0)))))
+       (loop for i from dim0 below size do
+	 (setf (row-major-aref new-array i)
+	       (row-major-aref array (- i dim0))))
+       new-array))
+    (t array)))
 
 (defun transpose (matrix)
   "Transpose a matrix (list of lists)"
@@ -131,6 +160,29 @@
 	(push r coords)
 	(setf index q)))))
 
+
+(defun reverse-array-first-axis (array)
+  (cond
+    ((stringp array) array)
+    ((numberp array) array)
+    ((arrayp array)
+     (let* ((dimensions (array-dimensions array))
+	    (first-dim (first dimensions))
+	    (element-type (array-element-type array))
+	    (reversed-array (make-array dimensions :element-type element-type)))
+       (dotimes (i first-dim)
+	 (let ((source-index (- (1- first-dim) i)))
+	   (dotimes (j (reduce #'* (rest dimensions)))
+	     (let ((indices (loop for dim in (rest dimensions)
+				  for index = j then (floor index dim)
+				  collect (mod index dim))))
+	       (setf (apply #'aref reversed-array i indices)
+		     (apply #'aref array source-index indices))))))
+       reversed-array))
+    (t (error "Cannot reverse ~A" array))))
+
+
+
 (defun where (array)
   "Return the 1D array of index vectors of non-zero elements in an array."
   (let* ((dims (array-dimensions array))
@@ -156,10 +208,131 @@
 			'vector))))
     (coerce dims 'vector)))
 
+;;; Joining, stacking, concatenating
+(defun array-stack (array1 array2)
+  "Join two arrays along a new axis
+   Dimension analysis will be done and the
+   most intuitive option returned, or an error
+   if dimensions don't match"
+  (cond
+    ((and (numberp array1) (numberp array2))
+     (make-array 2 :initial-contents (list array1 array2)))
+    ((and (arrayp array1) (arrayp array2))
+     (let ((dims1 (array-dimensions array1))
+	   (dims2 (array-dimensions array2)))
+       (cond
+	 ((= (length dims1) (length dims2))
+	  (cond
+	    ((equal dims1 dims2)
+	     (let* ((size1 (array-total-size array1))
+		    (new-dims (push 2 dims1))
+		    (new-array (make-array new-dims)))
+	       (loop for i from 0 below size1 do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i))
+		 (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
+	       new-array))
+	    (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
+	 ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
+	  (cond
+	    ((= (array-dimension array1 0) (array-dimension array2 0))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims2)))
+					   (cdr dims2)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    ((= (array-dimension array1 0) (array-dimension array2 1))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims2)))
+					   (cdr dims2)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    (t (error "Not implemented or not possible"))))
+	 ((= (length dims2) (1- (length dims1)))
+	  (cond
+	    ((= (array-dimension array1 0) (array-dimension array2 0))
+	     (let* ((new-dims (concatenate 'list
+					   (list (1+ (car dims1)))
+					   (cdr dims1)))
+		    (new-array (make-array new-dims))
+		    (size (array-total-size new-array)))
+	       (loop for i from 0 below (array-total-size array1) do
+		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
+	       (loop for i from (array-total-size array1) below size do
+		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	       new-array))
+	    (t (error "Not implemented or not possible"))))
+	 (t (error "Not implemented or not possible")))))
+    (t (error "Stack works with 2 arrays only"))))
+
+(defun calculate-mean-and-std (data)
+  (cond ((= (length (array-dimensions data)) 1)
+	 (let ((n 0)
+	       (sum 0.0)
+	       (sum-of-squares 0.0))
+	   (loop for i from 0 below (length data) do
+	     (let ((x (aref data i)))
+	       (incf n)
+	       (incf sum x)
+	       (incf sum-of-squares (* x x))))
+	   (let* ((mean (/ sum n))
+		  (variance (/ (- sum-of-squares (* sum mean)) n)))
+	     (values mean (sqrt variance)))))
+	(t (calculate-mean-and-std (flatten data)))))
+
+(defun mean-fn (data)
+  (multiple-value-bind (mean std) (calculate-mean-and-std data)
+    (declare (ignore std))
+    mean))
+
+(defun std-fn (data)
+  (multiple-value-bind (mean std) (calculate-mean-and-std data)
+    (declare (ignore mean))
+    std))
+
+(defun correlation-coefficient (x y)
+  (let ((mean-x (mean-fn x))
+	(mean-y (mean-fn y))
+	(sum-xy 0.0)
+	(sum-x2 0.0)
+	(sum-y2 0.0))
+    (dotimes (i (length x))
+	    (let ((xi (- (aref x i) mean-x))
+		  (yi (- (aref y i) mean-y)))
+	      (incf sum-xy (* xi yi))
+	      (incf sum-x2 (* xi xi))
+	      (incf sum-y2 (* yi yi))))
+    (/ sum-xy (sqrt (* sum-x2 sum-y2)))))
+
+(defun array-of-correlation-coefficients (data)
+  (let* ((num-rows (array-dimension data 0))
+	 (num-cols (array-dimension data 1))
+	 (x (make-array num-cols))
+	 (coefficients (make-array (- num-rows 1))))
+    (dotimes (j num-cols)
+      (setf (aref x j) (aref data 0 j)))
+    (dotimes (i (- num-rows 1))
+      (let ((y (make-array num-cols)))
+	(dotimes (j num-cols)
+	  (setf (aref y j) (aref data (+ i 1) j)))
+	(setf (aref coefficients i) (correlation-coefficient x y))))
+    coefficients))
+
 (register-op 'size #'count-elements 1)
 (register-op 'length #'length 1)
 (register-op 'shape #'shape-fn 1)
 (register-op 'range #'range-fn 1)
+(register-op 'mesh-x #'meshgrid-x 2)
+(register-op 'mesh-y #'meshgrid-y 2)
 (register-op 'rotate #'rotate 1)
 (register-op 'transpose #'transpose 1)
 (register-op 'reshape #'reshape 2)
@@ -171,11 +344,16 @@
 (register-op 'idx #'indexof 2)
 (register-op 'flatten #'flatten 1)
 (register-op 'rank #'rank-fn 1)
+(register-op 'stack #'array-stack 2)
+(register-op 'mean-std #'calculate-mean-and-std 1)
+(register-op 'mean #'mean-fn 1)
+(register-op 'std #'std-fn 1)
+(register-op 'corrcoeff #'array-of-correlation-coefficients 1)
 
 ;; Magicl stuff
 (handler-case (progn
 		(ql:quickload :magicl)
-		(load "linear_algebra.lisp"))
+		(load "std/linear_algebra.lisp"))
   (error ()
     (format t "Linear Algebra Not Loaded~%")))
   
@@ -204,8 +382,11 @@
   "Creates an array of dimensions DIMS filled with ones"
   (aops:ones (coerce dims 'list)))
 
+
+
 (register-op 'nrow #'nrow 1)
 (register-op 'ncol #'ncol 1)
 (register-op 'sub #'sub 2)
 (register-op 'zeros #'zeros 1)
 (register-op 'ones #'ones 1)
+(register-op 'reverse #'reverse-array-first-axis 1)
