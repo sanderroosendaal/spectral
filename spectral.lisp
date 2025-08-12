@@ -179,6 +179,89 @@
 
 (load "errors.lisp")
 
+(defun execute-element (element)
+  "Execute AST element"
+  (let ((typ (first element))
+	(val (cdr element)))
+    (cond
+      ;; Numbers push themselves
+      ((equal typ :number)
+       (push-stack (car val)))
+
+      ;; Strings push themselves
+      ((equal typ :string)
+       (push-stack (car val)))
+
+      ;; Constants
+      ((equal typ :constant)
+       (push-stack (cdr (assoc (car val) *constants*))))
+
+      ;;Variables
+      ((equal typ :variable)
+       (push-stack (gethash (car val) *variables*)))
+
+      ;; Conditional
+      ((equal typ :if-then-else)
+       (let* ((condition (pop-stack)))
+	 (if (is-true condition)
+	     (execute-element (first val))
+	     (execute-element (second val)))))
+
+      ;; Groups
+      ((equal typ :group)
+       (loop for item in (reverse val) do (execute-element item)))
+      
+      ;; Arrays
+      ((equal typ :array)
+       (let ((lists
+	       (loop for item in (reverse val) collect (execute-element val))))
+	 (list-to-n-dimensional-array lists)))
+
+      ;; User defined functions
+      ((equal typ :function)
+       (format t "Doing a user defined function")
+       (funcall (gethash (cdr val) *functions*)))
+
+      ;; Reduction
+
+      ;; Scan
+
+      ;; Stack operation
+      ((equal typ :stack)
+       (funcall (car (gethash val *stack-ops*))))
+
+      ;; STD function operations
+      ((equal typ :op)
+       (let ((op-fn (car val))
+	     (arity (cadr val)))
+	 (cond
+	   ;; Nullary operations
+	   ((= arity 0)
+	    (let ((values (multiple-value-list (funcall op-fn))))
+	      (loop for value in values do (push-stack value))
+	      (first *stack*)))
+	   
+
+           ;; Unary operations
+	   ((= arity 1)
+	    (let* ((a (pop-stack))
+		   (values (multiple-value-list (funcall op-fn a))))
+	      (loop for value in values do (push-stack value)))
+	    (first *stack*))
+    
+	   ;; Binary operations
+	   ((= arity 2)
+	    (let* ((a (pop-stack))
+		   (b (pop-stack))
+		   (values (multiple-value-list (funcall op-fn a b))))
+	      (loop for value in values do (push-stack value))
+	      (first *stack*)))
+
+	   (t (error "Functions of arity ~A are not implemented" arity)))))
+
+      ;; unrecognized
+      (t (error "Unexpected expressions: ~A" element)))))
+
 (defun execute-token (token &optional (debug nil))
   "Execute a single token"
   (when debug
@@ -528,7 +611,175 @@ result through each expression using 's' as the placeholder for the current valu
 	(setf (gethash name *variables*) result))
     result))
 
-(defun evaluate (expr-string &optional (filename nil) (line-number) (debug nil))
+(defun parse-user-function-call (tokens)
+  (let ((fun (gethash (car tokens) *functions*))
+	(rest (cdr tokens)))
+    (values
+     rest
+     `(:function ,fun))))
+
+ 
+(defun parse-array-2 (tokens)
+  (let ((rest (cdr tokens))
+	(elements '()))
+    (loop until (equal (first tokens) '])
+	  do (multiple-value-bind (rest2 tok) (parse-expression rest)
+	       (setf rest rest2)
+	       (setf tokens rest2)
+	       (push tok elements)))
+    (values
+     (cdr rest)
+     `(:array ,@(nreverse elements)))))
+
+(defun parse-stack-ops (tokens)
+  (let ((fun (gethash (car tokens) *stack-ops*))
+	(rest (cdr tokens)))
+    (values
+     rest
+     `(:stack ,(car fun) ,(cdr fun)))))
+
+
+(defun parse-ops (tokens)
+  (let ((fun (gethash (car tokens) *ops*))
+	(rest (cdr tokens)))
+    (values
+     rest
+     `(:op ,(car fun) ,(cdr fun)))))
+
+(defun parse-if (tokens)
+  (let ((then-else (first tokens))
+	(rest (cddr tokens)))
+    (unless (and (listp then-else)
+		 (>= (length then-else) 2))
+      (error "Could not find correct then-else clause for IF"))
+    (let ((groups (parse-group-2 then-else)))
+      (format t "Groups ~A~%" groups)
+      (values
+       rest
+       `(:if-then-else ,groups)))))
+
+(defun parse-group-2 (group)
+  (let ((result '()))
+    (loop until (null group) do
+      (multiple-value-bind (rest tok) (parse-expression group)
+	(setf group rest)
+	(push tok result)))
+    (reverse result)))
+
+(defun parse-expression (tokens)
+  (let ((token (first tokens))
+	(stoken (second tokens)))
+    (cond
+      ;; If - conditional
+      ((eq stoken 'if)
+       (parse-if tokens))
+      
+      ;; Numbers
+      ((numberp token)
+       (values 
+	(cdr tokens)
+	`(:number ,token)))
+
+      ;; Strings
+      ((stringp token)
+       (values
+	(cdr tokens))       
+       `(:string ,token))
+
+      ;; Constants
+      ((assoc token *constants*)
+       (values
+	(cdr tokens)
+       `(:constant ,token)))
+
+      ;; Variables
+      ((gethash token *variables*)
+       (values
+       (cdr tokens)
+       `(:variable ,token)))
+
+      ;; Groups
+      ((listp token)
+       (values
+	(cdr tokens)
+	`(:group
+	  ,(parse-group-2 token))))
+
+      ;; User defined Functions
+      ((gethash token *functions*)
+       (parse-user-function-call tokens))
+
+      ;; Array
+      ((equal token '[)
+       (parse-array-2 tokens))
+
+      ;; Reduction
+      ((char= (char (symbol-name token) 0) #\/)
+       (values 
+	(cdr tokens)
+       `(:reduce ,(parse-expression token))))
+
+      ;; Scan
+      ((char= (char (symbol-name token) 0) #\&)
+       (values
+	(cdr tokens)
+	`(:scan ,(parse-expression token))))
+
+      ;; Stack operations
+      ((gethash token *stack-ops*)
+       (parse-stack-ops tokens))
+
+      ;; STD function operations
+      ((gethash token *ops*)
+       (parse-ops tokens))
+      
+      ;; unrecognized
+      (t (error "Unexpected token: ~A" token)))))
+
+(defun parse (tokens)
+  (let ((result '()))
+    (loop until (null tokens)
+	  do
+	     (multiple-value-bind
+		   (rtokens expr)
+		 (parse-expression tokens)
+	       (setf tokens rtokens)
+	       (push expr result)))
+    (nreverse result)))
+
+(defun handle-assignment-2 (name expr-tokens)
+  "Handle variable/function assignment"
+  (let* ((ast (parse expr-tokens))
+	 (result
+	   (handler-case
+	       ;; try to evaluate the expression
+	       (progn
+		 (let ((*stack* nil))
+		   (dolist (element (reverse ast))
+		     (execute-element element))
+		   (peek-stack)))
+	     (error
+		 (condition)
+	       (declare (ignore condition))
+	       (lambda ()
+		 (dolist
+		     (element (reverse ast))
+		   (execute-element element))
+		 (peek-stack))))))
+    (if (functionp result)
+	(setf (gethash name *functions*) result)
+	(setf (gethash name *variables*) result))))
+
+(defun evaluate-2 (expr-string)
+  (let ((tokens (tokenize expr-string)))
+    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
+	(handle-assignment-2 (first tokens) (cddr tokens))
+	(let ((ast (parse tokens)))
+	  (loop for element in (reverse ast) do
+	    (execute-element element))
+	  (peek-stack)))))
+
+(defun evaluate (expr-string &optional (filename nil) (line-number nil) (debug nil))
   "Main evaluation function"
   ;;(setf *stack* nil)
   (let ((tokens (tokenize expr-string)))
