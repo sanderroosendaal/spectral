@@ -180,20 +180,23 @@
 (load "errors.lisp")
 
 
-(defun convert-structure (structure)
-  (labels ((helper (s)
-             (cond
-               ((null s) nil)
-               ((and (listp s) (eq (first s) :NUMBER))
-                (second s))
-               ((and (listp s) (eq (first s) :ARRAY))
-                (mapcar #'helper (rest s)))
-               (t s))))
-    (let ((result (helper (first structure))))
-      (if (and (listp result) (every #'listp result) (= (length result) 1))
-          (first result)
-          result))))
+(defun check-rectangular (elements)
+  (when (every #'listp elements)
+    ;; Only check if all elements are lists (i.e., nested arrays)
+    (let ((first-len (length (first elements))))
+      (unless (every (lambda (row) (= (length row) first-len)) elements)
+        (error "Ragged array: all rows must have the same length"))
+      (when (and (plusp first-len) (listp (caar elements)))
+        (dolist (row elements)
+          (check-rectangular row))))))
 
+(defun compute-dimensions (elements)
+  (if (every #'listp elements)
+      (list (length elements)
+            (if (plusp (length elements))
+                (length (first elements))
+                0))
+      (length elements)))
 
 (defun eval-node (element &optional (debug nil))
   "Execute AST element"
@@ -221,7 +224,7 @@
       ;; Assignment
       ((equal typ :assignment)
        (let* ((name (first val))
-	      (exprs (rest val))
+	      (exprs (car (rest val)))
 	      (result
 		(handler-case
 		    ;; try to evaluate the expression
@@ -255,13 +258,23 @@
       
       ;; Arrays
       ((equal typ :array)
-       (let ((lists (convert-structure (list element))))
+       (let* ((evaluated-elements (mapcar (lambda (part)
+					    (eval-node part nil)
+					    (let ((val (pop-stack)))
+					      (if (arrayp val)
+						  (coerce val 'list)
+						  val))) val))
+	      (dims (compute-dimensions evaluated-elements)))
+	 (when (every #'listp evaluated-elements)
+	   (check-rectangular evaluated-elements))
+	 (format t "Dims ~A elements ~A~%" dims evaluated-elements)
 	 (push-stack
-	  (list-to-n-dimensional-array lists))))
+          (make-array (if (listp dims) dims (list dims))
+			:initial-contents evaluated-elements))))
 
       ;; User defined functions
       ((equal typ :function)
-       (funcall (gethash (car val) *functions*)))
+       (push-stack (funcall (gethash (car val) *functions*))))
 
       ;; Reduction
 

@@ -1,7 +1,9 @@
 ;; Stack manipulation functions
 (defun push-stack (value)
   (if (and value (or (not (stringp value)) (not (string= value ""))))
-      (push value *stack*)))
+      (progn
+	(push value *stack*)
+	(first *stack*))))
 
 (defun pop-stack ()
   "Pops the top element off the stack"
