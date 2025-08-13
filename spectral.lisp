@@ -179,10 +179,28 @@
 
 (load "errors.lisp")
 
-(defun execute-element (element)
+
+(defun convert-structure (structure)
+  (labels ((helper (s)
+             (cond
+               ((null s) nil)
+               ((and (listp s) (eq (first s) :NUMBER))
+                (second s))
+               ((and (listp s) (eq (first s) :ARRAY))
+                (mapcar #'helper (rest s)))
+               (t s))))
+    (let ((result (helper (first structure))))
+      (if (and (listp result) (every #'listp result) (= (length result) 1))
+          (first result)
+          result))))
+
+
+(defun eval-node (element &optional (debug nil))
   "Execute AST element"
   (let ((typ (first element))
 	(val (cdr element)))
+    (if debug
+	(format t "Entering eval-node with typ ~A, val ~A~%" typ val))
     (cond
       ;; Numbers push themselves
       ((equal typ :number)
@@ -200,27 +218,50 @@
       ((equal typ :variable)
        (push-stack (gethash (car val) *variables*)))
 
+      ;; Assignment
+      ((equal typ :assignment)
+       (let* ((name (first val))
+	      (exprs (rest val))
+	      (result
+		(handler-case
+		    ;; try to evaluate the expression
+		    (progn
+		      (let ((*stack* nil))
+			(dolist (element (reverse exprs))
+			  (eval-node element))
+			(peek-stack)))
+		  (error
+		      (condition)
+		    (declare (ignore condition))
+		    (lambda ()
+		      (dolist
+			  (element (reverse exprs))
+			(eval-node element))
+		      (peek-stack))))))
+	 (if (functionp result)
+	     (setf (gethash name *functions*) result)
+	     (setf (gethash name *variables*) result))))
+
       ;; Conditional
       ((equal typ :if-then-else)
        (let* ((condition (pop-stack)))
 	 (if (is-true condition)
-	     (execute-element (first val))
-	     (execute-element (second val)))))
+	     (eval-node (first val))
+	     (eval-node (second val)))))
 
       ;; Groups
       ((equal typ :group)
-       (loop for item in (reverse val) do (execute-element item)))
+       (loop for item in (reverse val) do (eval-node item)))
       
       ;; Arrays
       ((equal typ :array)
-       (let ((lists
-	       (loop for item in (reverse val) collect (execute-element val))))
-	 (list-to-n-dimensional-array lists)))
+       (let ((lists (convert-structure (list element))))
+	 (push-stack
+	  (list-to-n-dimensional-array lists))))
 
       ;; User defined functions
       ((equal typ :function)
-       (format t "Doing a user defined function")
-       (funcall (gethash (cdr val) *functions*)))
+       (funcall (gethash (car val) *functions*)))
 
       ;; Reduction
 
@@ -612,11 +653,10 @@ result through each expression using 's' as the placeholder for the current valu
     result))
 
 (defun parse-user-function-call (tokens)
-  (let ((fun (gethash (car tokens) *functions*))
-	(rest (cdr tokens)))
+  (let ((rest (cdr tokens)))
     (values
      rest
-     `(:function ,fun))))
+     `(:function ,(car tokens)))))
 
  
 (defun parse-array-2 (tokens)
@@ -646,6 +686,14 @@ result through each expression using 's' as the placeholder for the current valu
      rest
      `(:op ,(car fun) ,(cdr fun)))))
 
+(defun parse-assignment (tokens)
+  (let* ((name (first tokens))
+	 (expr-tokens (cddr tokens))
+	 (ast (parse expr-tokens)))
+    (values
+     nil
+     `(:assignment ,name ,ast))))
+
 (defun parse-if (tokens)
   (let ((then-else (first tokens))
 	(rest (cddr tokens)))
@@ -673,6 +721,10 @@ result through each expression using 's' as the placeholder for the current valu
       ;; If - conditional
       ((eq stoken 'if)
        (parse-if tokens))
+
+      ;; Assignment
+      ((eq stoken '=)
+       (parse-assignment tokens))
       
       ;; Numbers
       ((numberp token)
@@ -683,8 +735,8 @@ result through each expression using 's' as the placeholder for the current valu
       ;; Strings
       ((stringp token)
        (values
-	(cdr tokens))       
-       `(:string ,token))
+	(cdr tokens)       
+       `(:string ,token)))
 
       ;; Constants
       ((assoc token *constants*)
@@ -747,37 +799,12 @@ result through each expression using 's' as the placeholder for the current valu
 	       (push expr result)))
     (nreverse result)))
 
-(defun handle-assignment-2 (name expr-tokens)
-  "Handle variable/function assignment"
-  (let* ((ast (parse expr-tokens))
-	 (result
-	   (handler-case
-	       ;; try to evaluate the expression
-	       (progn
-		 (let ((*stack* nil))
-		   (dolist (element (reverse ast))
-		     (execute-element element))
-		   (peek-stack)))
-	     (error
-		 (condition)
-	       (declare (ignore condition))
-	       (lambda ()
-		 (dolist
-		     (element (reverse ast))
-		   (execute-element element))
-		 (peek-stack))))))
-    (if (functionp result)
-	(setf (gethash name *functions*) result)
-	(setf (gethash name *variables*) result))))
-
-(defun evaluate-2 (expr-string)
+(defun evaluate-2 (expr-string &optional (debug nil))
   (let ((tokens (tokenize expr-string)))
-    (if (and (>= (length tokens) 3) (eq (second tokens) '=))
-	(handle-assignment-2 (first tokens) (cddr tokens))
-	(let ((ast (parse tokens)))
-	  (loop for element in (reverse ast) do
-	    (execute-element element))
-	  (peek-stack)))))
+    (let ((ast (parse tokens)))
+      (loop for node in (reverse ast) do
+	(eval-node node debug))
+      (peek-stack))))
 
 (defun evaluate (expr-string &optional (filename nil) (line-number nil) (debug nil))
   "Main evaluation function"
@@ -822,7 +849,7 @@ result through each expression using 's' as the placeholder for the current valu
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
 	((or (null line) (string= line "exit")) (return))
-	(t (evaluate line)
+	(t (evaluate-2 line)
 	   (pretty-print-stack))))))
 
 (load "std/arrays.lisp")
