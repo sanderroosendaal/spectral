@@ -444,7 +444,7 @@ result through each expression using 's' as the placeholder for the current valu
      `(:function ,(car tokens)))))
 
  
-(defun parse-array-2 (tokens)
+(defun parse-array (tokens)
   (let ((rest (cdr tokens))
 	(elements '()))
     (loop until (equal (first tokens) '])
@@ -548,7 +548,7 @@ result through each expression using 's' as the placeholder for the current valu
 
       ;; Array
       ((equal token '[)
-       (parse-array-2 tokens))
+       (parse-array tokens))
 
       ;; Reduction
       ((char= (char (symbol-name token) 0) #\/)
