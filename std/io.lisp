@@ -100,7 +100,7 @@
 	    while line
 	    when (and (> (length line) 0)
 		      (not (char= (char line 0) #\;))) ; Skip comments
-	      do (evaluate (string-trim " " line) filename line-count)
+	      do (evaluate (string-trim " " line)) ;; -- need to add filename line-count)
 	    (incf line-count)))
      (peek-stack)))
 
