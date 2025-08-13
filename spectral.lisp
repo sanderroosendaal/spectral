@@ -267,7 +267,6 @@
 	      (dims (compute-dimensions evaluated-elements)))
 	 (when (every #'listp evaluated-elements)
 	   (check-rectangular evaluated-elements))
-	 (format t "Dims ~A elements ~A~%" dims evaluated-elements)
 	 (push-stack
           (make-array (if (listp dims) dims (list dims))
 			:initial-contents evaluated-elements))))

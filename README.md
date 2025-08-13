@@ -77,6 +77,8 @@ This repository contains a Lisp prototype (<1000 lines) implementing:
 - ✅ Variables and function definitions
 - ✅ File I/O (text files) (`load`, `load-csv`, `write-csv`)
 - ✅ Stack operations (`pop` to pop, `dup` or `d` to duplicate, `swap` to swap, `peek`)
+- ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
+     `[A B]` where `A` and `B` are user-defined variables which can be arrays.
 - ✅ Conditional (`if`)
 - ✅ Nested groups `((sin % 2 pi) (sin))` - currently only used in combination with `if`
 - ✅ FFT (need FFTW installed)
@@ -130,10 +132,11 @@ more functions implemented.
 
 ### Phase 1: Language Design (Current)
 
-- [x] Core syntax and semantics
-- [x] Basic mathematical operations
+- [X] Core syntax and semantics
+- [X] Basic mathematical operations
 - [X] Reduction operators (`/+`, `/*`, `/max`)
 - [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
+- [X] Array literals referencing user-defined variables
 - [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
 - [X] Control flow and conditionals (just `if`)
 
