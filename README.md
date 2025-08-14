@@ -44,7 +44,7 @@ spectrum = log10 magnitude fft bandpass 10Hz 1kHz data
 peaks = find-peaks 3.0 spectrum
 
 ;; Plotting
-surf reshape 9 9 range 81
+surf reshape [9 9] range 81
 format-plot "set xlabel 'X'"
 format-plot "set ylabel 'Y'"
 format-plot "set ylabel 'Z'"

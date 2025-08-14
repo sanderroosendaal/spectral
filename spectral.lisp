@@ -249,12 +249,12 @@
       ((equal typ :if-then-else)
        (let* ((condition (pop-stack)))
 	 (if (is-true condition)
-	     (eval-node (first val))
-	     (eval-node (second val)))))
+	     (eval-node (first (car val)))
+	     (eval-node (second (car val))))))
 
       ;; Groups
       ((equal typ :group)
-       (loop for item in (reverse val) do (eval-node item)))
+       (loop for item in (reverse (car val)) do (eval-node item)))
       
       ;; Arrays
       ((equal typ :array)
@@ -273,7 +273,7 @@
 
       ;; User defined functions
       ((equal typ :function)
-       (push-stack (funcall (gethash (car val) *functions*))))
+       (funcall (gethash (car val) *functions*)))
 
       ;; Reduction
 
@@ -281,7 +281,7 @@
 
       ;; Stack operation
       ((equal typ :stack)
-       (funcall (car (gethash val *stack-ops*))))
+       (funcall (car val)))
 
       ;; STD function operations
       ((equal typ :op)
@@ -299,15 +299,16 @@
 	   ((= arity 1)
 	    (let* ((a (pop-stack))
 		   (values (multiple-value-list (funcall op-fn a))))
-	      (loop for value in values do (push-stack value)))
-	    (first *stack*))
+	      (loop for value in values do (push-stack value))
+	      (first *stack*)))
     
 	   ;; Binary operations
 	   ((= arity 2)
 	    (let* ((a (pop-stack))
 		   (b (pop-stack))
 		   (values (multiple-value-list (funcall op-fn a b))))
-	      (loop for value in values do (push-stack value))
+	      (loop for value in values do
+		(push-stack value))
 	      (first *stack*)))
 
 	   (t (error "Functions of arity ~A are not implemented" arity)))))
