@@ -6,14 +6,14 @@
       (setf (aref arr i) i))))
 
 (defun meshgrid-y (m n)
-  "Generates a mesh in X direction of dimensions MxN"
+  "Generates a mesh in Y direction of dimensions MxN."
   (let ((array (make-array (list m n) :element-type 'number)))
     (dotimes (i (* m n) array)
       (setf (row-major-aref array i) (mod i n)))
     array))
 
 (defun meshgrid-x (m n)
-  "Generates a mesh in Y direction of dimensions MxN"
+  "Generates a mesh in X direction of dimensions MxN."
   (let ((array (make-array (list m n) :element-type 'number)))
     (dotimes (i (* m n) array)
       (setf (row-major-aref array i) (floor (/ i n))))
@@ -71,6 +71,7 @@
   (array-total-size array))
 
 (defun rank-fn (array)
+  "Return the number of dimensions (rank) of the array."
   (array-rank array))
 
 (defun flatten (array)
@@ -162,6 +163,7 @@
 
 
 (defun reverse-array-first-axis (array)
+  "Reverse the order of elements along the first axis of the array."
   (cond
     ((stringp array) array)
     ((numberp array) array)
@@ -275,6 +277,7 @@
     (t (error "Stack works with 2 arrays only"))))
 
 (defun calculate-mean-and-std (data)
+  "Return mean and standard deviation of array elements. Handles 1D and flattens higher dimensions."
   (cond ((= (length (array-dimensions data)) 1)
 	 (let ((n 0)
 	       (sum 0.0)
@@ -316,7 +319,7 @@
     (/ sum-xy (sqrt (* sum-x2 sum-y2)))))
 
 (defun array-of-correlation-coefficients (data)
-  "Assums a 2D array with X values in first row, Y values in other rows. Returns 1D array of correlation coefficients."
+  "Assumes a 2D array with X values in first row, Y values in other rows. Returns 1D array of correlation coefficients."
   (let* ((num-rows (array-dimension data 0))
 	 (num-cols (array-dimension data 1))
 	 (x (make-array num-cols))
@@ -330,8 +333,12 @@
 	(setf (aref coefficients i) (correlation-coefficient x y))))
     coefficients))
 
+(defun spectral-length (array)
+  "Return the number of elements along the first dimension (or total size for 1D arrays)."
+  (length array))
+
 (register-op 'size #'count-elements 1)
-(register-op 'length #'length 1)
+(register-op 'length #'spectral-length 1)
 (register-op 'shape #'shape-fn 1)
 (register-op 'range #'range-fn 1)
 (register-op 'mesh-x #'meshgrid-x 2)

@@ -2,7 +2,8 @@
 (load "~/.sbclrc")
 
 ;; Robust Lisp documentation extractor
-;; Usage: sbcl -–script doc-extractor.lisp *.lisp > documentation.md
+;; Usage: sbcl --script doc-extractor.lisp spectral.lisp std/*.lisp > documentation.md
+;; On Windows PowerShell, use: ... 2>$null | Out-File -FilePath documentation.md -Encoding utf8
 (let ((*standard-output* *error-output*))
   (ql:quickload :cl-ansi-text)   ; spectral.lisp references this
   (ql:quickload :cl-ppcre)
@@ -71,26 +72,26 @@
     (let ((name (second form))
 	  (function (third form))
 	  (arity (fourth form)))
-      ;; Handle quoted symbols and strings
+      ;; Handle quoted symbols and (function name)
       (when (and (listp name) (eq (first name) 'quote))
 	(setf name (second name)))
-      (when (and (listp function) (eq (first function) 'quote))
-	(setf function (second function)))
-      ;; Convert to strings
+      (when (listp function)
+	(cond ((eq (first function) 'quote)
+	       (setf function (second function)))
+	      ((and (eq (first function) 'function) (= (length function) 2))
+	       (setf function (second function)))))
+      ;; Convert to strings and push
       (let ((name-str (cond ((stringp name) name)
 			    ((symbolp name) (string-downcase (symbol-name name)))
 			    (t (format nil "~A" name))))
-	    (function-str (cond ((stringp function) function) ; Handle #\ escape)
-				((symbolp function) (strip-hash-quote (string-downcase (symbol-name function))))
-				(t (strip-hash-quote (string-downcase (format nil "~A" function))) )))
-	    (arity-val (cond ((numberp arity) arity)
-			     ((and (listp arity) (eq (first arity) 'quote))
-			      (second arity))
-			     (t arity))))
-	(push (make-op-info :name name-str
-			    :function function-str
-			    :arity arity-val
-			    :file filename)
+	    (function-str (if (symbolp function)
+			      (string-downcase (symbol-name function))
+			      (string-downcase (format nil "~A" function))))
+	    (arity-val (if (numberp arity) arity
+			   (if (and (listp arity) (eq (first arity) 'quote))
+			       (second arity) arity))))
+	(push (make-op-info :name name-str :function function-str
+			    :arity arity-val :file filename)
 	      *registered-ops*)))))
 
 (defun proper-list-p (x)

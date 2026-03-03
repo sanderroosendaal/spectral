@@ -36,7 +36,7 @@
       (magicl:det magicl-a)))
 
 (defun trace-fn (a)
-  "BLAS/LAPACK Required: Trace (sum of diagnoal elements) of matrix"
+  "BLAS/LAPACK Required: Trace (sum of diagonal elements) of matrix."
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
@@ -64,7 +64,7 @@
   
 
 (defun dagger (a)
-  "BLAS/LAPACK Required: Conjugate transport of matrix"
+  "BLAS/LAPACK Required: Conjugate transpose of matrix."
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2))
     (error "Input must be a matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
