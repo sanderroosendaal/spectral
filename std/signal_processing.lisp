@@ -1,10 +1,11 @@
-(load "std/fftw-ffi.lisp")
+(load (merge-pathnames "fftw-ffi.lisp"
+                       (make-pathname :defaults *load-truename* :name nil :type nil)))
 
 (defun convert-to-float (input)
   "Convert the input 1D array to a float array. Do nothing if the array is already double float."
-  (unless (and (arrayp input) (= (array-dimension input 0) 1)
-	       (eq (array-element-type input) 'double-float))
-    input)
+  (when (and (arrayp input) (= (array-rank input) 1)
+	     (eq (array-element-type input) 'double-float))
+    (return-from convert-to-float input))
   (let ((float-array (make-array (length input) :element-type 'double-float)))
     (dotimes (i (length input))
       (setf (aref float-array i) (coerce (aref input i) 'double-float)))
