@@ -78,7 +78,7 @@ This eliminates parentheses and makes data flow explicit.
 
 ## Current Implementation
 
-This repository contains a Lisp prototype (<1000 lines) implementing:
+This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libraries) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
 - ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
