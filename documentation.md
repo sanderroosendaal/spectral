@@ -1,6 +1,37 @@
-# API Documentation
+﻿# API Documentation
 
 Generated from Lisp source files.
+
+## Built-in Operators
+
+These operators are part of the core language (parser-level) and are not
+registered via `register-op`.
+
+### Reduction
+
+Reduce an array to a single value (or along the first axis for 2D arrays).
+
+| Operator | Operation | Example |
+|----------|-----------|---------|
+| `/+` | Sum | `/+ [1 2 3 4 5]` -> 15 |
+| `/*` | Product | `/* [1 2 3 4 5]` -> 120 |
+| `/max` | Maximum | `/max [3 1 4 1 5]` -> 5 |
+| `/min` | Minimum | `/min [3 1 4 1 5]` -> 1 |
+
+For 2D arrays, reduction is along the first axis: `/+ [[1 2][3 4]]` -> #(4 6).
+
+---
+
+### Scan
+
+Prefix scan (inclusive): cumulative result at each position.
+
+| Operator | Operation | Example |
+|----------|-----------|---------|
+| `&+` | Cumulative sum | `&+ [1 2 3 4 5]` -> #(1 3 6 10 15) |
+| `&*` | Cumulative product | `&* [1 2 3 4 5]` -> #(1 2 6 24 120) |
+
+---
 
 ## Registered Operations
 
@@ -563,6 +594,149 @@ Write numbers (vector) to a text file (one per line)
 **Description:**
 
 Saves a 2D lisp array to a CSV file, comma separated, row oriented
+
+---
+
+### std/linear_algebra.lisp 
+
+---
+#### `@`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
+
+---
+
+#### `conjugate-transpose`
+
+- **Function:** `dagger`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Conjugate transpose of matrix.
+
+---
+
+#### `dagger`
+
+- **Function:** `dagger`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Conjugate transpose of matrix.
+
+---
+
+#### `det`
+
+- **Function:** `det-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Determinant of matrix
+
+---
+
+#### `eig`
+
+- **Function:** `eig-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Returns eigenvalues and eigenvectors of matrix
+
+---
+
+#### `inv`
+
+- **Function:** `matrix-inv`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix inverse
+
+---
+
+#### `mmult`
+
+- **Function:** `matrix-multiply`
+- **Arity:** 2
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A B)`
+
+**Description:**
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
+
+---
+
+#### `trace`
+
+- **Function:** `trace-fn`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Trace (sum of diagonal elements) of matrix.
+
+---
+
+#### `tril`
+
+- **Function:** `tril`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Lower triangular part of matrix
+
+---
+
+#### `triu`
+
+- **Function:** `triu`
+- **Arity:** 1
+- **Source:** std/linear_algebra.lisp
+
+**Parameters:** `(A)`
+
+**Description:**
+
+BLAS/LAPACK Required: Upper triangular part of matrix
 
 ---
 
@@ -1515,6 +1689,26 @@ Count the number of elements in an array
 
 ---
 
+### `dagger`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Conjugate transpose of matrix.
+
+---
+
+### `det-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Determinant of matrix
+
+---
+
 ### `div-fn`
 
 **Parameters:** `(A B)`
@@ -1542,6 +1736,16 @@ Drop the first N elements from an array.
 **Source:** std/stack.lisp
 
 Duplicate the top element of the stack.
+
+---
+
+### `eig-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Returns eigenvalues and eigenvectors of matrix
 
 ---
 
@@ -1645,6 +1849,16 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 
 ---
 
+### `hstack`
+
+**Parameters:** `(A B)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Concatenate matrices A, B horizontally
+
+---
+
 ### `imagpart-fn`
 
 **Parameters:** `(A)`
@@ -1713,6 +1927,26 @@ Load numbers from a text file (one per line)
 **Source:** std/math.lisp
 
 Natural logarithm ln a
+
+---
+
+### `matrix-inv`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Matrix inverse
+
+---
+
+### `matrix-multiply`
+
+**Parameters:** `(A B)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Matrix Multiply two matrices A and B.
 
 ---
 
@@ -2150,6 +2384,16 @@ Simple tokenizer
 
 ---
 
+### `trace-fn`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Trace (sum of diagonal elements) of matrix.
+
+---
+
 ### `transpose`
 
 **Parameters:** `(MATRIX)`
@@ -2157,6 +2401,36 @@ Simple tokenizer
 **Source:** std/arrays.lisp
 
 Transpose a matrix (list of lists)
+
+---
+
+### `tril`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Lower triangular part of matrix
+
+---
+
+### `triu`
+
+**Parameters:** `(A)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Upper triangular part of matrix
+
+---
+
+### `vstack`
+
+**Parameters:** `(A B)`
+
+**Source:** std/linear_algebra.lisp
+
+BLAS/LAPACK Required: Concatenate matrices A, B vertically
 
 ---
 

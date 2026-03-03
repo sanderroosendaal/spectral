@@ -146,6 +146,21 @@
     '(("> 5 [1 2 3 4 5 6 7]" #(0 0 0 0 0 1 1))
       ("eq 5 [1 2 3 4 5 6]" #(0 0 0 0 1 0))))
 
+  ;; Reduction (/op collapses array to single value)
+  (run-test-group "Reduction"
+    '(("/+ [1 2 3 4 5]" 15)
+      ("/+ range 5" 10)                 ; 0+1+2+3+4
+      ("/* [1 2 3 4 5]" 120)           ; factorial 5
+      ("/max [3 1 4 1 5]" 5)
+      ("/min [3 1 4 1 5]" 1)
+      ("/+ [[1 2][3 4]]" #(4 6))))     ; reduce along first axis
+
+  ;; Scan (&op prefix scan, cumulative results)
+  (run-test-group "Scan"
+    '(("&+ [1 2 3 4 5]" #(1 3 6 10 15))
+      ("&+ range 5" #(0 1 3 6 10))
+      ("&* [1 2 3 4 5]" #(1 2 6 24 120))))
+
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
     (format t "~%~%--- ~D passed, ~D failed (~D total) ---~%"

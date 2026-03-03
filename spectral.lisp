@@ -61,6 +61,8 @@
 (defparameter *ops* (make-hash-table))
 
 (defparameter *stack-ops* (make-hash-table))
+(defparameter *reduce-ops* (make-hash-table))
+(defparameter *scan-ops* (make-hash-table))
 (defparameter *error-stream* t)
 
 (defun reset-spectral-state ()
@@ -86,6 +88,14 @@
 (load (merge-pathnames "std/filters.lisp" *spectral-root*))
 (load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
 (load (merge-pathnames "std/plotting.lisp" *spectral-root*))
+
+;; Reduction and scan operators
+(setf (gethash '/+ *reduce-ops*) #'+)
+(setf (gethash '/* *reduce-ops*) #'*)
+(setf (gethash '/max *reduce-ops*) #'max)
+(setf (gethash '/min *reduce-ops*) #'min)
+(setf (gethash '&+ *scan-ops*) #'+)
+(setf (gethash '&* *scan-ops*) #'*)
 
 ;; Array operations
 (defun array-op-list (op a b)
@@ -198,6 +208,9 @@
   (cond
     ((numberp a) (error "Invalid input for scan: ~A" a))
     ((listp a) (scan1 op a))
+    ((arrayp a)
+     (let ((lst (coerce a 'list)))
+       (coerce (scan1 op lst) 'vector)))
     (t (error "Invalid input for scan: ~A" a))))
 
 (load (merge-pathnames "errors.lisp" *spectral-root*))
@@ -299,8 +312,24 @@
        (funcall (gethash (car val) *functions*)))
 
       ;; Reduction
+      ((equal typ :reduce)
+       (eval-node (second val) debug)
+       (let* ((operand (pop-stack))
+	      (op-sym (first val))
+	      (op-fn (gethash op-sym *reduce-ops*)))
+	 (when (null op-fn)
+	   (error "Unknown reduction operator: ~A" op-sym))
+	 (push-stack (reduce-array op-fn operand))))
 
       ;; Scan
+      ((equal typ :scan)
+       (eval-node (second val) debug)
+       (let* ((operand (pop-stack))
+	      (op-sym (first val))
+	      (op-fn (gethash op-sym *scan-ops*)))
+	 (when (null op-fn)
+	   (error "Unknown scan operator: ~A" op-sym))
+	 (push-stack (scan-array op-fn operand))))
 
       ;; Stack operation
       ((equal typ :stack)
@@ -575,15 +604,13 @@ result through each expression using 's' as the placeholder for the current valu
 
       ;; Reduction
       ((char= (char (symbol-name token) 0) #\/)
-       (values 
-	(cdr tokens)
-       `(:reduce ,(parse-expression token))))
+       (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
+	 (values rest `(:reduce ,token ,operand-ast))))
 
       ;; Scan
       ((char= (char (symbol-name token) 0) #\&)
-       (values
-	(cdr tokens)
-	`(:scan ,(parse-expression token))))
+       (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
+	 (values rest `(:scan ,token ,operand-ast))))
 
       ;; Stack operations
       ((gethash token *stack-ops*)

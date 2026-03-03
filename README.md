@@ -46,6 +46,11 @@ sin + pi range 10
 ;; Variables and functions 
 threshold = * 3 mean data
 Normalize = % /max dup
+
+;; Reduction and scan
+/+ [1 2 3 4 5]          ; sum → 15
+/+ range 5               ; 0+1+2+3+4 → 10
+&+ [1 2 3 4 5]           ; cumulative sum → [1 3 6 10 15]
 clean = Normalize raw
 
 ;; File I/O and processing
@@ -90,6 +95,8 @@ This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libr
 - ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
      `[A B]` where `A` and `B` are user-defined variables which can be arrays.
 - ✅ Conditional (`if`)
+- ✅ Reduction (`/+`, `/*`, `/max`, `/min`) — collapse array to single value or reduce along axis
+- ✅ Scan (`&+`, `&*`) — prefix scan (cumulative sum, product, etc.)
 - ✅ Nested groups `((sin % 2 pi) (sin))` - currently only used in combination with `if`
 - ✅ FFT (need FFTW installed)
 - ✅ Matrix operations (need LAPACK installed: `mmult` or `@` for matrix multiplication,
@@ -103,7 +110,6 @@ This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libr
 - No loops; composition and `run` only
 - No `bandpass`, `find-peaks`, or other signal-analysis helpers
 - HDF5 and binary file I/O not yet supported
-- Reduction operators (`/+`, `/*`, `/max`) have parser support; evaluation may be incomplete
 
 ### Prerequisites
 
@@ -151,6 +157,8 @@ Run scripts from the project root so paths resolve correctly:
 ΣpectraΛ > ifft load "examples/spectrum.dat"
 ΣpectraΛ > size [[1 2][3 4]]
 ΣpectraΛ > shape [[1 2][3 4]]
+ΣpectraΛ > /+ [1 2 3 4 5]
+ΣpectraΛ > &+ range 5
 ΣpectraΛ > complex 1 1
 ΣpectraΛ > re complex 2 3
 ΣpectraΛ > write-csv "spectrum.csv" fft load "examples/signal.dat"
@@ -167,7 +175,8 @@ See [REFERENCE](documentation.md) for more functions implemented.
 
 - [X] Core syntax and semantics
 - [X] Basic mathematical operations
-- [X] Reduction operators (`/+`, `/*`, `/max`)
+- [X] Reduction operators (`/+`, `/*`, `/max`, `/min`)
+- [X] Scan operators (`&+`, `&*`) — prefix scan
 - [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
 - [X] Array literals referencing user-defined variables
 - [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
@@ -176,7 +185,8 @@ See [REFERENCE](documentation.md) for more functions implemented.
 ### Phase 2: Scientific Computing
 
 - [X] Linear algebra (LAPACK integration)
-- [X] Signal processing (FFT; filtering not yet)
+- [X] Signal processing (FFT)
+- [ ] Signal filtering (`bandpass`, `find-peaks`, etc.)
 - [X] Statistics (mean, std, correlation)
 - [X] File formats (CSV load/save)
 - [ ] File formats (HDF5, binary)
