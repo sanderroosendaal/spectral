@@ -168,7 +168,8 @@
 
 (defun reduce-array (op a)
   (cond
-    ((numberp a) (error "Invalid input for reduce: ~S" a))
+    ((numberp a)
+     (error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
     ((and (arrayp a) (> (length (array-dimensions a)) 1))
      (let* ((dims (array-dimensions a))
 	    (rest-dims (subseq dims 1))
@@ -186,7 +187,7 @@
        (loop for i from 1 to (1- ntot) do
 	 (setf result (funcall op result (row-major-aref a i))))
        result))
-    (t (error "Invalid input for reduce: ~S" a))))
+    (t (error "Reduction expects an array, got ~S." a))))
 
 (defun scan (op initial lst)
   (let ((results nil)
@@ -206,12 +207,13 @@
 
 (defun scan-array (op a)
   (cond
-    ((numberp a) (error "Invalid input for scan: ~A" a))
+    ((numberp a)
+     (error "Scan (e.g. &+) expects an array, got ~S. Use &+ [1 2 3] for cumulative sum." a))
     ((listp a) (scan1 op a))
     ((arrayp a)
      (let ((lst (coerce a 'list)))
        (coerce (scan1 op lst) 'vector)))
-    (t (error "Invalid input for scan: ~A" a))))
+    (t (error "Scan expects an array, got ~S." a))))
 
 (load (merge-pathnames "errors.lisp" *spectral-root*))
 
@@ -654,5 +656,9 @@ result through each expression using 's' as the placeholder for the current valu
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
 	((or (null line) (string= line "exit")) (return))
-	(t (evaluate line)
-	   (pretty-print-stack))))))
+	(t (handler-case
+	       (progn (evaluate line)
+		      (pretty-print-stack))
+	     (error (e)
+	       (format *error-stream* "~&Error: ~A~%" e)
+	       (finish-output *error-stream*))))))))
