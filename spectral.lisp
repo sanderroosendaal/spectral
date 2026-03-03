@@ -13,6 +13,9 @@
 
 (in-package :spectral)
 
+;;; Pipeline: tokenize -> parse -> eval-node. AST nodes use (:type ...).
+;;; Stack: ops pop args in reverse order (b then a), so "% 3 15" => 15/3.
+
 ;; Resolve paths relative to spectral.lisp (so std/*.lisp load correctly from any CWD)
 (defvar *spectral-root*
   (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
@@ -58,8 +61,12 @@
 
 (defparameter *functions* (make-hash-table))
 
+;; Operation registries:
+;; *ops*       - STD functions (+, -, *, %, sin, ...) via register-op
+;; *stack-ops* - dup, swap, pop, peek
+;; *reduce-ops* - /+, /*, /max, /min (parser treats token starting with /)
+;; *scan-ops*   - &+, &* (parser treats token starting with &)
 (defparameter *ops* (make-hash-table))
-
 (defparameter *stack-ops* (make-hash-table))
 (defparameter *reduce-ops* (make-hash-table))
 (defparameter *scan-ops* (make-hash-table))
@@ -166,6 +173,7 @@
 	(intern (subseq name 1))
 	token)))
 
+;; 1D: fold left. 2D: reduce along first axis, return (dims-1) shape.
 (defun reduce-array (op a)
   (cond
     ((numberp a)
@@ -196,6 +204,7 @@
 	   (setf acc (funcall op acc item))
       (push acc results))))
 
+;; Inclusive prefix scan: first element = itself, no initial value.
 (defun scan1 (op lst)
   (when (null lst)
     (error "scan1 requires a non-empty list"))
@@ -236,6 +245,8 @@
                 0))
       (length elements)))
 
+;; element = (car element) = :type, (cdr element) = val.
+;; For :reduce/:scan, val = (op-symbol operand-ast). Eval operand first, then apply.
 (defun eval-node (element &optional (debug nil))
   "Execute AST element"
   (let ((typ (first element))
@@ -338,6 +349,8 @@
        (funcall (car val)))
 
       ;; STD function operations
+      ;; Stack order: pop a then b means b was pushed last (rightmost in source).
+      ;; Op-fn receives (b a) to match left-to-right reading: "+ 3 5" => 3+5.
       ((equal typ :op)
        (let ((op-fn (car val))
 	     (arity (cadr val)))
@@ -471,6 +484,7 @@ result through each expression using 's' as the placeholder for the current valu
     (add-spaces-around-brackets s)
     (add-spaces-after-single-char-tokens s)))
 
+;; Preprocess strips comments, expands |, adds spaces. Read produces symbols/numbers.
 (defun tokenize (expr-string)
   "Simple tokenizer"
   (let ((tokens '())
@@ -553,6 +567,8 @@ result through each expression using 's' as the placeholder for the current valu
 	(push tok result)))
     (reverse result)))
 
+;; Returns (values rest-tokens ast). Consumes one expression from tokens.
+;; Reduction/scan: consume token (e.g. /+), parse operand from (cdr tokens).
 (defun parse-expression (tokens)
   (let ((token (first tokens))
 	(stoken (second tokens)))
