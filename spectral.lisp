@@ -1,5 +1,10 @@
 (require "asdf")
 
+;; Resolve paths relative to spectral.lisp (so std/*.lisp load correctly from any CWD)
+(defvar *spectral-root*
+  (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
+                :name nil :type nil))
+
 (defpackage :spectral
   (:use :cl)
   (:export :evaluate :reset-spectral-state))
@@ -69,7 +74,7 @@
   "Registers a new stack operation with the given name, function and arity"
   (setf (gethash name *stack-ops*)
 	(cons function arity)))
-(load "std/stack.lisp")
+(load (merge-pathnames "std/stack.lisp" *spectral-root*))
 
 ;; Array operations
 (defun array-op-list (op a b)
@@ -184,7 +189,7 @@
     ((listp a) (scan1 op a))
     (t (error "Invalid input for scan: ~A" a))))
 
-(load "errors.lisp")
+(load (merge-pathnames "errors.lisp" *spectral-root*))
 
 
 (defun check-rectangular (elements)
@@ -614,9 +619,9 @@ result through each expression using 's' as the placeholder for the current valu
 	(t (evaluate line)
 	   (pretty-print-stack))))))
 
-(load "std/arrays.lisp")
-(load "std/math.lisp")
-(load "std/io.lisp")
-(load "std/filters.lisp")
-(load "std/signal_processing.lisp")
-(load "std/plotting.lisp")
+(load (merge-pathnames "std/arrays.lisp" *spectral-root*))
+(load (merge-pathnames "std/math.lisp" *spectral-root*))
+(load (merge-pathnames "std/io.lisp" *spectral-root*))
+(load (merge-pathnames "std/filters.lisp" *spectral-root*))
+(load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
+(load (merge-pathnames "std/plotting.lisp" *spectral-root*))

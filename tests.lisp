@@ -1,6 +1,10 @@
 ;; Spectral test suite
 ;; Run with: sbcl --noinform --load tests.lisp
 
+(let ((script-dir (make-pathname :defaults (truename *load-truename*)
+                                :name nil :type nil)))
+  (setf *default-pathname-defaults* script-dir))
+
 (load "spectral.lisp")
 (in-package :spectral)
 

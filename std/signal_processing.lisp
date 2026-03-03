@@ -1,4 +1,5 @@
-(load "std/fftw-ffi.lisp")
+(load (merge-pathnames "fftw-ffi.lisp"
+                       (make-pathname :defaults *load-truename* :name nil :type nil)))
 
 (defun convert-to-float (input)
   "Convert the input 1D array to a float array. Do nothing if the array is already double float."
