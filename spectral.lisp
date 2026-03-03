@@ -61,6 +61,8 @@
 (defparameter *ops* (make-hash-table))
 
 (defparameter *stack-ops* (make-hash-table))
+(defparameter *reduce-ops* (make-hash-table))
+(defparameter *scan-ops* (make-hash-table))
 (defparameter *error-stream* t)
 
 (defun reset-spectral-state ()
@@ -86,6 +88,14 @@
 (load (merge-pathnames "std/filters.lisp" *spectral-root*))
 (load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
 (load (merge-pathnames "std/plotting.lisp" *spectral-root*))
+
+;; Reduction and scan operators
+(setf (gethash '/+ *reduce-ops*) #'+)
+(setf (gethash '/* *reduce-ops*) #'*)
+(setf (gethash '/max *reduce-ops*) #'max)
+(setf (gethash '/min *reduce-ops*) #'min)
+(setf (gethash '&+ *scan-ops*) #'+)
+(setf (gethash '&* *scan-ops*) #'*)
 
 ;; Array operations
 (defun array-op-list (op a b)
@@ -158,7 +168,8 @@
 
 (defun reduce-array (op a)
   (cond
-    ((numberp a) (error "Invalid input for reduce: ~S" a))
+    ((numberp a)
+     (error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
     ((and (arrayp a) (> (length (array-dimensions a)) 1))
      (let* ((dims (array-dimensions a))
 	    (rest-dims (subseq dims 1))
@@ -176,7 +187,7 @@
        (loop for i from 1 to (1- ntot) do
 	 (setf result (funcall op result (row-major-aref a i))))
        result))
-    (t (error "Invalid input for reduce: ~S" a))))
+    (t (error "Reduction expects an array, got ~S." a))))
 
 (defun scan (op initial lst)
   (let ((results nil)
@@ -196,9 +207,13 @@
 
 (defun scan-array (op a)
   (cond
-    ((numberp a) (error "Invalid input for scan: ~A" a))
+    ((numberp a)
+     (error "Scan (e.g. &+) expects an array, got ~S. Use &+ [1 2 3] for cumulative sum." a))
     ((listp a) (scan1 op a))
-    (t (error "Invalid input for scan: ~A" a))))
+    ((arrayp a)
+     (let ((lst (coerce a 'list)))
+       (coerce (scan1 op lst) 'vector)))
+    (t (error "Scan expects an array, got ~S." a))))
 
 (load (merge-pathnames "errors.lisp" *spectral-root*))
 
@@ -299,8 +314,24 @@
        (funcall (gethash (car val) *functions*)))
 
       ;; Reduction
+      ((equal typ :reduce)
+       (eval-node (second val) debug)
+       (let* ((operand (pop-stack))
+	      (op-sym (first val))
+	      (op-fn (gethash op-sym *reduce-ops*)))
+	 (when (null op-fn)
+	   (error "Unknown reduction operator: ~A" op-sym))
+	 (push-stack (reduce-array op-fn operand))))
 
       ;; Scan
+      ((equal typ :scan)
+       (eval-node (second val) debug)
+       (let* ((operand (pop-stack))
+	      (op-sym (first val))
+	      (op-fn (gethash op-sym *scan-ops*)))
+	 (when (null op-fn)
+	   (error "Unknown scan operator: ~A" op-sym))
+	 (push-stack (scan-array op-fn operand))))
 
       ;; Stack operation
       ((equal typ :stack)
@@ -575,15 +606,13 @@ result through each expression using 's' as the placeholder for the current valu
 
       ;; Reduction
       ((char= (char (symbol-name token) 0) #\/)
-       (values 
-	(cdr tokens)
-       `(:reduce ,(parse-expression token))))
+       (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
+	 (values rest `(:reduce ,token ,operand-ast))))
 
       ;; Scan
       ((char= (char (symbol-name token) 0) #\&)
-       (values
-	(cdr tokens)
-	`(:scan ,(parse-expression token))))
+       (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
+	 (values rest `(:scan ,token ,operand-ast))))
 
       ;; Stack operations
       ((gethash token *stack-ops*)
@@ -627,5 +656,9 @@ result through each expression using 's' as the placeholder for the current valu
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
 	((or (null line) (string= line "exit")) (return))
-	(t (evaluate line)
-	   (pretty-print-stack))))))
+	(t (handler-case
+	       (progn (evaluate line)
+		      (pretty-print-stack))
+	     (error (e)
+	       (format *error-stream* "~&Error: ~A~%" e)
+	       (finish-output *error-stream*))))))))
