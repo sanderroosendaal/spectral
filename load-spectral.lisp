@@ -1,3 +1,15 @@
+;; Ensure loads resolve relative to this file's directory (fixes Linux when run from elsewhere)
+(let ((script-dir (make-pathname :defaults (truename *load-truename*)
+                                :name nil :type nil)))
+  (setf *default-pathname-defaults* script-dir))
+
+;; Ensure Quicklisp is available (needed for cl-ansi-text, cl-ppcre, etc.)
+(unless (find-package :ql)
+  (let ((ql-setup (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+    (if (probe-file ql-setup)
+        (load ql-setup)
+        (error "Quicklisp not found. Install from https://www.quicklisp.org/ or ensure (ql:quickload ...) works."))))
+
 (load "spectral.lisp")
 (in-package :spectral)
 (spectral-repl)

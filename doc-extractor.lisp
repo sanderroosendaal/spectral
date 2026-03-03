@@ -158,7 +158,7 @@
       (push o (gethash (op-info-file o) table)))
     (mapcar (lambda (file)
 	      (cons file
-		    (sort (gethash file table) #'string< :key #'op-info-function)))
+		    (sort (gethash file table) #'string< :key #'op-info-name)))
 	    (sort (loop for k being the hash-keys of table collect k) #'string<))))
 
 (defun generate-markdown ()

@@ -36,11 +36,11 @@
 
 (defun realpart-fn (a)
   "Get the real part of complex number"
-  (realpart a))
+  (array-fn #'realpart a))
 
 (defun imagpart-fn (a)
   "Get the imaginary part of complex number"
-  (imagpart a))
+  (array-fn #'imagpart a))
 
 (defun intg-fn (a)
   "Floor"

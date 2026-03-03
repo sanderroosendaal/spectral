@@ -25,7 +25,18 @@
       (loop for line = (read-line stream nil nil)
 	    while line
 	    do (push (parse-number line) result))
-      (nreverse result))))
+      (coerce
+       (nreverse result) 'vector))))
+
+(defun write-numbers (filename data)
+  "Write numbers (vector) to a text file (one per line)"
+  (with-open-file (stream filename :direction :output
+				   :if-exists :supersede :element-type 'character)
+    (loop for i from 0 to (1- (length data))
+	  do
+	     (format stream "~A~%" (aref data i)))
+    (terpri stream))
+  data)
 
 (defun is-header-row (row)
   "Check if a row contains headers"
@@ -100,13 +111,14 @@
 	    while line
 	    when (and (> (length line) 0)
 		      (not (char= (char line 0) #\;))) ; Skip comments
-	      do (evaluate (string-trim " " line) filename line-count)
+	      do (evaluate (string-trim " " line)) ;; -- need to add filename line-count)
 	    (incf line-count)))
      (peek-stack)))
 
 
 ;; Add file operations
 (register-op 'load #'load-numbers 1)
+(register-op 'write #'write-numbers 2)
 (register-op 'load-csv #'load-csv 1)
 (register-op 'write-csv #'write-csv 2)
 (register-op 'run #'run-script 1)
