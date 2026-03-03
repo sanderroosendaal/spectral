@@ -206,6 +206,7 @@ Spectral is designed for:
 | "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load |
 | FFT errors | FFTW3 library not found (CFFI) |
 | Plot commands fail | gnuplot not installed or not on PATH |
+| "Bug in readtable iterators or concurrent access" | SBCL + outdated named-readtables. Install the patched version: `cd ~/quicklisp/local-projects && git clone https://github.com/melisgl/named-readtables.git` (or `%USERPROFILE%\quicklisp\local-projects` on Windows). Then retry. |
 
 ## Contributing
 
