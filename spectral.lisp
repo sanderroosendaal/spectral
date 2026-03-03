@@ -2,18 +2,20 @@
 
 (defpackage :spectral
   (:use :cl)
-  (:export :evaluate))
+  (:export :evaluate :reset-spectral-state))
 
 (ql:quickload :cl-ansi-text)
 
 (in-package :spectral)
 
 (defun in-slime-p ()
-  (and (find-package :swank)
-       (symbol-value (find-symbol "*EMACS-CONNECTION*" :swank))))
+  (let ((pkg (find-package :swank)))
+    (and pkg
+	 (let ((sym (find-symbol "*EMACS-CONNECTION*" pkg)))
+	   (and sym (boundp sym) (symbol-value sym))))))
 
 (defun colors-supported-p ()
-  (not (string= (uiop:getenv "TERM") "dumb")))
+  (not (string= (or (uiop:getenv "TERM") "") "dumb")))
 
 (defun should-colorize-p ()
   (and (not (in-slime-p)) (colors-supported-p)))
@@ -50,6 +52,12 @@
 
 (defparameter *stack-ops* (make-hash-table))
 (defparameter *error-stream* t)
+
+(defun reset-spectral-state ()
+  "Clear stack, variables, and functions. Used for fresh test runs."
+  (setf *stack* nil)
+  (clrhash *variables*)
+  (clrhash *functions*))
 
 ;; Symbol list
 (defun register-op (name function arity)
@@ -171,7 +179,6 @@
       (push acc results))))
 
 (defun scan-array (op a)
-  (format t "Entering scan-array with ~A on ~A~%" op a)
   (cond
     ((numberp a) (error "Invalid input for scan: ~A" a))
     ((listp a) (scan1 op a))
@@ -401,7 +408,7 @@
 
 
 (defmacro preprocess-s (string &body expressions)
-  "Execute a equence of expressions on a string, threading the
+  "Execute a sequence of expressions on a string, threading the
 result through each expression using 's' as the placeholder for the current value."
   (let ((result-var (gensym "RESULT")))
     `(let ((,result-var ,string))
@@ -487,7 +494,6 @@ result through each expression using 's' as the placeholder for the current valu
 		 (>= (length then-else) 2))
       (error "Could not find correct then-else clause for IF"))
     (let ((groups (parse-group then-else)))
-      (format t "Groups ~A~%" groups)
       (values
        rest
        `(:if-then-else ,groups)))))

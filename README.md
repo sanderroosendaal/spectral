@@ -114,6 +114,12 @@ This repository contains a Lisp prototype (<1000 lines) implementing:
   - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
   - [gnuplot](http://gnuplot.info/) — for plotting
 
+### Run Tests
+
+```bash
+sbcl --noinform --load tests.lisp
+```
+
 ### Try It
 
 ```bash
