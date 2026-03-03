@@ -4,14 +4,14 @@
 ;; Robust Lisp documentation extractor
 ;; Usage: sbcl -–script doc-extractor.lisp *.lisp > documentation.md
 (let ((*standard-output* *error-output*))
+  (ql:quickload :cl-ansi-text)   ; spectral.lisp references this
+  (ql:quickload :cl-ppcre)
+  (ql:quickload :split-sequence)
   (ql:quickload :cl-csv)
   (ql:quickload :array-operations)
-  (handler-case
-      (ql:quickload :magicl)
-    (error () (print "a")))
+  (handler-case (ql:quickload :magicl) (error () nil))
   (ql:quickload :cffi)
-  (load "std/fftw-ffi.lisp")
-  )
+  (handler-case (load "std/fftw-ffi.lisp") (error () nil)))
 
 (defvar *functions* (make-hash-table :test 'equal))
 (defvar *registered-ops* '())
@@ -93,20 +93,31 @@
 			    :file filename)
 	      *registered-ops*)))))
 
+(defun proper-list-p (x)
+  (loop for tail = x then (cdr tail)
+        until (null tail)
+        when (atom tail) return nil
+        finally (return t)))
+
 (defun walk-form (form filename)
   "Walk through a form and process defuns and register-op calls."
-  (cond
-    ((null form) nil)
-    ((atom form) nil)
-    ((eq (first form) 'defun)
-     (process-defun form filename))
-    ((or (eq (first form) 'register-op) (eq (first form) 'register-stack-op))
-     (process-register-op form filename))
-    (t
-     ;; Recursively process sublists
-     (dolist (subform form)
-       (when (listp subform)
-	 (walk-form subform filename))))))
+  (handler-case
+      (cond
+	((null form) nil)
+	((atom form) nil)
+	((eq (first form) 'defun)
+	 (process-defun form filename))
+	((or (eq (first form) 'register-op) (eq (first form) 'register-stack-op))
+	 (process-register-op form filename))
+	;; Skip recursing into quasiquote - contains comma structs that break dolist
+	((and (consp form) (eq (first form) 'sb-int:quasiquote)) nil)
+	((and (consp form) (eq (first form) 'quote)) nil)
+	(t
+	 (when (proper-list-p form)
+	   (dolist (subform form)
+	     (when (proper-list-p subform)
+	       (walk-form subform filename))))))
+    (type-error () nil)))  ; skip forms that cause type errors (e.g. comma in quasiquote)
 
 (defun read-all-forms (filename)
   "Read all forms from a file safely."
