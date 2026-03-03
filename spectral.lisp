@@ -1,5 +1,10 @@
 (require "asdf")
 
+;; Preload named-readtables first to avoid SBCL 2.5.x "readtable iterators or concurrent access" bug
+;; when loading under SLIME/Swank (see https://github.com/melisgl/named-readtables/issues/33)
+(handler-case (ql:quickload :named-readtables)
+  (error () nil))
+
 (defpackage :spectral
   (:use :cl)
   (:export :evaluate :reset-spectral-state))
@@ -75,6 +80,12 @@
   (setf (gethash name *stack-ops*)
 	(cons function arity)))
 (load (merge-pathnames "std/stack.lisp" *spectral-root*))
+(load (merge-pathnames "std/arrays.lisp" *spectral-root*))
+(load (merge-pathnames "std/math.lisp" *spectral-root*))
+(load (merge-pathnames "std/io.lisp" *spectral-root*))
+(load (merge-pathnames "std/filters.lisp" *spectral-root*))
+(load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
+(load (merge-pathnames "std/plotting.lisp" *spectral-root*))
 
 ;; Array operations
 (defun array-op-list (op a b)
@@ -618,10 +629,3 @@ result through each expression using 's' as the placeholder for the current valu
 	((or (null line) (string= line "exit")) (return))
 	(t (evaluate line)
 	   (pretty-print-stack))))))
-
-(load (merge-pathnames "std/arrays.lisp" *spectral-root*))
-(load (merge-pathnames "std/math.lisp" *spectral-root*))
-(load (merge-pathnames "std/io.lisp" *spectral-root*))
-(load (merge-pathnames "std/filters.lisp" *spectral-root*))
-(load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
-(load (merge-pathnames "std/plotting.lisp" *spectral-root*))
