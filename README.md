@@ -134,7 +134,7 @@ cd spectral
 sbcl --load load-spectral.lisp
 ```
 
-Run scripts from the project root so paths resolve correctly:
+Run scripts from the project root so paths resolve correctly. The REPL catches errors, prints a message, and stays alive for the next input:
 
 ```spectral
 ΣpectraΛ > load "examples/numbers.dat"
@@ -143,6 +143,8 @@ Run scripts from the project root so paths resolve correctly:
 ΣpectraΛ > AddFive 10
 ΣpectraΛ > run "examples/tests.spec"
 ΣpectraΛ > run "examples/sombrero.spec"
+ΣpectraΛ > /+ 1 2 3
+Error: Reduction (e.g. /+) expects an array, got 1. Use /+ [1 2 3] to sum values.
 ΣpectraΛ > exit
 * (exit)
 ```
@@ -217,6 +219,7 @@ Spectral is designed for:
 | FFT errors | FFTW3 library not found (CFFI) |
 | Plot commands fail | gnuplot not installed or not on PATH |
 | "Bug in readtable iterators or concurrent access" | SBCL + outdated named-readtables. Install the patched version: `cd ~/quicklisp/local-projects && git clone https://github.com/melisgl/named-readtables.git` (or `%USERPROFILE%\quicklisp\local-projects` on Windows). Then retry. |
+| "Reduction expects an array" | `/+` and friends require an array operand. Use `/+ [1 2 3]`, not `/+ 1 2 3`. |
 
 ## Contributing
 

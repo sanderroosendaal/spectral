@@ -20,6 +20,8 @@ Reduce an array to a single value (or along the first axis for 2D arrays).
 
 For 2D arrays, reduction is along the first axis: `/+ [[1 2][3 4]]` -> #(4 6).
 
+Scalar operands produce a clear error; use array syntax, e.g. `/+ [1 2 3]`.
+
 ---
 
 ### Scan
@@ -30,6 +32,15 @@ Prefix scan (inclusive): cumulative result at each position.
 |----------|-----------|---------|
 | `&+` | Cumulative sum | `&+ [1 2 3 4 5]` -> #(1 3 6 10 15) |
 | `&*` | Cumulative product | `&* [1 2 3 4 5]` -> #(1 2 6 24 120) |
+
+Scalar operands produce a clear error; use array syntax, e.g. `&+ [1 2 3]`.
+
+---
+
+### REPL Error Handling
+
+The interactive REPL catches evaluation errors, prints the message, and continues.
+The session stays alive instead of exiting on error.
 
 ---
 

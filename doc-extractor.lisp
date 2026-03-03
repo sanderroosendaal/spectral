@@ -190,7 +190,8 @@
   (format t "| `/*` | Product | `/* [1 2 3 4 5]` -> 120 |~%")
   (format t "| `/max` | Maximum | `/max [3 1 4 1 5]` -> 5 |~%")
   (format t "| `/min` | Minimum | `/min [3 1 4 1 5]` -> 1 |~%")
-  (format t "~%For 2D arrays, reduction is along the first axis: `/+ [[1 2][3 4]]` -> #(4 6).~%~%")
+  (format t "~%For 2D arrays, reduction is along the first axis: `/+ [[1 2][3 4]]` -> #(4 6).~%")
+  (format t "~%Scalar operands produce a clear error; use array syntax, e.g. `/+ [1 2 3]`.~%~%")
   (format t "---~%~%")
   (format t "### Scan~%~%")
   (format t "Prefix scan (inclusive): cumulative result at each position.~%~%")
@@ -198,7 +199,12 @@
   (format t "|----------|-----------|---------|~%")
   (format t "| `&+` | Cumulative sum | `&+ [1 2 3 4 5]` -> #(1 3 6 10 15) |~%")
   (format t "| `&*` | Cumulative product | `&* [1 2 3 4 5]` -> #(1 2 6 24 120) |~%")
-  (format t "~%---~%~%")
+  (format t "~%Scalar operands produce a clear error; use array syntax, e.g. `&+ [1 2 3]`.~%~%")
+  (format t "---~%~%")
+  (format t "### REPL Error Handling~%~%")
+  (format t "The interactive REPL catches evaluation errors, prints the message, and continues.~%")
+  (format t "The session stays alive instead of exiting on error.~%~%")
+  (format t "---~%~%")
 
   ;; Sort operations by name for consistent output
   (let ((sorted-ops (group-and-sort-ops *registered-ops*)))
