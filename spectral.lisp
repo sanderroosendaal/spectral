@@ -1,10 +1,5 @@
 (require "asdf")
 
-;; Resolve paths relative to spectral.lisp (so std/*.lisp load correctly from any CWD)
-(defvar *spectral-root*
-  (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
-                :name nil :type nil))
-
 (defpackage :spectral
   (:use :cl)
   (:export :evaluate :reset-spectral-state))
@@ -12,6 +7,11 @@
 (ql:quickload :cl-ansi-text)
 
 (in-package :spectral)
+
+;; Resolve paths relative to spectral.lisp (so std/*.lisp load correctly from any CWD)
+(defvar *spectral-root*
+  (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
+                :name nil :type nil))
 
 (defun in-slime-p ()
   (let ((pkg (find-package :swank)))
