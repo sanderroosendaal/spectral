@@ -13,7 +13,7 @@ Spectral reimagines how scientists interact with numerical data. Instead of nest
 result = np.log10(np.abs(np.fft.fft(data * calibration_factor)))
 
 # Spectral approach 
-result = log10 magnitude fft * calibration_factor data
+result = log10 abs fft * calibration_factor data
 ```
 
 Reading right-to-left, data flows through transformations like a signal processing pipeline.
@@ -26,28 +26,38 @@ Reading right-to-left, data flows through transformations like a signal processi
 - **Performance-oriented**: Designed for large arrays and real-time processing
 - **Reproducible research**: Scripts document methodology explicitly
 
+## Why Stack-Based?
+
+Stack-based languages offer unique advantages:
+
+- **Composability**: Operations chain naturally
+- **No precedence rules**: Unambiguous execution order
+- **Interactive development**: Easy to build complex expressions incrementally
+- **Functional style**: Pure data transformations
+- **Embedding-friendly**: Simple to integrate in other systems
+
 ## Quick Examples
 
 ```spectral
-# Constants and basic math
-* 2 pi frequency # Convert to angular frequency
-sin + pi range 10 # Sine wave with phase shift
+;; Constants and basic math
+* 2 pi frequency
+sin + pi range 10
 
 ;; Variables and functions 
 threshold = * 3 mean data
-Normalize = % /max dup # Function: divide by maximum
-clean = Normalize raw # Apply function
+Normalize = % /max dup
+clean = Normalize raw
 
 ;; File I/O and processing
 data = load "experiment.dat"
-spectrum = log10 magnitude fft bandpass 10Hz 1kHz data
-peaks = find-peaks 3.0 spectrum
+spectrum = log10 abs fft data
+above_threshold = where > 3.0 spectrum
 
 ;; Plotting
 surf reshape [9 9] range 81
 format-plot "set xlabel 'X'"
 format-plot "set ylabel 'Y'"
-format-plot "set ylabel 'Z'"
+format-plot "set zlabel 'Z'"
 
 plot [1 4 6 7 6 4]
 ```
@@ -88,6 +98,22 @@ This repository contains a Lisp prototype (<1000 lines) implementing:
 - ✅ Script execution
 - ✅ Simple plotting (depending on gnuplot)
 
+### Current Limitations
+
+- No loops; composition and `run` only
+- No `bandpass`, `find-peaks`, or other signal-analysis helpers
+- HDF5 and binary file I/O not yet supported
+- Reduction operators (`/+`, `/*`, `/max`) have parser support; evaluation may be incomplete
+
+### Prerequisites
+
+- [SBCL](http://sbcl.org/) (or another Common Lisp implementation)
+- [Quicklisp](https://www.quicklisp.org/) for dependencies
+- **Optional** (Spectral runs without these, but features are disabled):
+  - [FFTW3](http://www.fftw.org/) — for FFT
+  - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
+  - [gnuplot](http://gnuplot.info/) — for plotting
+
 ### Try It
 
 ```bash
@@ -96,37 +122,38 @@ cd spectral
 sbcl --load load-spectral.lisp
 ```
 
+Run scripts from the project root so paths resolve correctly:
+
 ```spectral
-ΣpectraΛ > load "numbers.dat" ; load a list of numbers
-ΣpectraΛ > sin * 2 * pi % 20 range 20 ; Sine wave
-ΣpectraΛ > AddFive = + 5 ; Define function
-ΣpectraΛ > AddFive 10 ; Use function → 15
-ΣpectraΛ > run "examples/tests.spec" ; run a script
-ΣpectraΛ > run "examples/sombrero.spec" ; create a nice 3D chart of sin(x)/x
-ΣpectraΛ > exit ; to exit
-* (exit) ; to exit from lisp
+ΣpectraΛ > load "examples/numbers.dat"
+ΣpectraΛ > sin * 2 * pi % 20 range 20
+ΣpectraΛ > AddFive = + 5
+ΣpectraΛ > AddFive 10
+ΣpectraΛ > run "examples/tests.spec"
+ΣpectraΛ > run "examples/sombrero.spec"
+ΣpectraΛ > exit
+* (exit)
 ```
 
-![Sombrero chart](https://github.com/sanderroosendaal/spectral/blob/develop/examples/sombrero.png)
+![Sombrero chart](https://github.com/sanderroosendaal/spectral/blob/main/examples/sombrero.png)
 
-### More Syntax examples
+### More Syntax Examples
 
 ```spectral
-ΣpectraΛ > load-csv "examples/example.csv" ; load a list of numbers
-ΣpectraΛ > fft load "signal.dat" ; fourier transform
-ΣpectraΛ > ifft load "spectrum.dat" ; inverse fourier transform
-ΣpectraΛ > size [[1 2][3 4]] ; number of elements: 4
-ΣpectraΛ > shape [[1 2][3 4]] ; [2 2]
-ΣpectraΛ > complex 1 1 ; 1+i
-ΣpectraΛ > re complex 2 3 ; 2 - real part of 2+3i
-ΣpectraΛ > write-csv "spectrum.csv" fft load "signal.dat" ; write calculated spectrum to file
+ΣpectraΛ > load-csv "examples/example.csv"
+ΣpectraΛ > fft load "examples/signal.dat"
+ΣpectraΛ > ifft load "examples/spectrum.dat"
+ΣpectraΛ > size [[1 2][3 4]]
+ΣpectraΛ > shape [[1 2][3 4]]
+ΣpectraΛ > complex 1 1
+ΣpectraΛ > re complex 2 3
+ΣpectraΛ > write-csv "spectrum.csv" fft load "examples/signal.dat"
 ΣpectraΛ > * d 2
-ΣpectraΛ > (*2|%2) if det d matrix ; multiply by 2 if determinant is not zero, else divide by 2
-ΣpectraΛ > ((%2)(%2)) if det d matrix ; same as above, alternative notation
+ΣpectraΛ > (*2|%2) if det d matrix
+ΣpectraΛ > ((%2)(%2)) if det d matrix
 ```
 
-See [REFERENCE](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md) for
-more functions implemented.
+See [REFERENCE](documentation.md) for more functions implemented.
 
 ## Roadmap
 
@@ -143,9 +170,10 @@ more functions implemented.
 ### Phase 2: Scientific Computing
 
 - [X] Linear algebra (LAPACK integration)
-- [ ] Signal processing (FFT, filtering)
+- [X] Signal processing (FFT; filtering not yet)
 - [X] Statistics (mean, std, correlation)
-- [ ] File formats (HDF5, CSV, binary)
+- [X] File formats (CSV load/save)
+- [ ] File formats (HDF5, binary)
 - [X] Plotting and visualization
 
 ### Phase 3: Performance
@@ -165,15 +193,13 @@ Spectral is designed for:
 - **Data analysis**: Statistical processing, machine learning pipelines
 - **Embedded systems**: Expression language for data platforms
 
-## Why Stack-Based?
+## Troubleshooting
 
-Stack-based languages offer unique advantages:
-
-- **Composability**: Operations chain naturally
-- **No precedence rules**: Unambiguous execution order
-- **Interactive development**: Easy to build complex expressions incrementally
-- **Functional style**: Pure data transformations
-- **Embedding-friendly**: Simple to integrate in other systems
+| Message | Cause |
+|---------|-------|
+| "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load |
+| FFT errors | FFTW3 library not found (CFFI) |
+| Plot commands fail | gnuplot not installed or not on PATH |
 
 ## Contributing
 
@@ -186,7 +212,7 @@ This is an experimental language exploring new ideas. Contributions welcome:
 
 ### Discussion Topics
 
-- What’s the right balance of built-in vs user-defined functions?
+- What's the right balance of built-in vs user-defined functions?
 - Integration strategies with existing scientific libraries?
 - postfix/RPN notation and left-to-right or prefix notation and right-to-left code execution?
 
@@ -202,17 +228,16 @@ Spectral draws inspiration from:
 
 ## Documentation
 
-See [REFERENCE](https://github.com/sanderroosendaal/spectral/blob/main/documentation.md).
+See [REFERENCE](documentation.md).
 
 ## License
 
-MIT License - See [LICENSE](https://github.com/sanderroosendaal/spectral/blob/main/LICENSE "Standard MIT License") for details.
+MIT License - See [LICENSE](LICENSE) for details.
 
 -----
 
-*“The best way to predict the future is to invent it.”* - Alan Kay
+*"The best way to predict the future is to invent it."* — Alan Kay
 
 **Status**: Exploring the intersection of language design and scientific computing. Join the experiment!
 
-**Note**: Readme written with help of LLM, approved by "roosendaalsander". However, secretly, I am just here having fun with
-developing and playing with my own array manipulation language.
+**Note**: Readme written with help of LLM, approved by "roosendaalsander". However, secretly, I am just here having fun with developing and playing with my own array manipulation language.
