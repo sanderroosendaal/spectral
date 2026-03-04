@@ -83,7 +83,7 @@ This eliminates parentheses and makes data flow explicit.
 
 ## Current Implementation
 
-This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libraries) implementing:
+This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libraries) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
 - ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
@@ -99,6 +99,7 @@ This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libr
 - ✅ Scan (`&+`, `&*`) — prefix scan (cumulative sum, product, etc.)
 - ✅ Nested groups `((sin % 2 pi) (sin))` - currently only used in combination with `if`
 - ✅ FFT (need FFTW installed)
+- ✅ Signal filtering: `bandpass`, `lowpass`, `highpass`, `bandstop`, `smooth`, `savgol`, `find-peaks`, `find-valleys`, `psd`, `detrend`, `differentiate`
 - ✅ Matrix operations (need LAPACK installed: `mmult` or `@` for matrix multiplication,
      `det`, `trace`, `triu` and `tril`, `dagger`, `conjugate-transpose`,
      `transpose`, `inv`, `eig`)
@@ -108,7 +109,6 @@ This repository contains a Lisp prototype (~580 lines core, ~1170 lines std libr
 ### Current Limitations
 
 - No loops; composition and `run` only
-- No `bandpass`, `find-peaks`, or other signal-analysis helpers
 - HDF5 and binary file I/O not yet supported
 
 ### Prerequisites
@@ -157,6 +157,8 @@ Error: Reduction (e.g. /+) expects an array, got 1. Use /+ [1 2 3] to sum values
 ΣpectraΛ > load-csv "examples/example.csv"
 ΣpectraΛ > fft load "examples/signal.dat"
 ΣpectraΛ > ifft load "examples/spectrum.dat"
+ΣpectraΛ > bandpass [5 15 200] load "examples/signal.dat"
+ΣpectraΛ > find-peaks [1 3 5 4 2]
 ΣpectraΛ > size [[1 2][3 4]]
 ΣpectraΛ > shape [[1 2][3 4]]
 ΣpectraΛ > /+ [1 2 3 4 5]
@@ -181,14 +183,14 @@ See [REFERENCE](documentation.md) for more functions implemented.
 - [X] Scan operators (`&+`, `&*`) — prefix scan
 - [X] Array manipulation (`dup`, `swap`, `transpose`, `take`, `drop`, `pick`)
 - [X] Array literals referencing user-defined variables
-- [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`)
+- [X] Simple masking/filtering (`>`, `<`, `>=`, `<=`, `eq`, `neq`)
 - [X] Control flow and conditionals (just `if`)
 
 ### Phase 2: Scientific Computing
 
 - [X] Linear algebra (LAPACK integration)
 - [X] Signal processing (FFT)
-- [ ] Signal filtering (`bandpass`, `find-peaks`, etc.)
+- [X] Signal filtering (`bandpass`, `lowpass`, `highpass`, `bandstop`, `smooth`, `savgol`, `find-peaks`, `find-valleys`, `psd`, `detrend`, `differentiate`)
 - [X] Statistics (mean, std, correlation)
 - [X] File formats (CSV load/save)
 - [ ] File formats (HDF5, binary)

@@ -203,6 +203,29 @@
       ("shape savgol [5 2] range 20" (20))       ; length preserved
       ("> 3.5 pick 4 savgol [5 2] [1 2 3 4 5 6 7 8 9 10]" 1)))  ; center ≈ 5 > 3.5 (threshold first, value second)
 
+  ;; find-valleys: indices of local minima
+  (run-test-group "find-valleys"
+    '(("find-valleys [5 1 5 1 5]" #(1 3))
+      ("find-valleys [3 2 1 2 3]" #(2))
+      ("find-valleys [1 2 3 4 5]" #(0))
+      ("find-valleys [5 4 3 2 1]" #(4))
+      ("find-valleys [4 1 3 2 5]" #(1 3))
+      ("find-valleys [5]" #(0))))
+
+  ;; lowpass, highpass, bandstop - FFT-based filters
+  (run-test-group "lowpass/highpass/bandstop"
+    '(("shape lowpass [10 100] range 100" (100))
+      ("shape highpass [10 100] range 100" (100))
+      ("shape bandstop [5 15 100] range 100" (100))))
+
+  ;; psd, detrend, differentiate
+  (run-test-group "psd/detrend/differentiate"
+    '(("shape psd range 64" (64))
+      ("pick 0 differentiate [0 1 2 3 4]" 1)
+      ("pick 2 differentiate [0 1 2 3 4]" 1)
+      ("pick 0 detrend [0 1 2 3 4]" 0)
+      ("/+ abs detrend [0 1 2 3 4]" 0)))
+
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
     (format t "~%~%--- ~D passed, ~D failed (~D total) ---~%"
