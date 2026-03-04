@@ -14,15 +14,18 @@
 
 (defun spectral-equal (expected actual)
   "Compare Spectral results (numbers, arrays, lists)."
-  (cond
-    ((and (arrayp expected) (arrayp actual))
-     (and (equal (array-dimensions expected) (array-dimensions actual))
-          (equalp expected actual)))
-    ((and (numberp expected) (numberp actual))
-     (or (= expected actual)
-         (and (floatp expected) (floatp actual)
-              (< (abs (- expected actual)) 1.0d-10))))
-    (t (equalp expected actual))))
+  (flet ((numbers-equal-p (e a)
+           (or (= e a)
+               (and (numberp e) (numberp a)
+                    (< (abs (- (coerce e 'double-float) (coerce a 'double-float))) 1.0d-10)))))
+    (cond
+      ((and (arrayp expected) (arrayp actual))
+       (and (equal (array-dimensions expected) (array-dimensions actual))
+            (or (equalp expected actual)
+                (every #'numbers-equal-p expected actual))))
+      ((and (numberp expected) (numberp actual))
+       (numbers-equal-p expected actual))
+      (t (equalp expected actual)))))
 
 (defun format-result (result)
   "Format a result for display (truncate long arrays)."
@@ -193,6 +196,12 @@
       ("smooth 5 [1 1 1 1 1 1 1]" #(1 1 1 1 1 1 1))  ; constant in = constant out
       ("shape smooth 3 range 10" (10))          ; length preserved
       ("smooth 3 [1 2 3 4 5]" #(1.5 2 3 4 4.5))))  ; 3-point: edges partial, center full
+
+  ;; savgol [window_length poly_order] signal - Savitzky-Golay polynomial smoothing
+  (run-test-group "savgol"
+    '(("savgol [5 2] [1 1 1 1 1 1 1 1 1 1]" #(1 1 1 1 1 1 1 1 1 1))  ; constant preserved
+      ("shape savgol [5 2] range 20" (20))       ; length preserved
+      ("> 3.5 pick 4 savgol [5 2] [1 2 3 4 5 6 7 8 9 10]" 1)))  ; center ≈ 5 > 3.5 (threshold first, value second)
 
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
