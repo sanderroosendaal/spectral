@@ -89,7 +89,10 @@
 
 ;; Array operations (defined before std libs that use them)
 (defun array-op (op a b)
-  "Apply binary operation element-wise on n-dimensional arrays."
+  "Apply binary operation element-wise on n-dimensional arrays.
+   List inputs are coerced to vectors."
+  (when (listp a) (setf a (coerce a 'vector)))
+  (when (listp b) (setf b (coerce b 'vector)))
   (cond
     ((and (numberp a) (numberp b)) (funcall op a b))
     ((and (numberp a) (arrayp b))
@@ -118,7 +121,9 @@
 
 
 (defun array-fn (op a)
-  "Apply a unary operation element-wise on an n-dimensional array."
+  "Apply a unary operation element-wise on an n-dimensional array.
+   List inputs are coerced to vectors."
+  (when (listp a) (setf a (coerce a 'vector)))
   (cond
     ((numberp a) (funcall op a))
     ((arrayp a)
