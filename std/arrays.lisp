@@ -1,4 +1,11 @@
 ; Array functions
+
+(defun copy-array-range (dest dest-start source source-start count)
+  "Copy COUNT elements from SOURCE (row-major offset SOURCE-START) to DEST (row-major offset DEST-START)."
+  (dotimes (i count)
+    (setf (row-major-aref dest (+ dest-start i))
+          (row-major-aref source (+ source-start i)))))
+
 (defun range-fn (n)
   "Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]"
   (let ((arr (make-array n :element-type 'number)))
@@ -78,8 +85,8 @@
   "Flatten a nested list structure into a single list."
   (let* ((size (array-total-size array))
 	 (flat (make-array size :element-type (array-element-type array))))
-    (dotimes (i size flat)
-      (setf (aref flat i) (row-major-aref array i)))))
+    (copy-array-range flat 0 array 0 size)
+    flat))
 
 
 (defun reshape (shape array)
@@ -90,8 +97,7 @@
 	 (result (make-array new-dims)))
     (if (/= (array-total-size result) size)
 	(error "Non-matching shape ~A" new-dims)
-	(dotimes (i size)
-	  (setf (row-major-aref result i) (row-major-aref array i))))
+	(copy-array-range result 0 array 0 size))
     result))
 
 (defun pick (index array)
@@ -125,12 +131,11 @@
 	     (error "Invalid dimensions or too few elements to take."))
 	   (let* ((new-dims (cons index (rest dims)))
 		  (result (make-array new-dims
-				      :element-type (array-element-type array))))
-	     (dotimes (i (array-total-size result) result)
-	       (setf (row-major-aref result i)
-		     (row-major-aref array i)))))
-       (error
-	   (condition)
+				      :element-type (array-element-type array)))
+		  (n (array-total-size result)))
+	     (copy-array-range result 0 array 0 n)
+	     result))
+       (error (condition)
 	 (declare (ignore condition))
 	 (error "Invalid index: take ~A ~A" index array))))
      (t (error "Invalid inputs to take: ~A, ~A" index array))))
@@ -146,11 +151,10 @@
        (let* ((new-dims (cons (- (first dims) index) (rest dims)))
 	      (result (make-array new-dims
 				  :element-type (array-element-type array)))
-	      (element-size (array-total-size result)))
-	 (let ((offset (* index (reduce #'* (rest dims)))))
-	   (dotimes (i element-size result)
-	     (setf (row-major-aref result i)
-		   (row-major-aref array (+ offset i))))))))
+	      (element-size (array-total-size result))
+	      (offset (* index (reduce #'* (rest dims)))))
+	 (copy-array-range result 0 array offset element-size)
+	 result)))
     (t (error "Invalid inputs to drop: ~A, ~A" index array))))
 
 (defun array-row-major-index-to-subscript (dims index)
@@ -227,50 +231,37 @@
 	  (cond
 	    ((equal dims1 dims2)
 	     (let* ((size1 (array-total-size array1))
-		    (new-dims (push 2 dims1))
+		    (new-dims (list* 2 dims1))
 		    (new-array (make-array new-dims)))
-	       (loop for i from 0 below size1 do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i))
-		 (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
+	       (copy-array-range new-array 0 array1 0 size1)
+	       (copy-array-range new-array size1 array2 0 size1)
 	       new-array))
 	    (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
 	 ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
 	  (cond
 	    ((= (array-dimension array1 0) (array-dimension array2 0))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims2)))
-					   (cdr dims2)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	     (let* ((size1 (array-total-size array1))
+		    (new-dims (concatenate 'list (list (1+ (car dims2))) (cdr dims2)))
+		    (new-array (make-array new-dims)))
+	       (copy-array-range new-array 0 array1 0 size1)
+	       (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
 	       new-array))
 	    ((= (array-dimension array1 0) (array-dimension array2 1))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims2)))
-					   (cdr dims2)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	     (let* ((size1 (array-total-size array1))
+		    (new-dims (concatenate 'list (list (1+ (car dims2))) (cdr dims2)))
+		    (new-array (make-array new-dims)))
+	       (copy-array-range new-array 0 array1 0 size1)
+	       (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
 	       new-array))
 	    (t (error "Not implemented or not possible"))))
 	 ((= (length dims2) (1- (length dims1)))
 	  (cond
 	    ((= (array-dimension array1 0) (array-dimension array2 0))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims1)))
-					   (cdr dims1)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
+	     (let* ((size1 (array-total-size array1))
+		    (new-dims (concatenate 'list (list (1+ (car dims1))) (cdr dims1)))
+		    (new-array (make-array new-dims)))
+	       (copy-array-range new-array 0 array1 0 size1)
+	       (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
 	       new-array))
 	    (t (error "Not implemented or not possible"))))
 	 (t (error "Not implemented or not possible")))))
