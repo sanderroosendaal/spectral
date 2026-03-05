@@ -1,5 +1,3 @@
-(ql:quickload :vgplot)
-
 (defmacro with-plot-rows-2d (array &optional (fun #'vgplot:plot))
 "For a true 2D array, extract the first row as x and remaining rows as y1, y2, etc.
 Expands into a call like (vgplot:plot x y1 x y2 ...)."

@@ -1,6 +1,5 @@
 ;;;; FFTW FFI Integration for Signal Processing
 ;;;; Requires: CFFI, and FFTW3 library installed
-(ql:quickload :cffi)
 
 (defpackage :fftw-ffi
   (:use :cl :cffi)

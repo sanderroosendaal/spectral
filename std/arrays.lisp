@@ -353,7 +353,6 @@
 
 ;; Magicl stuff
 (handler-case (progn
-		(ql:quickload :magicl)
 		(load (merge-pathnames "std/linear_algebra.lisp" *spectral-root*)))
   (error ()
     (format t "Linear Algebra Not Loaded~%")))
@@ -361,8 +360,6 @@
 
 
 ;; Array-ops stuff
-(ql:quickload :array-operations)
-
 (defun nrow (a)
   "Number of rows in matrix"
   (aops:nrow a))

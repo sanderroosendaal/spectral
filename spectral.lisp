@@ -1,15 +1,13 @@
 (require "asdf")
 
-;; Preload named-readtables first to avoid SBCL 2.5.x "readtable iterators or concurrent access" bug
-;; when loading under SLIME/Swank (see https://github.com/melisgl/named-readtables/issues/33)
-(handler-case (ql:quickload :named-readtables)
-  (error () nil))
+;; Load all dependencies before defpackage (named-readtables must be early for SLIME)
+(load (merge-pathnames "std/deps.lisp"
+                       (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
+                                     :name nil :type nil)))
 
 (defpackage :spectral
   (:use :cl)
   (:export :evaluate :reset-spectral-state))
-
-(ql:quickload :cl-ansi-text)
 
 (in-package :spectral)
 
@@ -399,9 +397,6 @@
 	(vector-push-extend #\Space result)))
     (coerce result 'string)))
 
-
-(ql:quickload :cl-ppcre)
-(ql:quickload :split-sequence)
 
 (defun parse-pipes (s)
   (with-output-to-string (out)
