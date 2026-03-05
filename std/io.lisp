@@ -8,12 +8,12 @@
   "Safely parse a string to number"
   (handler-case
       (let ((trimmed (string-trim '(#\Space #\Tab) string)))
-	(cond
-	  ((string= trimmed "") nil)
-	  ((every #'digit-char-p trimmed) (parse-integer trimmed))
-	  ((or (find #\. trimmed) (find #\e trimmed) (find #\E trimmed))
-	   (read-from-string trimmed))
-	  (t (parse-integer trimmed))))
+  (cond
+    ((string= trimmed "") nil)
+    ((every #'digit-char-p trimmed) (parse-integer trimmed))
+    ((or (find #\. trimmed) (find #\e trimmed) (find #\E trimmed))
+     (read-from-string trimmed))
+    (t (parse-integer trimmed))))
     (error () nil)))
 
 (defun load-numbers (filename)
@@ -21,26 +21,26 @@
   (with-open-file (stream filename :direction :input)
     (let ((result '()))
       (loop for line = (read-line stream nil nil)
-	    while line
-	    do (push (parse-number line) result))
+      while line
+      do (push (parse-number line) result))
       (coerce
        (nreverse result) 'vector))))
 
 (defun write-numbers (filename data)
   "Write numbers (vector) to a text file (one per line)"
   (with-open-file (stream filename :direction :output
-				   :if-exists :supersede :element-type 'character)
+           :if-exists :supersede :element-type 'character)
     (loop for i from 0 to (1- (length data))
-	  do
-	     (format stream "~A~%" (aref data i)))
+    do
+       (format stream "~A~%" (aref data i)))
     (terpri stream))
   data)
 
 (defun is-header-row (row)
   "Check if a row contains headers"
   (some (lambda (cell)
-	  (null (parse-number-safe cell)))
-	row))
+    (null (parse-number-safe cell)))
+  row))
 
 (defun write-csv-field (value stream delimiter)
   "Write a single field to CSV stream, properly escaping if necessary."
@@ -68,55 +68,55 @@
   (unless (= (array-rank matrix) 2)
     (spectral-error "Expected a 2D array, got ~A" (array-rank matrix)))
   (with-open-file (stream filename :direction :output :if-exists :supersede
-				   :element-type 'character)
+           :element-type 'character)
     (let ((rows (first (array-dimensions matrix)))
-	  (cols (second (array-dimensions matrix))))
+    (cols (second (array-dimensions matrix))))
       (dotimes (row rows)
-	(dotimes (col cols)
-	  (let ((value (aref matrix row col)))
-	    (write-csv-field value stream delimiter)
-	    (when (< col (1- cols))
-	      (write-char delimiter stream))))
-	(terpri stream))))
+  (dotimes (col cols)
+    (let ((value (aref matrix row col)))
+      (write-csv-field value stream delimiter)
+      (when (< col (1- cols))
+        (write-char delimiter stream))))
+  (terpri stream))))
   matrix)
 
 
 (defun load-csv (filename)
   "Loads a table from a CSV file, comma separated, row oriented"
   (let* ((all-rows (cl-csv:read-csv (pathname filename)))
-	 (first-row (first all-rows))
-	 (headers nil)
-	 (data-rows nil))
+   (first-row (first all-rows))
+   (headers nil)
+   (data-rows nil))
     (if (is-header-row first-row)
-	(setf headers (coerce first-row 'vector)
-	      data-rows (rest all-rows))
-	(setf data-rows all-rows))
+  (setf headers (coerce first-row 'vector)
+        data-rows (rest all-rows))
+  (setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
-	    (coerce
-	     (mapcar (lambda (row)
-		       (mapcar #'parse-number-safe row))
-		     data-rows) 'vector)))
+      (coerce
+       (mapcar (lambda (row)
+           (mapcar #'parse-number-safe row))
+         data-rows) 'vector)))
       (if headers
-	  (values headers parsed-data)
-	  parsed-data))))
+    (values headers parsed-data)
+    parsed-data))))
 
 (defun run-script (filename)
   "Execute a script file line by line. Errors include filename and line number."
   (with-open-file (stream filename :direction :input)
     (let* ((*script-filename* (namestring (merge-pathnames filename)))
-	   (line-count 1))
+     (line-count 1))
       (loop for line = (read-line stream nil nil)
-	    while line
-	    do (when (and (> (length line) 0)
-			  (not (char= (char line 0) #\;)))
-		 (let ((*script-line* line-count))
-		   (handler-case
-		       (evaluate (string-trim " " line))
-		     (error (e)
-		       (error "~A:~D: ~A" *script-filename* *script-line* e)))))
-	       (incf line-count))
+      while line
+      do (when (and (> (length line) 0)
+        (not (char= (char line 0) #\;)))
+     (let ((*script-line* line-count))
+       (handler-case
+           (evaluate (string-trim " " line))
+         (error (e)
+           (error "~A:~D: ~A" *script-filename* *script-line* e)))))
+         (incf line-count))
       (peek-stack))))
 
 
@@ -177,8 +177,8 @@
          (ndims (length dims))
          (typecode (array-element-type-to-sdat-code data))
          (bpe (sdat-bytes-per-element typecode)))
-    (when (> ndims 8)
-      (spectral-error ".sdat supports at most 8 dimensions, got ~A" ndims))
+    (when (> ndims *max-ndims*)
+      (spectral-error ".sdat supports at most ~D dimensions, got ~A" *max-ndims* ndims))
     (with-open-file (s filename :direction :output :if-exists :supersede
                        :element-type '(unsigned-byte 8))
       (write-int32-le typecode s)
@@ -281,8 +281,8 @@
            (_bpe (read-uint32-le s))
            (ndims (read-uint32-le s)))
       (declare (ignore _bpe))
-      (when (> ndims 8)
-        (spectral-error "Invalid .sdat: ndims ~A > 8" ndims))
+      (when (> ndims *max-ndims*)
+        (spectral-error "Invalid .sdat: ndims ~A > ~D" ndims *max-ndims*))
       (let ((dims (loop repeat ndims collect (read-uint32-le s))))
         (let ((total (reduce #'* dims))
               (et (case typecode
@@ -335,8 +335,8 @@
                             (format nil "(~{~A~^, ~})" dims)
                             (format nil "(~A,)" (car dims)))))
          (hlen (length header)))
-    ;; Pad so 6+2+2+hlen divisible by 16
-    (let ((pad (mod (- 16 (mod (+ 10 hlen) 16)) 16)))
+    ;; Pad so 6+2+2+hlen divisible by *npy-alignment*
+    (let ((pad (mod (- *npy-alignment* (mod (+ 10 hlen) *npy-alignment*)) *npy-alignment*)))
       (setf header (concatenate 'string header (make-string pad :initial-element #\Space))
             hlen (+ hlen pad)))
     (with-open-file (s filename :direction :output :if-exists :supersede

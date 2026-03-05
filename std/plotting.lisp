@@ -2,18 +2,18 @@
 "For a true 2D array, extract the first row as x and remaining rows as y1, y2, etc.
 Expands into a call like (vgplot:plot x y1 x y2 ...)."
   (let ((array-sym (gensym "ARRAY"))
-	(x-sym (gensym "X"))
-	(ys-sym (gensym "YS"))
-	(cols-sym (gensym "COLS"))
-	(args-sym (gensym "ARGS")))
+  (x-sym (gensym "X"))
+  (ys-sym (gensym "YS"))
+  (cols-sym (gensym "COLS"))
+  (args-sym (gensym "ARGS")))
     `(let* ((,array-sym ,array)
-	    (,cols-sym (array-dimension ,array-sym 1))
-	    (,x-sym (loop for j below ,cols-sym
-			  collect (aref ,array-sym 0 j)))
-	    (,ys-sym (loop for i from 1 below (array-dimension ,array-sym 0)
-			   collect (loop for j below ,cols-sym
-						 collect (aref ,array-sym i j))))
-	    (,args-sym (loop for y in ,ys-sym append (list ,x-sym y))))
+      (,cols-sym (array-dimension ,array-sym 1))
+      (,x-sym (loop for j below ,cols-sym
+        collect (aref ,array-sym 0 j)))
+      (,ys-sym (loop for i from 1 below (array-dimension ,array-sym 0)
+         collect (loop for j below ,cols-sym
+             collect (aref ,array-sym i j))))
+      (,args-sym (loop for y in ,ys-sym append (list ,x-sym y))))
        (declare (ignore ,cols-sym))
        (apply ,fun ,args-sym))))
 
@@ -29,7 +29,7 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
       (loop for x from 0 below (length y) collect (aref y x))))
     ((and (arrayp y) (= 2 (length (array-dimensions y))) (= 2 (first (array-dimensions y))))
      (let ((x (loop for i from 0 below (second (array-dimensions y)) collect (aref y 0 i)))
-	   (y (loop for i from 0 below (second (array-dimensions y)) collect (aref y 1 i))))
+     (y (loop for i from 0 below (second (array-dimensions y)) collect (aref y 1 i))))
        (vgplot:plot x y)))
     ((arrayp y)
      (with-plot-rows-2d y))
@@ -52,16 +52,16 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
   (unless (= (length (array-dimensions array)) 3)
     (spectral-error "Must be 3xMxN array"))
   (let* ((dimensions (array-dimensions array))
-	 (xx (make-array (cdr dimensions)))
-	 (yy (make-array (cdr dimensions)))
-	 (zz (make-array (cdr dimensions)))
-	 (m (first (cdr dimensions)))
-	 (n (second (cdr dimensions))))
+   (xx (make-array (cdr dimensions)))
+   (yy (make-array (cdr dimensions)))
+   (zz (make-array (cdr dimensions)))
+   (m (first (cdr dimensions)))
+   (n (second (cdr dimensions))))
     (loop for i from 0 below m do
       (loop for j from 0 below n do
-	(setf (aref xx i j) (aref array 0 i j))
-	(setf (aref yy i j) (aref array 1 i j))
-	(setf (aref zz i j) (aref array 2 i j))))
+  (setf (aref xx i j) (aref array 0 i j))
+  (setf (aref yy i j) (aref array 1 i j))
+  (setf (aref zz i j) (aref array 2 i j))))
     (values xx yy zz)))
 
 (defun surf-plot (y)

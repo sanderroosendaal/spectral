@@ -22,8 +22,8 @@
 (defun in-slime-p ()
   (let ((pkg (find-package :swank)))
     (and pkg
-	 (let ((sym (find-symbol "*EMACS-CONNECTION*" pkg)))
-	   (and sym (boundp sym) (symbol-value sym))))))
+   (let ((sym (find-symbol "*EMACS-CONNECTION*" pkg)))
+     (and sym (boundp sym) (symbol-value sym))))))
 
 (defun colors-supported-p ()
   (not (string= (or (uiop:getenv "TERM") "") "dumb")))
@@ -36,13 +36,13 @@
 
 (defun spectral-color-text (text)
   (let ((result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
-	(colors *spectral-colors*))
+  (colors *spectral-colors*))
     (loop for char across text
-	  for i from 0
-	  do (let ((color (nth (mod i (length colors)) colors)))
-	       (map nil (lambda (c) (vector-push-extend c result))
-		    (cl-ansi-text:make-color-string color))
-	       (vector-push-extend char result)))
+    for i from 0
+    do (let ((color (nth (mod i (length colors)) colors)))
+         (map nil (lambda (c) (vector-push-extend c result))
+        (cl-ansi-text:make-color-string color))
+         (vector-push-extend char result)))
     (coerce result 'string)))
 
 (defparameter *stack* nil)
@@ -69,6 +69,12 @@
 (defparameter *scan-ops* (make-hash-table))
 (defparameter *error-stream* t)
 
+;; Magic numbers (used by std libs)
+(defparameter *print-limit-per-dim* 10 "Max elements shown per dimension when pretty-printing arrays.")
+(defparameter *peek-stack-limit* 5 "Max stack items shown by peek.")
+(defparameter *max-ndims* 8 "Max array dimensions supported by .sdat format.")
+(defparameter *npy-alignment* 16 "NPY header alignment (bytes).")
+
 (defun spectral-error (format-control &rest format-args)
   "Signal a user-facing Spectral error with consistent formatting."
   (error (make-condition 'simple-error
@@ -89,12 +95,12 @@
 (defun register-op (name function arity)
   "Register a new operation with the given name, function, and arity."
   (setf (gethash name *ops*)
-	(cons function arity)))
+  (cons function arity)))
 
 (defun register-stack-op (name function arity)
   "Registers a new stack operation with the given name, function and arity"
   (setf (gethash name *stack-ops*)
-	(cons function arity)))
+  (cons function arity)))
 
 ;; Array operations (defined before std libs that use them)
 (defun array-op (op a b)
@@ -107,29 +113,29 @@
     ((and (numberp a) (numberp b)) (funcall op a b))
     ((and (numberp a) (arrayp b))
      (let* ((dimensions (array-dimensions b))
-	    (result-array (make-array dimensions))
-	    (total (array-total-size b)))
+      (result-array (make-array dimensions))
+      (total (array-total-size b)))
        (dotimes (i total)
-	 (setf (row-major-aref result-array i)
-	       (funcall op a (row-major-aref b i))))
+   (setf (row-major-aref result-array i)
+         (funcall op a (row-major-aref b i))))
        result-array))
     ((and (numberp b) (arrayp a))
      (let* ((dimensions (array-dimensions a))
-	    (result-array (make-array dimensions))
-	    (total (array-total-size a)))
+      (result-array (make-array dimensions))
+      (total (array-total-size a)))
        (dotimes (i total)
-	 (setf (row-major-aref result-array i)
-	       (funcall op (row-major-aref a i) b)))
+   (setf (row-major-aref result-array i)
+         (funcall op (row-major-aref a i) b)))
        result-array))
     ((and (arrayp a) (arrayp b))
      (let* ((dimensions (array-dimensions a))
-	    (result-array (make-array dimensions))
-	    (total (array-total-size a)))
+      (result-array (make-array dimensions))
+      (total (array-total-size a)))
        (unless (equal dimensions (array-dimensions b))
-	 (spectral-error "Mismatched array dimensions: arrays must have the same dimensions"))
+   (spectral-error "Mismatched array dimensions: arrays must have the same dimensions"))
        (dotimes (i total)
-	 (setf (row-major-aref result-array i)
-	       (funcall op (row-major-aref a i) (row-major-aref b i))))
+   (setf (row-major-aref result-array i)
+         (funcall op (row-major-aref a i) (row-major-aref b i))))
        result-array))))
 
 
@@ -142,11 +148,11 @@
     ((numberp a) (funcall op a))
     ((arrayp a)
      (let* ((dimensions (array-dimensions a))
-	    (result-array (make-array dimensions))
-	    (total (array-total-size a)))
+      (result-array (make-array dimensions))
+      (total (array-total-size a)))
        (dotimes (i total)
-	 (setf (row-major-aref result-array i)
-	       (funcall op (row-major-aref a i))))
+   (setf (row-major-aref result-array i)
+         (funcall op (row-major-aref a i))))
        result-array))
     (t (spectral-error "Invalid input for array operation: ~S" a))))
 
@@ -173,29 +179,29 @@
      (spectral-error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
     ((and (arrayp a) (> (length (array-dimensions a)) 1))
      (let* ((dims (array-dimensions a))
-	    (rest-dims (subseq dims 1))
-	    (col-size (reduce #'* rest-dims))
-	    (result (make-array rest-dims)))
+      (rest-dims (subseq dims 1))
+      (col-size (reduce #'* rest-dims))
+      (result (make-array rest-dims)))
        (dotimes (i (array-total-size result))
-	 (let ((v (loop with acc = (row-major-aref a i)
-		       for k from 1 below (first dims)
-		       do (setf acc (funcall op acc (row-major-aref a (+ i (* k col-size)))))
-		       finally (return acc))))
-	   (setf (row-major-aref result i) v)))
+   (let ((v (loop with acc = (row-major-aref a i)
+           for k from 1 below (first dims)
+           do (setf acc (funcall op acc (row-major-aref a (+ i (* k col-size)))))
+           finally (return acc))))
+     (setf (row-major-aref result i) v)))
        result))
     ((arrayp a) 
      (let* ((result (row-major-aref a 0))
-	    (ntot (array-total-size a)))
+      (ntot (array-total-size a)))
        (loop for i from 1 to (1- ntot) do
-	 (setf result (funcall op result (row-major-aref a i))))
+   (setf result (funcall op result (row-major-aref a i))))
        result))
     (t (spectral-error "Reduction expects an array, got ~S." a))))
 
 (defun scan (op initial lst)
   (let ((results nil)
-	(acc initial))
+  (acc initial))
     (dolist (item lst (nreverse results))
-	   (setf acc (funcall op acc item))
+     (setf acc (funcall op acc item))
       (push acc results))))
 
 ;; Inclusive prefix scan: first element = itself, no initial value.
@@ -203,7 +209,7 @@
   (when (null lst)
     (spectral-error "scan1 requires a non-empty list"))
   (let ((results (list (first lst)))
-	(acc (first lst)))
+  (acc (first lst)))
     (dolist (item (rest lst) (nreverse results))
       (setf acc (funcall op acc item))
       (push acc results))))
@@ -241,9 +247,9 @@
 (defun eval-node (element &optional (debug nil))
   "Execute AST element"
   (let ((typ (first element))
-	(val (cdr element)))
+  (val (cdr element)))
     (if debug
-	(format t "Entering eval-node with typ ~A, val ~A~%" typ val))
+  (format t "Entering eval-node with typ ~A, val ~A~%" typ val))
     (cond
       ;; Numbers push themselves
       ((equal typ :number)
@@ -264,33 +270,33 @@
       ;; Assignment
       ((equal typ :assignment)
        (let* ((name (first val))
-	      (exprs (car (rest val)))
-	      (result
-		(handler-case
-		    ;; try to evaluate the expression
-		    (progn
-		      (let ((*stack* nil))
-			(dolist (element (reverse exprs))
-			  (eval-node element))
-			(peek-stack)))
-		  (error
-		      (condition)
-		    (declare (ignore condition))
-		    (lambda ()
-		      (dolist
-			  (element (reverse exprs))
-			(eval-node element))
-		      (peek-stack))))))
-	 (if (functionp result)
-	     (setf (gethash name *functions*) result)
-	     (setf (gethash name *variables*) result))))
+        (exprs (car (rest val)))
+        (result
+    (handler-case
+        ;; try to evaluate the expression
+        (progn
+          (let ((*stack* nil))
+      (dolist (element (reverse exprs))
+        (eval-node element))
+      (peek-stack)))
+      (error
+          (condition)
+        (declare (ignore condition))
+        (lambda ()
+          (dolist
+        (element (reverse exprs))
+      (eval-node element))
+          (peek-stack))))))
+   (if (functionp result)
+       (setf (gethash name *functions*) result)
+       (setf (gethash name *variables*) result))))
 
       ;; Conditional
       ((equal typ :if-then-else)
        (let* ((condition (pop-stack)))
-	 (if (is-true condition)
-	     (eval-node (first (car val)))
-	     (eval-node (second (car val))))))
+   (if (is-true condition)
+       (eval-node (first (car val)))
+       (eval-node (second (car val))))))
 
       ;; Groups
       ((equal typ :group)
@@ -299,17 +305,17 @@
       ;; Arrays
       ((equal typ :array)
        (let* ((evaluated-elements (mapcar (lambda (part)
-					    (eval-node part nil)
-					    (let ((val (pop-stack)))
-					      (if (arrayp val)
-						  (coerce val 'list)
-						  val))) val))
-	      (dims (compute-dimensions evaluated-elements)))
-	 (when (every #'listp evaluated-elements)
-	   (check-rectangular evaluated-elements))
-	 (push-stack
+              (eval-node part nil)
+              (let ((val (pop-stack)))
+                (if (arrayp val)
+              (coerce val 'list)
+              val))) val))
+        (dims (compute-dimensions evaluated-elements)))
+   (when (every #'listp evaluated-elements)
+     (check-rectangular evaluated-elements))
+   (push-stack
           (make-array (if (listp dims) dims (list dims))
-			:initial-contents evaluated-elements))))
+      :initial-contents evaluated-elements))))
 
       ;; User defined functions
       ((equal typ :function)
@@ -319,21 +325,21 @@
       ((equal typ :reduce)
        (eval-node (second val) debug)
        (let* ((operand (pop-stack))
-	      (op-sym (first val))
-	      (op-fn (gethash op-sym *reduce-ops*)))
-	 (when (null op-fn)
-	   (spectral-error "Unknown reduction operator: ~A" op-sym))
-	 (push-stack (reduce-array op-fn operand))))
+        (op-sym (first val))
+        (op-fn (gethash op-sym *reduce-ops*)))
+   (when (null op-fn)
+     (spectral-error "Unknown reduction operator: ~A" op-sym))
+   (push-stack (reduce-array op-fn operand))))
 
       ;; Scan
       ((equal typ :scan)
        (eval-node (second val) debug)
        (let* ((operand (pop-stack))
-	      (op-sym (first val))
-	      (op-fn (gethash op-sym *scan-ops*)))
-	 (when (null op-fn)
-	   (spectral-error "Unknown scan operator: ~A" op-sym))
-	 (push-stack (scan-array op-fn operand))))
+        (op-sym (first val))
+        (op-fn (gethash op-sym *scan-ops*)))
+   (when (null op-fn)
+     (spectral-error "Unknown scan operator: ~A" op-sym))
+   (push-stack (scan-array op-fn operand))))
 
       ;; Stack operation
       ((equal typ :stack)
@@ -344,41 +350,41 @@
       ;; Op-fn receives (b a) to match left-to-right reading: "+ 3 5" => 3+5.
       ((equal typ :op)
        (let ((op-fn (car val))
-	     (arity (cadr val)))
-	 (cond
-	   ;; Nullary operations
-	   ((= arity 0)
-	    (let ((values (multiple-value-list (funcall op-fn))))
-	      (loop for value in values do (push-stack value))
-	      (first *stack*)))
-	   
+       (arity (cadr val)))
+   (cond
+     ;; Nullary operations
+     ((= arity 0)
+      (let ((values (multiple-value-list (funcall op-fn))))
+        (loop for value in values do (push-stack value))
+        (first *stack*)))
+     
 
            ;; Unary operations
-	   ((= arity 1)
-	    (let* ((a (pop-stack))
-		   (values (multiple-value-list (funcall op-fn a))))
-	      (loop for value in values do (push-stack value))
-	      (first *stack*)))
+     ((= arity 1)
+      (let* ((a (pop-stack))
+       (values (multiple-value-list (funcall op-fn a))))
+        (loop for value in values do (push-stack value))
+        (first *stack*)))
     
-	   ;; Binary operations
-	   ((= arity 2)
-	    (let* ((a (pop-stack))
-		   (b (pop-stack))
-		   (values (multiple-value-list (funcall op-fn a b))))
-	      (loop for value in values do
-		(push-stack value))
-	      (first *stack*)))
+     ;; Binary operations
+     ((= arity 2)
+      (let* ((a (pop-stack))
+       (b (pop-stack))
+       (values (multiple-value-list (funcall op-fn a b))))
+        (loop for value in values do
+    (push-stack value))
+        (first *stack*)))
 
-	   ;; Ternary operations (e.g. write-hdf5 filename path data)
-	   ((= arity 3)
-	    (let* ((a (pop-stack))
-		   (b (pop-stack))
-		   (c (pop-stack))
-		   (values (multiple-value-list (funcall op-fn a b c))))
-	      (loop for value in values do (push-stack value))
-	      (first *stack*)))
+     ;; Ternary operations (e.g. write-hdf5 filename path data)
+     ((= arity 3)
+      (let* ((a (pop-stack))
+       (b (pop-stack))
+       (c (pop-stack))
+       (values (multiple-value-list (funcall op-fn a b c))))
+        (loop for value in values do (push-stack value))
+        (first *stack*)))
 
-	   (t (spectral-error "Functions of arity ~A are not implemented" arity)))))
+     (t (spectral-error "Functions of arity ~A are not implemented" arity)))))
 
       ;; unrecognized
       (t (spectral-error "Unexpected expressions: ~A" element)))))
@@ -394,74 +400,74 @@
 
 (defun remove-comments (string)
   (let ((in-quote nil)
-	(result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+  (result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
     (dotimes (i (length string))
       (let ((char (char string i)))
-	(cond
-	  ((char= char #\")
-	   (setf in-quote (not in-quote))
-	   (vector-push-extend char result))
-	  ((and (not in-quote) (char= char #\;))
-	   (return-from remove-comments (coerce result 'string)))
-	  (t
-	   (vector-push-extend char result)))))
+  (cond
+    ((char= char #\")
+     (setf in-quote (not in-quote))
+     (vector-push-extend char result))
+    ((and (not in-quote) (char= char #\;))
+     (return-from remove-comments (coerce result 'string)))
+    (t
+     (vector-push-extend char result)))))
     (coerce result 'string)))
 
 
 (defun add-spaces-around-brackets (s)
     (with-output-to-string (out)
       (loop for char across s
-	    do (if (member char *square-brackets*)
-		   (format out " ~C " char)
-		   (write-char char out)))))
+      do (if (member char *square-brackets*)
+       (format out " ~C " char)
+       (write-char char out)))))
 
 (defun add-spaces-after-single-char-tokens (s)
   (let ((result (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
     (dotimes (i (length s))
       (vector-push-extend (char s i) result)
       (when (and (< i (1- (length s)))
-		 (find (char s i) *single-character-tokens*)
-		 (or
-		  (digit-char-p (char s (1+ i)))
-		  (find (char s (1+ i)) *single-character-tokens*)))
-	(vector-push-extend #\Space result)))
+     (find (char s i) *single-character-tokens*)
+     (or
+      (digit-char-p (char s (1+ i)))
+      (find (char s (1+ i)) *single-character-tokens*)))
+  (vector-push-extend #\Space result)))
     (coerce result 'string)))
 
 
 (defun parse-pipes (s)
   (with-output-to-string (out)
     (labels ((process (start end)
-	       ;; Transform "a|b|c" to "((a)(b)(c))"
-	       (let ((parts (split-sequence:split-sequence #\| (subseq s start end))))
-		 (format out "(~{(~a)~})" parts)))
-	     (walk (i)
-	       (loop while (< i (length s)) do
-		 (let ((ch (char s i)))
-		   (cond
-		     ((char= ch #\()
-		      (let ((start i)
-			    (depth 1)
-			    (j (1+ i)))
-			;; Search for matching closing paren
-			(loop while (and (< j (length s)) (> depth 0)) do
-			  (let ((c (char s j)))
-			    (cond
-			      ((char= c #\() (incf depth))
-			      ((char= c #\)) (decf depth))))
-			  (incf j))
-			(if (and (= depth 0)
-				 (find #\| s :start (1+ start) :end (1- j)))
-			    ;; Parenthesized expression with | found
-			    (progn
-			      (process (1+ start) (1- j))
-			      (setf i j))
-			    ;; Not an alternation or unbalanced
-			    (progn
-			      (write-string (subseq s start j) out)
-			      (setf i j)))))
-		     (t (write-char ch out)
-			(incf i)))))))
-	     (walk 0))))
+         ;; Transform "a|b|c" to "((a)(b)(c))"
+         (let ((parts (split-sequence:split-sequence #\| (subseq s start end))))
+     (format out "(~{(~a)~})" parts)))
+       (walk (i)
+         (loop while (< i (length s)) do
+     (let ((ch (char s i)))
+       (cond
+         ((char= ch #\()
+          (let ((start i)
+          (depth 1)
+          (j (1+ i)))
+      ;; Search for matching closing paren
+      (loop while (and (< j (length s)) (> depth 0)) do
+        (let ((c (char s j)))
+          (cond
+            ((char= c #\() (incf depth))
+            ((char= c #\)) (decf depth))))
+        (incf j))
+      (if (and (= depth 0)
+         (find #\| s :start (1+ start) :end (1- j)))
+          ;; Parenthesized expression with | found
+          (progn
+            (process (1+ start) (1- j))
+            (setf i j))
+          ;; Not an alternation or unbalanced
+          (progn
+            (write-string (subseq s start j) out)
+            (setf i j)))))
+         (t (write-char ch out)
+      (incf i)))))))
+       (walk 0))))
 
 
 (defmacro preprocess-s (string &body expressions)
@@ -470,8 +476,8 @@ result through each expression using 's' as the placeholder for the current valu
   (let ((result-var (gensym "RESULT")))
     `(let ((,result-var ,string))
        ,@(mapcar (lambda (expr)
-		   `(setf ,result-var ,(substitute result-var 's expr)))
-		 expressions)
+       `(setf ,result-var ,(substitute result-var 's expr)))
+     expressions)
        ,result-var)))
 
 (defun preprocess (s)
@@ -485,11 +491,11 @@ result through each expression using 's' as the placeholder for the current valu
 (defun tokenize (expr-string)
   "Simple tokenizer"
   (let ((tokens '())
-	(expr-string (preprocess expr-string)))
+  (expr-string (preprocess expr-string)))
     (with-input-from-string (s expr-string)
       (loop for token = (read s nil nil)
-	    while token
-	    do (push token tokens)))
+      while token
+      do (push token tokens)))
     (reverse tokens)))
 
 
@@ -512,19 +518,19 @@ result through each expression using 's' as the placeholder for the current valu
  
 (defun parse-array (tokens)
   (let ((rest (cdr tokens))
-	(elements '()))
+  (elements '()))
     (loop until (equal (first tokens) '])
-	  do (multiple-value-bind (rest2 tok) (parse-expression rest)
-	       (setf rest rest2)
-	       (setf tokens rest2)
-	       (push tok elements)))
+    do (multiple-value-bind (rest2 tok) (parse-expression rest)
+         (setf rest rest2)
+         (setf tokens rest2)
+         (push tok elements)))
     (values
      (cdr rest)
      `(:array ,@(nreverse elements)))))
 
 (defun parse-stack-ops (tokens)
   (let ((fun (gethash (car tokens) *stack-ops*))
-	(rest (cdr tokens)))
+  (rest (cdr tokens)))
     (values
      rest
      `(:stack ,(car fun) ,(cdr fun)))))
@@ -532,24 +538,24 @@ result through each expression using 's' as the placeholder for the current valu
 
 (defun parse-ops (tokens)
   (let ((fun (gethash (car tokens) *ops*))
-	(rest (cdr tokens)))
+  (rest (cdr tokens)))
     (values
      rest
      `(:op ,(car fun) ,(cdr fun)))))
 
 (defun parse-assignment (tokens)
   (let* ((name (first tokens))
-	 (expr-tokens (cddr tokens))
-	 (ast (parse expr-tokens)))
+   (expr-tokens (cddr tokens))
+   (ast (parse expr-tokens)))
     (values
      nil
      `(:assignment ,name ,ast))))
 
 (defun parse-if (tokens)
   (let ((then-else (first tokens))
-	(rest (cddr tokens)))
+  (rest (cddr tokens)))
     (unless (and (listp then-else)
-		 (>= (length then-else) 2))
+     (>= (length then-else) 2))
       (spectral-error "Could not find correct then-else clause for IF"))
     (let ((groups (parse-group then-else)))
       (values
@@ -560,15 +566,15 @@ result through each expression using 's' as the placeholder for the current valu
   (let ((result '()))
     (loop until (null group) do
       (multiple-value-bind (rest tok) (parse-expression group)
-	(setf group rest)
-	(push tok result)))
+  (setf group rest)
+  (push tok result)))
     (reverse result)))
 
 ;; Returns (values rest-tokens ast). Consumes one expression from tokens.
 ;; Reduction/scan: consume token (e.g. /+), parse operand from (cdr tokens).
 (defun parse-expression (tokens)
   (let ((token (first tokens))
-	(stoken (second tokens)))
+  (stoken (second tokens)))
     (cond
       ;; If - conditional
       ((eq stoken 'if)
@@ -581,19 +587,19 @@ result through each expression using 's' as the placeholder for the current valu
       ;; Numbers
       ((numberp token)
        (values 
-	(cdr tokens)
-	`(:number ,token)))
+  (cdr tokens)
+  `(:number ,token)))
 
       ;; Strings
       ((stringp token)
        (values
-	(cdr tokens)       
+  (cdr tokens)       
        `(:string ,token)))
 
       ;; Constants
       ((assoc token *constants*)
        (values
-	(cdr tokens)
+  (cdr tokens)
        `(:constant ,token)))
 
       ;; Variables
@@ -605,9 +611,9 @@ result through each expression using 's' as the placeholder for the current valu
       ;; Groups
       ((listp token)
        (values
-	(cdr tokens)
-	`(:group
-	  ,(parse-group token))))
+  (cdr tokens)
+  `(:group
+    ,(parse-group token))))
 
       ;; User defined Functions
       ((gethash token *functions*)
@@ -620,12 +626,12 @@ result through each expression using 's' as the placeholder for the current valu
       ;; Reduction
       ((char= (char (symbol-name token) 0) #\/)
        (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
-	 (values rest `(:reduce ,token ,operand-ast))))
+   (values rest `(:reduce ,token ,operand-ast))))
 
       ;; Scan
       ((char= (char (symbol-name token) 0) #\&)
        (multiple-value-bind (rest operand-ast) (parse-expression (cdr tokens))
-	 (values rest `(:scan ,token ,operand-ast))))
+   (values rest `(:scan ,token ,operand-ast))))
 
       ;; Stack operations
       ((gethash token *stack-ops*)
@@ -641,19 +647,20 @@ result through each expression using 's' as the placeholder for the current valu
 (defun parse (tokens)
   (let ((result '()))
     (loop until (null tokens)
-	  do
-	     (multiple-value-bind
-		   (rtokens expr)
-		 (parse-expression tokens)
-	       (setf tokens rtokens)
-	       (push expr result)))
+    do
+       (multiple-value-bind
+       (rtokens expr)
+     (parse-expression tokens)
+         (setf tokens rtokens)
+         (push expr result)))
     (nreverse result)))
 
 (defun evaluate (expr-string &optional (debug nil))
+  "Parse and evaluate a Spectral expression. Returns the top-of-stack value."
   (let ((tokens (tokenize expr-string)))
     (let ((ast (parse tokens)))
       (loop for node in (reverse ast) do
-	(eval-node node debug))
+  (eval-node node debug))
       (peek-stack))))
 
 
@@ -663,15 +670,15 @@ result through each expression using 's' as the placeholder for the current valu
       (format t "Spectral REPL - type exit to exit"))
   (loop
     (if (should-colorize-p)
-	(format t "~&~A ~A~A" (spectral-color-text (format nil "ΣpectraΛ")) (format nil "~C[0m" #\Escape) " > ")
-	(format t "~&ΣpectraΛ > "))
+  (format t "~&~A ~A~A" (spectral-color-text (format nil "ΣpectraΛ")) (format nil "~C[0m" #\Escape) " > ")
+  (format t "~&ΣpectraΛ > "))
     (finish-output)
     (let ((line (read-line *standard-input* nil :eof)))
       (cond
-	((or (null line) (string= line "exit")) (return))
-	(t (handler-case
-	       (progn (evaluate line)
-		      (pretty-print-stack))
-	     (error (e)
-	       (format *error-stream* "~&Error: ~A~%" e)
-	       (finish-output *error-stream*))))))))
+  ((or (null line) (string= line "exit")) (return))
+  (t (handler-case
+         (progn (evaluate line)
+          (pretty-print-stack))
+       (error (e)
+         (format *error-stream* "~&Error: ~A~%" e)
+         (finish-output *error-stream*))))))))

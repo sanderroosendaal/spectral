@@ -90,10 +90,10 @@
 (defun fact-fn (a)
   "Factorial ! 8 -> 40320"
   (labels ((fact (n)
-	     (cond
-	       ((= n 0) 1)
-	       ((= n 1) 1)
-	       ((> n 1) (* n (fact (1- n)))))))
+       (cond
+         ((= n 0) 1)
+         ((= n 1) 1)
+         ((> n 1) (* n (fact (1- n)))))))
     (array-fn #'fact a)))
 
 (register-op '! #'fact-fn 1)
