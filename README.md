@@ -91,6 +91,7 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 - ✅ Array operations with broadcasting
 - ✅ Variables and function definitions
 - ✅ File I/O (text files) (`load`, `load-csv`, `write-csv`)
+- ✅ Binary array I/O (`.sdat`) (`load-binary`, `write-binary`)
 - ✅ Stack operations (`pop` to pop, `dup` or `d` to duplicate, `swap` to swap, `peek`)
 - ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
      `[A B]` where `A` and `B` are user-defined variables which can be arrays.
@@ -109,7 +110,7 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 ### Current Limitations
 
 - No loops; composition and `run` only
-- HDF5 and binary file I/O not yet supported
+- HDF5 support not yet implemented (see `docs/IO_PROPOSAL.md`)
 
 ### Prerequisites
 
@@ -124,6 +125,12 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 
 ```bash
 sbcl --noinform --load tests.lisp
+```
+
+Binary I/O tests use fixtures in `testdata/`. To regenerate them:
+
+```bash
+sbcl --noinform --script write-fixtures-minimal.lisp
 ```
 
 ### Try It

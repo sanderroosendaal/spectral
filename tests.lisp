@@ -226,6 +226,31 @@
       ("pick 0 detrend [0 1 2 3 4]" 0)
       ("/+ abs detrend [0 1 2 3 4]" 0)))
 
+  ;; Binary array I/O (Tier A .sdat)
+  (run-test-group "Binary I/O"
+    '(;; Roundtrip: write then load (uses temp file)
+      ("write-binary \"testdata/roundtrip.sdat\" [1 2 3 4 5]" :run-only)
+      ("load-binary \"testdata/roundtrip.sdat\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0) nil)
+      ;; Roundtrip 2D
+      ("write-binary \"testdata/roundtrip2d.sdat\" [[1 2][3 4]]" :run-only)
+      ("load-binary \"testdata/roundtrip2d.sdat\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)) nil)
+      ;; Roundtrip with special values (zero, negative, exactly representable)
+      ("write-binary \"testdata/roundtrip_spec.sdat\" [0 -1 2]" :run-only)
+      ("pick 0 load-binary \"testdata/roundtrip_spec.sdat\"" 0.0d0 nil)
+      ("pick 1 load-binary \"testdata/roundtrip_spec.sdat\"" -1.0d0 nil)
+      ("pick 2 load-binary \"testdata/roundtrip_spec.sdat\"" 2.0d0 nil)
+      ;; Shape preserved
+      ("shape write-binary \"testdata/shape_test.sdat\" range 10" (10))
+      ("shape load-binary \"testdata/shape_test.sdat\"" (10) nil)
+      ;; Size preserved
+      ("size write-binary \"testdata/size_test.sdat\" [[1 2 3][4 5 6]]" 6)
+      ("size load-binary \"testdata/size_test.sdat\"" 6 nil)
+      ;; Fixture files (run write-fixtures-minimal.lisp first)
+      ("load-binary \"testdata/vec5_float64.sdat\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0))
+      ("load-binary \"testdata/mat2x2_float64.sdat\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)))
+      ("load-binary \"testdata/vec_special.sdat\"" #(0.0d0 -1.0d0 2.0d0))
+      ("shape load-binary \"testdata/vec100.sdat\"" (100))))
+
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
     (format t "~%~%--- ~D passed, ~D failed (~D total) ---~%"
