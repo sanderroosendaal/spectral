@@ -265,6 +265,19 @@
       ("size write-npy \"testdata/npy_size.npy\" [[1 2 3][4 5 6]]" 6)
       ("size load-npy \"testdata/npy_size.npy\"" 6 nil)))
 
+  ;; HDF5 (optional; skip when libhdf5 not available)
+  (when (and (boundp '*hdf5-available-p*) *hdf5-available-p*)
+    (run-test-group "HDF5 I/O"
+      '(;; Roundtrip 1D
+        ("write-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\" [1 2 3 4 5]" :run-only)
+        ("load-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0) nil)
+        ;; Roundtrip 2D
+        ("write-hdf5 \"testdata/h5_2d.h5\" \"/matrix\" [[1 2][3 4]]" :run-only)
+        ("load-hdf5 \"testdata/h5_2d.h5\" \"/matrix\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)) nil)
+        ;; Shape preserved
+        ("shape write-hdf5 \"testdata/h5_shape.h5\" \"/arr\" range 5" (5))
+        ("shape load-hdf5 \"testdata/h5_shape.h5\" \"/arr\"" (5) nil))))
+
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
     (format t "~%~%--- ~D passed, ~D failed (~D total) ---~%"

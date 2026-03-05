@@ -407,6 +407,23 @@
                             (coerce (read-int32-le s) 'double-float))))
                 arr))))))))
 
+
+;;; HDF5 (optional — requires libhdf5 + hdf5-cffi)
+;;; load-hdf5 filename path | write-hdf5 filename path data
+(defvar *hdf5-available-p* nil)
+
+(handler-case
+    (progn
+      (ql:quickload :hdf5-cffi)
+      (setf *hdf5-available-p* t)
+      (load (merge-pathnames "hdf5-io.lisp"
+                             (make-pathname :defaults (truename *load-truename*)
+                                            :name nil :type nil)))
+      (register-op 'load-hdf5 #'load-hdf5-fn 2)
+      (register-op 'write-hdf5 #'write-hdf5-fn 3))
+  (error ()
+    (warn "HDF5 not available; load-hdf5 and write-hdf5 disabled")))
+
 ;; Add file operations
 (register-op 'load #'load-numbers 1)
 (register-op 'write #'write-numbers 2)

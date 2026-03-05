@@ -93,6 +93,7 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 - ✅ File I/O (text files) (`load`, `load-csv`, `write-csv`)
 - ✅ Binary array I/O (`.sdat`) (`load-binary`, `write-binary`)
 - ✅ NPY format (`.npy`) (`load-npy`, `write-npy`) — float64/int32, 1D/2D
+- ✅ HDF5 (`.h5`) (`load-hdf5`, `write-hdf5`) — optional, requires libhdf5 + hdf5-cffi
 - ✅ Stack operations (`pop` to pop, `dup` or `d` to duplicate, `swap` to swap, `peek`)
 - ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
      `[A B]` where `A` and `B` are user-defined variables which can be arrays.
@@ -120,6 +121,7 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 - **Optional** (Spectral runs without these, but features are disabled):
   - [FFTW3](http://www.fftw.org/) — for FFT
   - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
+  - [HDF5](https://www.hdfgroup.org/solutions/hdf5/) (libhdf5) — for `load-hdf5` and `write-hdf5`
   - [gnuplot](http://gnuplot.info/) — for plotting
 
 ### Run Tests
@@ -201,7 +203,7 @@ See [REFERENCE](documentation.md) for more functions implemented.
 - [X] Signal filtering (`bandpass`, `lowpass`, `highpass`, `bandstop`, `smooth`, `savgol`, `find-peaks`, `find-valleys`, `psd`, `detrend`, `differentiate`)
 - [X] Statistics (mean, std, correlation)
 - [X] File formats (CSV load/save)
-- [ ] File formats (HDF5, binary)
+- [X] File formats (HDF5, binary .sdat, NPY)
 - [X] Plotting and visualization
 
 ### Phase 3: Performance
@@ -226,6 +228,7 @@ Spectral is designed for:
 | Message | Cause |
 |---------|-------|
 | "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load |
+| "HDF5 not available" | libhdf5 not installed; `load-hdf5` and `write-hdf5` disabled |
 | FFT errors | FFTW3 library not found (CFFI) |
 | Plot commands fail | gnuplot not installed or not on PATH |
 | "Bug in readtable iterators or concurrent access" | SBCL + outdated named-readtables. Install the patched version: `cd ~/quicklisp/local-projects && git clone https://github.com/melisgl/named-readtables.git` (or `%USERPROFILE%\quicklisp\local-projects` on Windows). Then retry. |
