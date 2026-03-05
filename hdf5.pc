@@ -1,0 +1,9 @@
+prefix=C:/Program Files/HDF_Group/HDF5/2.0.0
+includedir=${prefix}/include
+libdir=${prefix}/bin
+
+Name: hdf5
+Description: HDF5 - A general purpose library and file format for storing scientific data
+Version: 2.0.0
+Cflags: -I${includedir}
+Libs: -L${libdir} -lhdf5

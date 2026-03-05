@@ -23,8 +23,8 @@
                 data)
   (format t "Wrote testdata/mat2x2_float64.sdat~%"))
 
-;; Fixture 3: 1D with special values (zero, negative)
-(let ((data (coerce #(0.0d0 -1.5d0 3.14d0) 'vector)))
+;; Fixture 3: 1D with special values (zero, negative, positive) - must match tests.lisp expectation
+(let ((data (coerce #(0.0d0 -1.0d0 2.0d0) 'vector)))
   (write-binary (merge-pathnames "testdata/vec_special.sdat" *default-pathname-defaults*)
                 data)
   (format t "Wrote testdata/vec_special.sdat~%"))
