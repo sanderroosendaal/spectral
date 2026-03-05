@@ -208,17 +208,21 @@ The Lisp prototype is functional and reasonably structured, but there are dead c
 
 **Done:** Added "Error paths" test group covering stack underflow, reduction/scan expect-array, invalid indices (pick/take/drop), reshape errors, type errors, array-op invalid input, mismatched dimensions, ->P/->R length errors, ragged array, unknown reduction/scan, unexpected token, malformed IF, and script filename:line errors.
 
-### 8.2 `range-fn` docstring wrong (arrays.lisp:3)
+### 8.2 `range-fn` docstring wrong ✓
 
-**Issue:** Docstring says "range 9: [0 1 2 3 4 5 6 7 8 9]" but `range 9` produces 9 elements (0..8), not 10.
+**Issue:** Docstring said "range 9: [0 1 2 3 4 5 6 7 8 9]" but `range 9` produces 9 elements (0..8), not 10.
 
 **Refactor:** Fix docstring to match implementation.
 
-### 8.3 Duplicate fixture scripts
+**Done:** Docstring now correctly says "range 5 -> [0 1 2 3 4], range 9 -> [0..8]".
 
-**Issue:** `write-fixtures-minimal.lisp` and `generate-binary-fixtures.lisp` overlap. `generate-binary-fixtures` used to produce different `vec_special`; that was corrected but the duplication remains.
+### 8.3 Duplicate fixture scripts ✓
+
+**Issue:** `write-fixtures-minimal.lisp` and `generate-binary-fixtures.lisp` overlapped. `generate-binary-fixtures` used to produce different `vec_special`; that was corrected but the duplication remained.
 
 **Refactor:** Consolidate into one script or make one call the other; document which to use.
+
+**Done:** Removed `generate-binary-fixtures.lisp`. Kept `write-fixtures-minimal.lisp` (no deps, `--script` friendly). README and tests already reference it.
 
 ---
 
