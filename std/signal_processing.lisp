@@ -1,5 +1,4 @@
-(load (merge-pathnames "fftw-ffi.lisp"
-                       (make-pathname :defaults *load-truename* :name nil :type nil)))
+(load (merge-pathnames "std/fftw-ffi.lisp" *spectral-root*))
 
 (defun ensure-vector (x)
   "Coerce list to vector; return other sequences (e.g. arrays) unchanged."

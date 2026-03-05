@@ -354,7 +354,7 @@
 ;; Magicl stuff
 (handler-case (progn
 		(ql:quickload :magicl)
-		(load "std/linear_algebra.lisp"))
+		(load (merge-pathnames "std/linear_algebra.lisp" *spectral-root*)))
   (error ()
     (format t "Linear Algebra Not Loaded~%")))
   

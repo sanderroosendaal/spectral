@@ -411,9 +411,7 @@
     (progn
       (ql:quickload :hdf5-cffi)
       (setf *hdf5-available-p* t)
-      (load (merge-pathnames "hdf5-io.lisp"
-                             (make-pathname :defaults (truename *load-truename*)
-                                            :name nil :type nil)))
+      (load (merge-pathnames "std/hdf5-io.lisp" *spectral-root*))
       (register-op 'load-hdf5 #'load-hdf5-fn 2)
       (register-op 'write-hdf5 #'write-hdf5-fn 3))
   (error ()
