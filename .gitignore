@@ -4,3 +4,4 @@
 *.exe
 *.fasl
 *.dat
+.aider*
