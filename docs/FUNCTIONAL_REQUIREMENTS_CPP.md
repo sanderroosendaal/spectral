@@ -107,7 +107,7 @@ For all documented APIs, parameters are listed in **evaluation order** (first po
 | `*` | `(a, b)` | `a * b` | `* 4 5` → 20 |
 | `%` | `(a, b)` | `b / a` | `% 3 15` → 5 |
 
-**Broadcasting**: Scalar vs array and array vs array, element-wise. Arrays must have identical dimensions for array-array ops.
+**Broadcasting**: Scalar vs array and array vs array, element-wise. Arrays must have identical dimensions for array-array ops. List inputs are coerced to vectors.
 
 ### 4.5 Unary Math (Arity 1)
 
@@ -154,7 +154,7 @@ For all documented APIs, parameters are listed in **evaluation order** (first po
 | `->P` | `[x, y]` | `[r, θ]` (rectangular → polar) |
 | `->R` | `[r, θ]` | `[x, y]` (polar → rectangular) |
 
-**Note**: Expect list/vector of length 2.
+**Note**: Input and output are vectors of length 2. Expect `->P`/`->R` error if length ≠ 2.
 
 ### 4.10 Reduction Operators (Prefix `/`)
 
@@ -170,7 +170,7 @@ Syntax: `/op array`. Reduce array to scalar (1D) or along first axis (2D).
 **1D**: Fold left over elements.  
 **2D**: Reduce along first axis; output shape = `(dims[1], dims[2], ...)`.
 
-**Error**: Reduction on scalar → error: "Reduction expects an array".
+**Error**: Reduction on scalar → error: "Reduction (e.g. /+) expects an array, got … Use /+ [1 2 3] to sum values."
 
 ### 4.11 Scan Operators (Prefix `&`)
 
@@ -181,7 +181,7 @@ Syntax: `&op array`. Inclusive prefix scan; output same length as input.
 | `&+` | Cumulative sum |
 | `&*` | Cumulative product |
 
-**Error**: Scan on scalar → error: "Scan expects an array".
+**Error**: Scan on scalar → error: "Scan (e.g. &+) expects an array, got … Use &+ [1 2 3] for cumulative sum."
 
 ### 4.12 Filters (Arity 2)
 
@@ -296,7 +296,7 @@ Requires LAPACK/BLAS. If unavailable: graceful degradation (ops undefined or ret
 
 | Op | Arity | Signature | Behavior |
 |----|-------|-----------|----------|
-| `run` | 1 | `(filename)` | Execute script file line-by-line; skip blank lines and comments (`;`) |
+| `run` | 1 | `(filename)` | Execute script file line-by-line; skip blank lines and comments (`;`). Errors re-signal with `path:line: message` for location context. |
 
 ### 5.4 Binary Format (.sdat)
 
@@ -409,7 +409,7 @@ name = expression
 
 ### 6.7 Rectangular Arrays
 
-All rows must have same length. Ragged arrays → error.
+All rows must have the same length. Ragged arrays → error: "Ragged array: all rows must have the same length".
 
 ---
 
@@ -422,9 +422,16 @@ All rows must have same length. Ragged arrays → error.
 | Stack underflow | "Stack underflow: cannot pop from an empty stack" |
 | Unknown reduction op | "Unknown reduction operator: ..." |
 | Unknown scan op | "Unknown scan operator: ..." |
-| Wrong type (e.g. reduction on scalar) | "Reduction expects an array, got ..." |
+| Wrong type (e.g. reduction on scalar) | "Reduction (e.g. /+) expects an array, got ..." |
+| Wrong type (scan on scalar) | "Scan (e.g. &+) expects an array, got ..." |
 | Arity not supported | "Functions of arity X are not implemented" |
-| Dimension mismatch | "Mismatched array dimensions" |
+| Dimension mismatch | "Mismatched array dimensions: arrays must have the same dimensions" |
+| Ragged array literal | "Ragged array: all rows must have the same length" |
+| Invalid pick/take/drop index | "Invalid index …" / "Invalid index for take/drop …" |
+| Reshape shape mismatch | "Non-matching shape … array has X elements" |
+| Malformed IF (then-else &lt; 2 exprs) | "Could not find correct then-else clause for IF" |
+| Unrecognized token | "Unexpected token: …" |
+| ->P/->R wrong length | "->P takes a vector [x y] of length 2" / "->R takes a vector [r theta] of length 2" |
 | Invalid .sdat (ndims>8, unknown typecode) | "Invalid .sdat" / "Unknown .sdat type code" |
 | NPY fortran_order True | "NPY: fortran_order True not supported" |
 | NPY unsupported dtype | "NPY: only <f8 and <i4 supported" |

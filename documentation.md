@@ -101,8 +101,7 @@ Flatten a nested list structure into a single list.
 
 **Description:**
 
-Return the index of the first occurrence of VALUE in ARRAY.
-    If VALUE is not found, return the dimensions of the array.
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -228,9 +227,7 @@ Creates an array of dimensions DIMS filled with ones
 
 **Description:**
 
-Pick an element from an array based on the index.
-    If index is a number, it returns the nth element.
-    If index is a list, it traverses the array according to the indices in the list.
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
 ---
 
@@ -244,7 +241,7 @@ Pick an element from an array based on the index.
 
 **Description:**
 
-Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]
+Generate n elements from 0 to n-1. E.g. range 5 -> [0 1 2 3 4], range 9 -> [0..8].
 
 ---
 
@@ -272,8 +269,7 @@ Return the number of dimensions (rank) of the array.
 
 **Description:**
 
-Reshape an array into a multi-dimensional array based on the given shape.
-    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -357,10 +353,7 @@ Pick nth row from array
 
 **Description:**
 
-Join two arrays along a new axis
-    Dimension analysis will be done and the
-    most intuitive option returned, or an error
-    if dimensions don't match
+Join two arrays along a new axis    Dimension analysis will be done and the    most intuitive option returned, or an error    if dimensions don't match
 
 ---
 
@@ -457,12 +450,6 @@ Creates an array of dimensions DIMS filled with zeros
 - **Arity:** 2
 - **Source:** std/filters.lisp
 
-**Parameters:** `(A B)`
-
-**Description:**
-
-Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
-
 ---
 
 #### `<=`
@@ -470,12 +457,6 @@ Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 - **Function:** `smaller-equal-fn`
 - **Arity:** 2
 - **Source:** std/filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 
 ---
 
@@ -485,12 +466,6 @@ Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
 - **Arity:** 2
 - **Source:** std/filters.lisp
 
-**Parameters:** `(A B)`
-
-**Description:**
-
-Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
-
 ---
 
 #### `>=`
@@ -498,12 +473,6 @@ Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
 - **Function:** `greater-equal-fn`
 - **Arity:** 2
 - **Source:** std/filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
 
 ---
 
@@ -513,12 +482,6 @@ Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
 - **Arity:** 2
 - **Source:** std/filters.lisp
 
-**Parameters:** `(A B)`
-
-**Description:**
-
-Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
-
 ---
 
 #### `neq`
@@ -526,12 +489,6 @@ Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
 - **Function:** `not-eql-fn`
 - **Arity:** 2
 - **Source:** std/filters.lisp
-
-**Parameters:** `(A B)`
-
-**Description:**
-
-Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
 
 ---
 
@@ -552,6 +509,20 @@ Load numbers from a text file (one per line)
 
 ---
 
+#### `load-binary`
+
+- **Function:** `load-binary`
+- **Arity:** 1
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME)`
+
+**Description:**
+
+Load array from .sdat binary file. Returns double-float array.
+
+---
+
 #### `load-csv`
 
 - **Function:** `load-csv`
@@ -566,6 +537,30 @@ Loads a table from a CSV file, comma separated, row oriented
 
 ---
 
+#### `load-hdf5`
+
+- **Function:** `load-hdf5-fn`
+- **Arity:** 2
+- **Source:** std/io.lisp
+
+**Parameters:** `(PATH FILENAME)`
+
+---
+
+#### `load-npy`
+
+- **Function:** `load-npy`
+- **Arity:** 1
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME)`
+
+**Description:**
+
+Load array from .npy file. Returns double-float. Supports <f8, <i4, 1D/2D, C order.
+
+---
+
 #### `run`
 
 - **Function:** `run-script`
@@ -576,7 +571,7 @@ Loads a table from a CSV file, comma separated, row oriented
 
 **Description:**
 
-Execute a script file line by line
+Execute a script file line by line. Errors include filename and line number.
 
 ---
 
@@ -594,6 +589,20 @@ Write numbers (vector) to a text file (one per line)
 
 ---
 
+#### `write-binary`
+
+- **Function:** `write-binary`
+- **Arity:** 2
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME DATA)`
+
+**Description:**
+
+Write array to .sdat binary file. Supports float64, float32, int32, int16.
+
+---
+
 #### `write-csv`
 
 - **Function:** `write-csv`
@@ -605,6 +614,30 @@ Write numbers (vector) to a text file (one per line)
 **Description:**
 
 Saves a 2D lisp array to a CSV file, comma separated, row oriented
+
+---
+
+#### `write-hdf5`
+
+- **Function:** `write-hdf5-fn`
+- **Arity:** 3
+- **Source:** std/io.lisp
+
+**Parameters:** `(DATA PATH FILENAME)`
+
+---
+
+#### `write-npy`
+
+- **Function:** `write-npy`
+- **Arity:** 2
+- **Source:** std/io.lisp
+
+**Parameters:** `(FILENAME DATA)`
+
+**Description:**
+
+Write array to .npy file. Supports float64, int32, 1D/2D, C order.
 
 ---
 
@@ -852,146 +885,6 @@ Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
 ---
 
-#### `1/x`
-
-- **Function:** `1/x-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Reciprocal: 1/a
-
----
-
-#### `10^x`
-
-- **Function:** `10^x`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-10^a
-
----
-
-#### `abs`
-
-- **Function:** `abs-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Absolute value, also works for complex numbers
-
----
-
-#### `acos`
-
-- **Function:** `acos-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Acos
-
----
-
-#### `acosh`
-
-- **Function:** `acosh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Acosh
-
----
-
-#### `asin`
-
-- **Function:** `asin-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Asin
-
----
-
-#### `asinh`
-
-- **Function:** `asinh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Asinh
-
----
-
-#### `atan`
-
-- **Function:** `atan-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Atan
-
----
-
-#### `atanh`
-
-- **Function:** `atanh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Atanh
-
----
-
-#### `chs`
-
-- **Function:** `chs`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Change sign a -> -a
-
----
-
 #### `complex`
 
 - **Function:** `complex-fn`
@@ -1003,118 +896,6 @@ Change sign a -> -a
 **Description:**
 
 Creates complex number a+ib
-
----
-
-#### `cos`
-
-- **Function:** `cos-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Cos
-
----
-
-#### `cosh`
-
-- **Function:** `cosh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Cosh
-
----
-
-#### `exp`
-
-- **Function:** `exp-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Exponential: e^a
-
----
-
-#### `frac`
-
-- **Function:** `frac-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Returns the fractional part 1.23 -> .23
-
----
-
-#### `im`
-
-- **Function:** `imagpart-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Get the imaginary part of complex number
-
----
-
-#### `intg`
-
-- **Function:** `intg-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Floor
-
----
-
-#### `ln`
-
-- **Function:** `log-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Natural logarithm ln a
-
----
-
-#### `log`
-
-- **Function:** `10log-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-10log a
 
 ---
 
@@ -1143,118 +924,6 @@ Maximum
 **Description:**
 
 Minimum
-
----
-
-#### `re`
-
-- **Function:** `realpart-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Get the real part of complex number
-
----
-
-#### `rnd`
-
-- **Function:** `rnd-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Round
-
----
-
-#### `sin`
-
-- **Function:** `sin-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Sin
-
----
-
-#### `sinh`
-
-- **Function:** `sinh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Sinh
-
----
-
-#### `sqrt`
-
-- **Function:** `sqrt-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Square root
-
----
-
-#### `square`
-
-- **Function:** `sqr-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Square a^2
-
----
-
-#### `tan`
-
-- **Function:** `tan-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Tan
-
----
-
-#### `tanh`
-
-- **Function:** `tanh-fn`
-- **Arity:** 1
-- **Source:** std/math.lisp
-
-**Parameters:** `(A)`
-
-**Description:**
-
-Tanh
 
 ---
 
@@ -1310,6 +979,34 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 ### std/signal_processing.lisp 
 
 ---
+#### `bandpass`
+
+- **Function:** `bandpass-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Description:**
+
+Bandpass filter: keep frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate].
+
+---
+
+#### `bandstop`
+
+- **Function:** `bandstop-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Description:**
+
+Bandstop (notch) filter: zero frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate].
+
+---
+
 #### `cfft`
 
 - **Function:** `cfft-fn`
@@ -1321,6 +1018,34 @@ y^x first on stack is exponent, second is base: y^x 3 2 --> 8
 **Description:**
 
 Complex forward Fast Fourier Transform of the input signal
+
+---
+
+#### `detrend`
+
+- **Function:** `detrend-fn`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(SIGNAL)`
+
+**Description:**
+
+Remove linear trend from signal. Same-length output.
+
+---
+
+#### `differentiate`
+
+- **Function:** `differentiate-fn`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(SIGNAL)`
+
+**Description:**
+
+First derivative via central differencing. Same-length output; edges use forward/backward diff.
 
 ---
 
@@ -1338,6 +1063,48 @@ Fast Fourier Transform of the input signal.
 
 ---
 
+#### `find-peaks`
+
+- **Function:** `find-peaks-fn`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(DATA)`
+
+**Description:**
+
+Return 1D array of indices of local maxima. Strict: x[i] > both neighbors.
+
+---
+
+#### `find-valleys`
+
+- **Function:** `find-valleys-fn`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(DATA)`
+
+**Description:**
+
+Return 1D array of indices of local minima. Strict: x[i] < both neighbors.
+
+---
+
+#### `highpass`
+
+- **Function:** `highpass-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Description:**
+
+Highpass filter: keep frequencies above f_cutoff Hz. Params = [f_cutoff sample_rate].
+
+---
+
 #### `ifft`
 
 - **Function:** `fft-inverse`
@@ -1349,6 +1116,62 @@ Fast Fourier Transform of the input signal.
 **Description:**
 
 Inverse Fast Fourier Transform of the input signal.
+
+---
+
+#### `lowpass`
+
+- **Function:** `lowpass-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Description:**
+
+Lowpass filter: keep frequencies below f_cutoff Hz. Params = [f_cutoff sample_rate].
+
+---
+
+#### `psd`
+
+- **Function:** `psd-fn`
+- **Arity:** 1
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(SIGNAL)`
+
+**Description:**
+
+Power spectral density: |FFT(signal)|^2. Returns real array of power at each frequency bin.
+
+---
+
+#### `savgol`
+
+- **Function:** `savgol-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Description:**
+
+Savitzky-Golay polynomial smoothing. Params = [window_length poly_order].
+
+---
+
+#### `smooth`
+
+- **Function:** `smooth-fn`
+- **Arity:** 2
+- **Source:** std/signal_processing.lisp
+
+**Parameters:** `(WINDOW-SIZE SIGNAL)`
+
+**Description:**
+
+Boxcar moving average. window_size points, same-length output, partial windows at edges.
 
 ---
 
@@ -1387,7 +1210,7 @@ Duplicate the top element of the stack.
 
 **Description:**
 
-Print the top 5 items of the stack in a readable format.
+Print the top N items of the stack in a readable format (N = *peek-stack-limit*).
 
 ---
 
@@ -1437,66 +1260,6 @@ Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]
 
 ---
 
-### `1/x-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Reciprocal: 1/a
-
----
-
-### `10^x`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-10^a
-
----
-
-### `10log-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-10log a
-
----
-
-### `abs-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Absolute value, also works for complex numbers
-
----
-
-### `acos-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Acos
-
----
-
-### `acosh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Acosh
-
----
-
 ### `add-fn`
 
 **Parameters:** `(A B)`
@@ -1514,6 +1277,7 @@ Addition
 **Source:** spectral.lisp
 
 Apply a unary operation element-wise on an n-dimensional array.
+    List inputs are coerced to vectors.
 
 ---
 
@@ -1534,16 +1298,7 @@ Assumes a 2D array with X values in first row, Y values in other rows. Returns 1
 **Source:** spectral.lisp
 
 Apply binary operation element-wise on n-dimensional arrays.
-
----
-
-### `array-op-list`
-
-**Parameters:** `(OP A B)`
-
-**Source:** spectral.lisp
-
-Apply binary operation element-wise
+    List inputs are coerced to vectors.
 
 ---
 
@@ -1573,50 +1328,27 @@ Pick nth row from array
 
 **Source:** std/arrays.lisp
 
-Join two arrays along a new axis
-    Dimension analysis will be done and the
-    most intuitive option returned, or an error
-    if dimensions don't match
+Join two arrays along a new axis    Dimension analysis will be done and the    most intuitive option returned, or an error    if dimensions don't match
 
 ---
 
-### `asin-fn`
+### `bandpass-fn`
 
-**Parameters:** `(A)`
+**Parameters:** `(PARAMS SIGNAL)`
 
-**Source:** std/math.lisp
+**Source:** std/signal_processing.lisp
 
-Asin
-
----
-
-### `asinh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Asinh
+Bandpass filter: keep frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate].
 
 ---
 
-### `atan-fn`
+### `bandstop-fn`
 
-**Parameters:** `(A)`
+**Parameters:** `(PARAMS SIGNAL)`
 
-**Source:** std/math.lisp
+**Source:** std/signal_processing.lisp
 
-Atan
-
----
-
-### `atanh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Atanh
+Bandstop (notch) filter: zero frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate].
 
 ---
 
@@ -1640,16 +1372,6 @@ Complex forward Fast Fourier Transform of the input signal
 
 ---
 
-### `chs`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Change sign a -> -a
-
----
-
 ### `complex-fn`
 
 **Parameters:** `(A B)`
@@ -1670,23 +1392,13 @@ Convert the input 1D array to a float array. Do nothing if the array is already 
 
 ---
 
-### `cos-fn`
+### `copy-array-range`
 
-**Parameters:** `(A)`
+**Parameters:** `(DEST DEST-START SOURCE SOURCE-START COUNT)`
 
-**Source:** std/math.lisp
+**Source:** std/arrays.lisp
 
-Cos
-
----
-
-### `cosh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Cosh
+Copy COUNT elements from SOURCE (row-major offset SOURCE-START) to DEST (row-major offset DEST-START).
 
 ---
 
@@ -1717,6 +1429,26 @@ BLAS/LAPACK Required: Conjugate transpose of matrix.
 **Source:** std/linear_algebra.lisp
 
 BLAS/LAPACK Required: Determinant of matrix
+
+---
+
+### `detrend-fn`
+
+**Parameters:** `(SIGNAL)`
+
+**Source:** std/signal_processing.lisp
+
+Remove linear trend from signal. Same-length output.
+
+---
+
+### `differentiate-fn`
+
+**Parameters:** `(SIGNAL)`
+
+**Source:** std/signal_processing.lisp
+
+First derivative via central differencing. Same-length output; edges use forward/backward diff.
 
 ---
 
@@ -1760,13 +1492,23 @@ BLAS/LAPACK Required: Returns eigenvalues and eigenvectors of matrix
 
 ---
 
-### `eql-fn`
+### `ensure-double-float-vector`
 
-**Parameters:** `(A B)`
+**Parameters:** `(X)`
 
-**Source:** std/filters.lisp
+**Source:** std/signal_processing.lisp
 
-Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]
+Ensure input is a double-float vector. Coerces lists and non-float arrays.
+
+---
+
+### `ensure-vector`
+
+**Parameters:** `(X)`
+
+**Source:** std/signal_processing.lisp
+
+Coerce list to vector; return other sequences (e.g. arrays) unchanged.
 
 ---
 
@@ -1780,13 +1522,13 @@ Execute AST element
 
 ---
 
-### `exp-fn`
+### `evaluate`
 
-**Parameters:** `(A)`
+**Parameters:** `(EXPR-STRING &OPTIONAL (DEBUG NIL))`
 
-**Source:** std/math.lisp
+**Source:** spectral.lisp
 
-Exponential: e^a
+Parse and evaluate a Spectral expression. Returns the top-of-stack value.
 
 ---
 
@@ -1800,6 +1542,26 @@ Factorial ! 8 -> 40320
 
 ---
 
+### `fft-backward`
+
+**Parameters:** `(DATA &KEY (NORMALIZE T))`
+
+**Source:** std/fftw-ffi.lisp
+
+Compute backward (inverse) FFT of complex data
+
+---
+
+### `fft-cleanup`
+
+**Parameters:** `()`
+
+**Source:** std/fftw-ffi.lisp
+
+Clean up FFTW internal data structures
+
+---
+
 ### `fft-fn`
 
 **Parameters:** `(INPUT)`
@@ -1807,6 +1569,16 @@ Factorial ! 8 -> 40320
 **Source:** std/signal_processing.lisp
 
 Fast Fourier Transform of the input signal.
+
+---
+
+### `fft-forward`
+
+**Parameters:** `(DATA &KEY (NORMALIZE T))`
+
+**Source:** std/fftw-ffi.lisp
+
+Compute forward FFT of complex data
 
 ---
 
@@ -1820,6 +1592,56 @@ Inverse Fast Fourier Transform of the input signal.
 
 ---
 
+### `fft-real-forward`
+
+**Parameters:** `(DATA)`
+
+**Source:** std/fftw-ffi.lisp
+
+Compute forward FFT of real data (returns complex)
+
+---
+
+### `fftw-complex-to-lisp-array`
+
+**Parameters:** `(FFTW-PTR SIZE)`
+
+**Source:** std/fftw-ffi.lisp
+
+Convert FFTW complex array back to Lisp array
+
+---
+
+### `fftw-real-to-lisp-array`
+
+**Parameters:** `(FFTW-PTR SIZE)`
+
+**Source:** std/fftw-ffi.lisp
+
+Convert FFTW real array back to Lisp array
+
+---
+
+### `find-peaks-fn`
+
+**Parameters:** `(DATA)`
+
+**Source:** std/signal_processing.lisp
+
+Return 1D array of indices of local maxima. Strict: x[i] > both neighbors.
+
+---
+
+### `find-valleys-fn`
+
+**Parameters:** `(DATA)`
+
+**Source:** std/signal_processing.lisp
+
+Return 1D array of indices of local minima. Strict: x[i] < both neighbors.
+
+---
+
 ### `flatten`
 
 **Parameters:** `(ARRAY)`
@@ -1830,33 +1652,13 @@ Flatten a nested list structure into a single list.
 
 ---
 
-### `frac-fn`
+### `highpass-fn`
 
-**Parameters:** `(A)`
+**Parameters:** `(PARAMS SIGNAL)`
 
-**Source:** std/math.lisp
+**Source:** std/signal_processing.lisp
 
-Returns the fractional part 1.23 -> .23
-
----
-
-### `greater-equal-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** std/filters.lisp
-
-Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]
-
----
-
-### `greater-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** std/filters.lisp
-
-Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]
+Highpass filter: keep frequencies above f_cutoff Hz. Params = [f_cutoff sample_rate].
 
 ---
 
@@ -1870,34 +1672,13 @@ BLAS/LAPACK Required: Concatenate matrices A, B horizontally
 
 ---
 
-### `imagpart-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Get the imaginary part of complex number
-
----
-
 ### `indexof`
 
 **Parameters:** `(VALUE ARRAY)`
 
 **Source:** std/arrays.lisp
 
-Return the index of the first occurrence of VALUE in ARRAY.
-    If VALUE is not found, return the dimensions of the array.
-
----
-
-### `intg-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Floor
+Return the index of the first occurrence of VALUE in ARRAY.    If VALUE is not found, return the dimensions of the array.
 
 ---
 
@@ -1911,6 +1692,36 @@ Check if a row contains headers
 
 ---
 
+### `lisp-array-to-fftw-complex`
+
+**Parameters:** `(LISP-ARRAY FFTW-PTR)`
+
+**Source:** std/fftw-ffi.lisp
+
+Copy Lisp complex array to FFTW complex array
+
+---
+
+### `lisp-array-to-fftw-real`
+
+**Parameters:** `(LISP-ARRAY FFTW-PTR)`
+
+**Source:** std/fftw-ffi.lisp
+
+Copy Lisp real array to FFTW real array
+
+---
+
+### `load-binary`
+
+**Parameters:** `(FILENAME)`
+
+**Source:** std/io.lisp
+
+Load array from .sdat binary file. Returns double-float array.
+
+---
+
 ### `load-csv`
 
 **Parameters:** `(FILENAME)`
@@ -1918,6 +1729,16 @@ Check if a row contains headers
 **Source:** std/io.lisp
 
 Loads a table from a CSV file, comma separated, row oriented
+
+---
+
+### `load-npy`
+
+**Parameters:** `(FILENAME)`
+
+**Source:** std/io.lisp
+
+Load array from .npy file. Returns double-float. Supports <f8, <i4, 1D/2D, C order.
 
 ---
 
@@ -1931,13 +1752,33 @@ Load numbers from a text file (one per line)
 
 ---
 
-### `log-fn`
+### `lowpass-fn`
 
-**Parameters:** `(A)`
+**Parameters:** `(PARAMS SIGNAL)`
 
-**Source:** std/math.lisp
+**Source:** std/signal_processing.lisp
 
-Natural logarithm ln a
+Lowpass filter: keep frequencies below f_cutoff Hz. Params = [f_cutoff sample_rate].
+
+---
+
+### `make-complex-test-signal`
+
+**Parameters:** `(N &KEY (FREQUENCY 1.0) (SAMPLE-RATE 10.0))`
+
+**Source:** std/fftw-ffi.lisp
+
+Generate a complex test signal
+
+---
+
+### `make-test-signal`
+
+**Parameters:** `(N &KEY (FREQUENCY 1.0) (SAMPLE-RATE 10.0))`
+
+**Source:** std/fftw-ffi.lisp
+
+Generate a test sinusoidal signal
 
 ---
 
@@ -2031,13 +1872,13 @@ Number of columns in matrix
 
 ---
 
-### `not-eql-fn`
+### `npy-parse-shape`
 
-**Parameters:** `(A B)`
+**Parameters:** `(STR)`
 
-**Source:** std/filters.lisp
+**Source:** std/io.lisp
 
-Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]
+Extract shape tuple from e.g. '5, ' or '2, 3)' as list of dims.
 
 ---
 
@@ -2058,6 +1899,16 @@ Number of rows in matrix
 **Source:** std/arrays.lisp
 
 Creates an array of dimensions DIMS filled with ones
+
+---
+
+### `parse-npy-header`
+
+**Parameters:** `(HEADER)`
+
+**Source:** std/io.lisp
+
+Parse NPY header dict. Returns (descr dims). Supports <f8, <i4, fortran_order False.
 
 ---
 
@@ -2087,9 +1938,7 @@ Safely parse a string to number
 
 **Source:** std/arrays.lisp
 
-Pick an element from an array based on the index.
-    If index is a number, it returns the nth element.
-    If index is a list, it traverses the array according to the indices in the list.
+Pick an element from an array based on the index.    If index is a number, it returns the nth element.    If index is a list, it traverses the array according to the indices in the list.
 
 ---
 
@@ -2110,7 +1959,7 @@ Pops the top element off the stack
 **Source:** std/stack.lisp
 
 Pretty-print an n-dimensional ARRAY with square brackets, showing
- a maximum of 10 items per dimension.
+ a maximum of *print-limit-per-dim* items per dimension (elided with ...).
 
 ---
 
@@ -2120,7 +1969,27 @@ Pretty-print an n-dimensional ARRAY with square brackets, showing
 
 **Source:** std/stack.lisp
 
-Print the top 5 items of the stack in a readable format.
+Print the top N items of the stack in a readable format (N = *peek-stack-limit*).
+
+---
+
+### `pretty-print-stack-item`
+
+**Parameters:** `(ITEM)`
+
+**Source:** std/stack.lisp
+
+Print a single stack item (number, string, list, or array) to *standard-output*.
+
+---
+
+### `psd-fn`
+
+**Parameters:** `(SIGNAL)`
+
+**Source:** std/signal_processing.lisp
+
+Power spectral density: |FFT(signal)|^2. Returns real array of power at each frequency bin.
 
 ---
 
@@ -2130,7 +1999,7 @@ Print the top 5 items of the stack in a readable format.
 
 **Source:** std/arrays.lisp
 
-Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]
+Generate n elements from 0 to n-1. E.g. range 5 -> [0 1 2 3 4], range 9 -> [0..8].
 
 ---
 
@@ -2141,16 +2010,6 @@ Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]
 **Source:** std/arrays.lisp
 
 Return the number of dimensions (rank) of the array.
-
----
-
-### `realpart-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Get the real part of complex number
 
 ---
 
@@ -2190,8 +2049,7 @@ Clear stack, variables, and functions. Used for fresh test runs.
 
 **Source:** std/arrays.lisp
 
-Reshape an array into a multi-dimensional array based on the given shape.
-    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
+Reshape an array into a multi-dimensional array based on the given shape.    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix.
 
 ---
 
@@ -2202,16 +2060,6 @@ Reshape an array into a multi-dimensional array based on the given shape.
 **Source:** std/arrays.lisp
 
 Reverse the order of elements along the first axis of the array.
-
----
-
-### `rnd-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Round
 
 ---
 
@@ -2231,7 +2079,27 @@ Rotate clockwise, i.e. last element becomes first element
 
 **Source:** std/io.lisp
 
-Execute a script file line by line
+Execute a script file line by line. Errors include filename and line number.
+
+---
+
+### `savgol-fn`
+
+**Parameters:** `(PARAMS SIGNAL)`
+
+**Source:** std/signal_processing.lisp
+
+Savitzky-Golay polynomial smoothing. Params = [window_length poly_order].
+
+---
+
+### `savgol-kernel`
+
+**Parameters:** `(M N)`
+
+**Source:** std/signal_processing.lisp
+
+Return 1D array of SG coefficients for window m, polynomial order n.
 
 ---
 
@@ -2245,43 +2113,23 @@ Return the shape of an array
 
 ---
 
-### `sin-fn`
+### `smooth-fn`
 
-**Parameters:** `(A)`
+**Parameters:** `(WINDOW-SIZE SIGNAL)`
 
-**Source:** std/math.lisp
+**Source:** std/signal_processing.lisp
 
-Sin
-
----
-
-### `sinh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Sinh
+Boxcar moving average. window_size points, same-length output, partial windows at edges.
 
 ---
 
-### `smaller-equal-fn`
+### `spectral-error`
 
-**Parameters:** `(A B)`
+**Parameters:** `(FORMAT-CONTROL &REST FORMAT-ARGS)`
 
-**Source:** std/filters.lisp
+**Source:** spectral.lisp
 
-Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]
-
----
-
-### `smaller-fn`
-
-**Parameters:** `(A B)`
-
-**Source:** std/filters.lisp
-
-Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
+Signal a user-facing Spectral error with consistent formatting.
 
 ---
 
@@ -2292,26 +2140,6 @@ Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]
 **Source:** std/arrays.lisp
 
 Return the number of elements along the first dimension (or total size for 1D arrays).
-
----
-
-### `sqr-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Square a^2
-
----
-
-### `sqrt-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Square root
 
 ---
 
@@ -2362,26 +2190,6 @@ Swap top and second element of the stack
 **Source:** std/arrays.lisp
 
 Take the first N elements from an array.
-
----
-
-### `tan-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Tan
-
----
-
-### `tanh-fn`
-
-**Parameters:** `(A)`
-
-**Source:** std/math.lisp
-
-Tanh
 
 ---
 
@@ -2455,6 +2263,16 @@ Return the 1D array of index vectors of non-zero elements in an array.
 
 ---
 
+### `write-binary`
+
+**Parameters:** `(FILENAME DATA)`
+
+**Source:** std/io.lisp
+
+Write array to .sdat binary file. Supports float64, float32, int32, int16.
+
+---
+
 ### `write-csv`
 
 **Parameters:** `(MATRIX FILENAME &OPTIONAL (DELIMITER ,))`
@@ -2472,6 +2290,16 @@ Saves a 2D lisp array to a CSV file, comma separated, row oriented
 **Source:** std/io.lisp
 
 Write a single field to CSV stream, properly escaping if necessary.
+
+---
+
+### `write-npy`
+
+**Parameters:** `(FILENAME DATA)`
+
+**Source:** std/io.lisp
+
+Write array to .npy file. Supports float64, int32, 1D/2D, C order.
 
 ---
 
