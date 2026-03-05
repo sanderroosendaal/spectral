@@ -125,7 +125,9 @@
       ("pick 99 [1 2 3]" (:error "Invalid index"))
       ("reshape [3 3] [1 2 3 4 5]" (:error "Non-matching shape"))
       ("take 10 [1 2 3]" (:error "Invalid"))
-      ("drop 5 [1 2 3]" (:error "Invalid"))))
+      ("drop 5 [1 2 3]" (:error "Invalid"))
+      ;; Script errors include filename and line number
+      ("run \"testdata/script_err.spec\"" (:error ":1:"))))
 
   ;; Variables and assignment (reset before group so stack is clean)
   (run-test-group "Variables"

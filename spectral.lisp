@@ -70,6 +70,10 @@
 (defparameter *scan-ops* (make-hash-table))
 (defparameter *error-stream* t)
 
+;; Script context for error reporting (bound by run-script)
+(defparameter *script-filename* nil)
+(defparameter *script-line* nil)
+
 (defun reset-spectral-state ()
   "Clear stack, variables, and functions. Used for fresh test runs."
   (setf *stack* nil)
@@ -162,8 +166,8 @@
 	    (result (make-array rest-dims)))
        (dotimes (i (array-total-size result))
 	 (let* ((idx (array-row-major-index-to-subscript rest-dims i))
-		(values (loop for i below (first dims)
-			      collect (apply #'aref a (cons i idx))))
+		(values (loop for k below (first dims)
+			      collect (apply #'aref a (cons k idx))))
 		(v (reduce op values)))
 	   (setf (row-major-aref result i) v)))
        result))
@@ -351,6 +355,15 @@
 		   (values (multiple-value-list (funcall op-fn a b))))
 	      (loop for value in values do
 		(push-stack value))
+	      (first *stack*)))
+
+	   ;; Ternary operations (e.g. write-hdf5 filename path data)
+	   ((= arity 3)
+	    (let* ((a (pop-stack))
+		   (b (pop-stack))
+		   (c (pop-stack))
+		   (values (multiple-value-list (funcall op-fn a b c))))
+	      (loop for value in values do (push-stack value))
 	      (first *stack*)))
 
 	   (t (error "Functions of arity ~A are not implemented" arity)))))

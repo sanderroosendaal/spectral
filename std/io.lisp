@@ -102,16 +102,21 @@
 	  parsed-data))))
 
 (defun run-script (filename)
-  "Execute a script file line by line"
+  "Execute a script file line by line. Errors include filename and line number."
   (with-open-file (stream filename :direction :input)
-    (let ((line-count 1))
+    (let* ((*script-filename* (namestring (merge-pathnames filename)))
+	   (line-count 1))
       (loop for line = (read-line stream nil nil)
 	    while line
-	    when (and (> (length line) 0)
-		      (not (char= (char line 0) #\;))) ; Skip comments
-	      do (evaluate (string-trim " " line)) ;; -- need to add filename line-count)
-	    (incf line-count)))
-     (peek-stack)))
+	    do (when (and (> (length line) 0)
+			  (not (char= (char line 0) #\;)))
+		 (let ((*script-line* line-count))
+		   (handler-case
+		       (evaluate (string-trim " " line))
+		     (error (e)
+		       (error "~A:~D: ~A" *script-filename* *script-line* e)))))
+	       (incf line-count))
+      (peek-stack))))
 
 
 ;;; Binary array I/O (.sdat format - MDA-inspired, zero deps)
