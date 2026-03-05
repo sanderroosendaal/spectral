@@ -200,11 +200,13 @@ The Lisp prototype is functional and reasonably structured, but there are dead c
 
 ## 8. Test and Documentation Gaps
 
-### 8.1 No tests for error paths
+### 8.1 No tests for error paths ✓
 
 **Issue:** Tests focus on success. Invalid inputs, underflow, type errors are not systematically tested.
 
 **Refactor:** Add an "Error handling" test group with `assert-error`-style checks.
+
+**Done:** Added "Error paths" test group covering stack underflow, reduction/scan expect-array, invalid indices (pick/take/drop), reshape errors, type errors, array-op invalid input, mismatched dimensions, ->P/->R length errors, ragged array, unknown reduction/scan, unexpected token, malformed IF, and script filename:line errors.
 
 ### 8.2 `range-fn` docstring wrong (arrays.lisp:3)
 

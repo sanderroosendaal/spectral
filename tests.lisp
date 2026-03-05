@@ -117,15 +117,42 @@
     '(("* d 2" 4)                      ; 2 * 2 (dup)
       ("swap 1 2" 2)))                 ; push 2, 1; swap -> 2 on top
 
-  ;; Error-path tests (for safe refactoring)
+  ;; Error-path tests (invalid inputs, underflow, type errors)
   (run-test-group "Error paths"
-    '(("pop" (:error "Stack underflow"))
+    '(;; Stack underflow
+      ("pop" (:error "Stack underflow"))
+      ("swap 1" (:error "Stack underflow"))
+      ("d" (:error "Stack underflow"))
+      ;; Reduction/scan expect array
       ("/+ 5" (:error "expects an array"))
       ("&+ 5" (:error "expects an array"))
+      ;; Invalid indices
       ("pick 99 [1 2 3]" (:error "Invalid index"))
-      ("reshape [3 3] [1 2 3 4 5]" (:error "Non-matching shape"))
       ("take 10 [1 2 3]" (:error "Invalid"))
       ("drop 5 [1 2 3]" (:error "Invalid"))
+      ;; Reshape
+      ("reshape [3 3] [1 2 3 4 5]" (:error "Non-matching shape"))
+      ("reshape [2 2] 5" (:error "reshape expects an array"))
+      ;; Type errors: pick/take/drop with wrong types
+      ("pick 0 5" (:error "pick expects an array"))
+      ("take \"x\" [1 2 3]" (:error "take expects"))
+      ("drop [1] [1 2 3]" (:error "Invalid inputs to drop"))
+      ;; Array op invalid input (CL signals type error for non-numeric)
+      ("+ 1 \"x\"" (:error "not of type"))
+      ;; Mismatched dimensions
+      ("+ [1 2 3] [1 2]" (:error "Mismatched array dimensions"))
+      ;; ->P / ->R wrong length
+      ("->P [1]" (:error "->P takes a vector"))
+      ("->R [1 2 3]" (:error "->R takes a vector"))
+      ;; Ragged array
+      ("[[1 2][3]]" (:error "Ragged array"))
+      ;; Unknown reduction/scan operator
+      ("/foo [1 2 3]" (:error "Unknown reduction"))
+      ("&bar [1 2 3]" (:error "Unknown scan"))
+      ;; Unexpected token
+      ("xyz 1 2" (:error "Unexpected token"))
+      ;; IF malformed (then-else needs 2+ expressions)
+      ("(1) if 1" (:error "then-else"))
       ;; Script errors include filename and line number
       ("run \"testdata/script_err.spec\"" (:error ":1:"))))
 
