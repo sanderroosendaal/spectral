@@ -88,23 +88,8 @@
   "Registers a new stack operation with the given name, function and arity"
   (setf (gethash name *stack-ops*)
 	(cons function arity)))
-(load (merge-pathnames "std/stack.lisp" *spectral-root*))
-(load (merge-pathnames "std/arrays.lisp" *spectral-root*))
-(load (merge-pathnames "std/math.lisp" *spectral-root*))
-(load (merge-pathnames "std/io.lisp" *spectral-root*))
-(load (merge-pathnames "std/filters.lisp" *spectral-root*))
-(load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
-(load (merge-pathnames "std/plotting.lisp" *spectral-root*))
 
-;; Reduction and scan operators
-(setf (gethash '/+ *reduce-ops*) #'+)
-(setf (gethash '/* *reduce-ops*) #'*)
-(setf (gethash '/max *reduce-ops*) #'max)
-(setf (gethash '/min *reduce-ops*) #'min)
-(setf (gethash '&+ *scan-ops*) #'+)
-(setf (gethash '&* *scan-ops*) #'*)
-
-;; Array operations
+;; Array operations (defined before std libs that use them)
 (defun array-op (op a b)
   "Apply binary operation element-wise on n-dimensional arrays."
   (cond
@@ -132,7 +117,7 @@
 	 (setf (row-major-aref result-array i)
 	       (funcall op (row-major-aref a i) (row-major-aref b i))))
        result-array))))
-    
+
 
 (defun array-fn (op a)
   "Apply a unary operation element-wise on an n-dimensional array."
@@ -147,6 +132,21 @@
        result-array))
     (t (error "Invalid input for array operation: ~S" a))))
 
+(load (merge-pathnames "std/stack.lisp" *spectral-root*))
+(load (merge-pathnames "std/arrays.lisp" *spectral-root*))
+(load (merge-pathnames "std/math.lisp" *spectral-root*))
+(load (merge-pathnames "std/io.lisp" *spectral-root*))
+(load (merge-pathnames "std/filters.lisp" *spectral-root*))
+(load (merge-pathnames "std/signal_processing.lisp" *spectral-root*))
+(load (merge-pathnames "std/plotting.lisp" *spectral-root*))
+
+;; Reduction and scan operators
+(setf (gethash '/+ *reduce-ops*) #'+)
+(setf (gethash '/* *reduce-ops*) #'*)
+(setf (gethash '/max *reduce-ops*) #'max)
+(setf (gethash '/min *reduce-ops*) #'min)
+(setf (gethash '&+ *scan-ops*) #'+)
+(setf (gethash '&* *scan-ops*) #'*)
 
 ;; 1D: fold left. 2D: reduce along first axis, return (dims-1) shape.
 (defun reduce-array (op a)
