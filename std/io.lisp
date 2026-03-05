@@ -125,14 +125,21 @@
 (defconstant +sdat-int32+ -3)
 (defconstant +sdat-int16+ -4)
 
+;;; Little-endian binary I/O helpers (shared byte-loop logic)
+(defun write-uint-le (n stream nbytes)
+  (dotimes (i nbytes)
+    (write-byte (ldb (byte 8 (* i 8)) n) stream)))
+
+(defun read-uint-le (stream nbytes)
+  (let ((n 0))
+    (dotimes (i nbytes n)
+      (setf n (logior n (ash (read-byte stream) (* i 8)))))))
+
 (defun write-uint32-le (n stream)
-  (dotimes (i 4)
-    (write-byte (ldb (byte 8 (* i 8)) (logand n #xFFFFFFFF)) stream)))
+  (write-uint-le (logand n #xFFFFFFFF) stream 4))
 
 (defun read-uint32-le (stream)
-  (let ((n 0))
-    (dotimes (i 4 n)
-      (setf n (logior n (ash (read-byte stream) (* i 8)))))))
+  (read-uint-le stream 4))
 
 (defun write-int32-le (n stream)
   (write-uint32-le (ldb (byte 32 0) n) stream))
@@ -187,14 +194,9 @@
   data)
 
 (defun write-float64-le (x stream)
-  #+sbcl
-  (let ((bits (sb-kernel:double-float-bits x)))
-    (dotimes (j 8)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream)))
-  #-sbcl
-  (let ((bits (double-to-ieee754-bits x)))
-    (dotimes (j 8)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream))))
+  (let ((bits #+sbcl (sb-kernel:double-float-bits x)
+              #-sbcl (double-to-ieee754-bits x)))
+    (write-uint-le bits stream 8)))
 
 (defun double-to-ieee754-bits (x)
   (multiple-value-bind (sig exp sign) (integer-decode-float x)
@@ -206,9 +208,7 @@
       (logior sign-bit (ash ieee-exp 52) mant))))
 
 (defun write-float32-le (x stream)
-  (let ((bits (single-to-ieee754-bits x)))
-    (dotimes (j 4)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream))))
+  (write-uint-le (single-to-ieee754-bits x) stream 4))
 
 (defun single-to-ieee754-bits (x)
   (multiple-value-bind (sig exp sign) (integer-decode-float (float x 1.0d0))
@@ -219,10 +219,18 @@
         (return-from single-to-ieee754-bits 0))
       (logior sign-bit (ash ieee-exp 23) mant))))
 
+(defun write-uint16-le (n stream)
+  (write-uint-le (logand n #xFFFF) stream 2))
+
+(defun read-uint16-le (stream)
+  (read-uint-le stream 2))
+
 (defun write-int16-le (n stream)
-  (let ((u (ldb (byte 16 0) (round n))))
-    (write-byte (ldb (byte 8 0) u) stream)
-    (write-byte (ldb (byte 8 8) u) stream)))
+  (write-uint16-le (ldb (byte 16 0) (round n)) stream))
+
+(defun read-int16-le (stream)
+  (let ((u (read-uint16-le stream)))
+    (if (logbitp 15 u) (logior u #x-10000) u)))
 
 (defun ieee754-bits-to-double (bits)
   (let ((sign (if (logbitp 63 bits) -1 1))
@@ -240,10 +248,7 @@
                             (- exp 1023)))))))
 
 (defun read-float64-le (stream)
-  (let ((bits 0))
-    (dotimes (i 8)
-      (setf bits (logior bits (ash (read-byte stream) (* i 8)))))
-    (ieee754-bits-to-double bits)))
+  (ieee754-bits-to-double (read-uint-le stream 8)))
 
 (defun ieee754-bits-to-single (bits)
   (let ((sign (if (logbitp 31 bits) -1 1))
@@ -256,10 +261,7 @@
                 'single-float))))
 
 (defun read-float32-le (stream)
-  (let ((bits 0))
-    (dotimes (i 4)
-      (setf bits (logior bits (ash (read-byte stream) (* i 8)))))
-    (ieee754-bits-to-single bits)))
+  (ieee754-bits-to-single (read-uint-le stream 4)))
 
 (defun read-int16-le (stream)
   (let ((low (read-byte stream))
@@ -305,13 +307,6 @@
 
 ;;; NPY format (NEP 1) - float64 and int32, 1D/2D, C order only
 (defconstant +npy-magic+ #(147 78 85 77 80 89)) ; \x93NUMPY
-
-(defun write-uint16-le (n stream)
-  (write-byte (ldb (byte 8 0) (logand n #xFFFF)) stream)
-  (write-byte (ldb (byte 8 8) (logand n #xFFFF)) stream))
-
-(defun read-uint16-le (stream)
-  (logior (read-byte stream) (ash (read-byte stream) 8)))
 
 (defun npy-array-descr (arr)
   (let ((et (array-element-type arr)))

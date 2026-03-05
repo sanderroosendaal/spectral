@@ -1,6 +1,14 @@
 (load (merge-pathnames "fftw-ffi.lisp"
                        (make-pathname :defaults *load-truename* :name nil :type nil)))
 
+(defun ensure-vector (x)
+  "Coerce list to vector; return other sequences (e.g. arrays) unchanged."
+  (if (listp x) (coerce x 'vector) x))
+
+(defun ensure-double-float-vector (x)
+  "Ensure input is a double-float vector. Coerces lists and non-float arrays."
+  (convert-to-float (ensure-vector x)))
+
 (defun convert-to-float (input)
   "Convert the input 1D array to a float array. Do nothing if the array is already double float."
   (when (and (arrayp input) (= (array-rank input) 1)
@@ -25,7 +33,7 @@
 
 (defun find-peaks-fn (data)
   "Return 1D array of indices of local maxima. Strict: x[i] > both neighbors."
-  (let* ((vec (if (listp data) (coerce data 'vector) data))
+  (let* ((vec (ensure-vector data))
 	 (n (length vec))
 	 (peaks '()))
     (when (zerop n)
@@ -47,11 +55,11 @@
 
 (defun bandpass-fn (params signal)
   "Bandpass filter: keep frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate]."
-  (let* ((params-vec (if (listp params) (coerce params 'vector) params))
+  (let* ((params-vec (ensure-vector params))
 	 (f-low (coerce (elt params-vec 0) 'double-float))
 	 (f-high (coerce (elt params-vec 1) 'double-float))
 	 (fs (coerce (elt params-vec 2) 'double-float))
-	 (data (convert-to-float (if (listp signal) (coerce signal 'vector) signal)))
+	 (data (ensure-double-float-vector signal))
 	 (n (length data))
 	 (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) data))))
     (unless (>= n 2)
@@ -68,7 +76,7 @@
 
 (defun smooth-fn (window-size signal)
   "Boxcar moving average. window_size points, same-length output, partial windows at edges."
-  (let* ((vec (if (listp signal) (coerce signal 'vector) signal))
+  (let* ((vec (ensure-vector signal))
 	 (n (length vec))
 	 (w (max 1 (floor (coerce window-size 'real)))))
     (when (zerop n)
@@ -136,11 +144,11 @@
 
 (defun savgol-fn (params signal)
   "Savitzky-Golay polynomial smoothing. Params = [window_length poly_order]."
-  (let* ((params-vec (if (listp params) (coerce params 'vector) params))
+  (let* ((params-vec (ensure-vector params))
 	 (m-raw (max 3 (floor (coerce (elt params-vec 0) 'real))))
 	 (m (if (oddp m-raw) m-raw (1+ m-raw)))
 	 (n (min (1- m) (max 0 (floor (coerce (elt params-vec 1) 'real)))))
-	 (vec (if (listp signal) (coerce signal 'vector) signal))
+	 (vec (ensure-vector signal))
 	 (len (length vec)))
     (when (zerop len)
       (return-from savgol-fn (vector)))
@@ -156,10 +164,10 @@
 
 (defun lowpass-fn (params signal)
   "Lowpass filter: keep frequencies below f_cutoff Hz. Params = [f_cutoff sample_rate]."
-  (let* ((params-vec (if (listp params) (coerce params 'vector) params))
+  (let* ((params-vec (ensure-vector params))
 	 (f-cutoff (coerce (elt params-vec 0) 'double-float))
 	 (fs (coerce (elt params-vec 1) 'double-float))
-	 (data (convert-to-float (if (listp signal) (coerce signal 'vector) signal)))
+	 (data (ensure-double-float-vector signal))
 	 (n (length data))
 	 (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) data))))
     (unless (>= n 2)
@@ -175,10 +183,10 @@
 
 (defun highpass-fn (params signal)
   "Highpass filter: keep frequencies above f_cutoff Hz. Params = [f_cutoff sample_rate]."
-  (let* ((params-vec (if (listp params) (coerce params 'vector) params))
+  (let* ((params-vec (ensure-vector params))
 	 (f-cutoff (coerce (elt params-vec 0) 'double-float))
 	 (fs (coerce (elt params-vec 1) 'double-float))
-	 (data (convert-to-float (if (listp signal) (coerce signal 'vector) signal)))
+	 (data (ensure-double-float-vector signal))
 	 (n (length data))
 	 (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) data))))
     (unless (>= n 2)
@@ -194,11 +202,11 @@
 
 (defun bandstop-fn (params signal)
   "Bandstop (notch) filter: zero frequencies in [f_low, f_high] Hz. Params = [f_low f_high sample_rate]."
-  (let* ((params-vec (if (listp params) (coerce params 'vector) params))
+  (let* ((params-vec (ensure-vector params))
 	 (f-low (coerce (elt params-vec 0) 'double-float))
 	 (f-high (coerce (elt params-vec 1) 'double-float))
 	 (fs (coerce (elt params-vec 2) 'double-float))
-	 (data (convert-to-float (if (listp signal) (coerce signal 'vector) signal)))
+	 (data (ensure-double-float-vector signal))
 	 (n (length data))
 	 (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) data))))
     (unless (>= n 2)
@@ -214,7 +222,7 @@
 
 (defun find-valleys-fn (data)
   "Return 1D array of indices of local minima. Strict: x[i] < both neighbors."
-  (let* ((vec (if (listp data) (coerce data 'vector) data))
+  (let* ((vec (ensure-vector data))
 	 (n (length vec))
 	 (valleys '()))
     (when (zerop n)
@@ -233,14 +241,14 @@
 
 (defun psd-fn (signal)
   "Power spectral density: |FFT(signal)|^2. Returns real array of power at each frequency bin."
-  (let* ((vec (convert-to-float (if (listp signal) (coerce signal 'vector) signal)))
+  (let* ((vec (ensure-double-float-vector signal))
 	 (n (length vec))
 	 (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) vec))))
     (map 'vector (lambda (c) (* (abs c) (abs c))) spec)))
 
 (defun detrend-fn (signal)
   "Remove linear trend from signal. Same-length output."
-  (let* ((vec (if (listp signal) (coerce signal 'vector) signal))
+  (let* ((vec (ensure-vector signal))
 	 (n (length vec)))
     (when (zerop n)
       (return-from detrend-fn (vector)))
@@ -269,7 +277,7 @@
 
 (defun differentiate-fn (signal)
   "First derivative via central differencing. Same-length output; edges use forward/backward diff."
-  (let* ((vec (if (listp signal) (coerce signal 'vector) signal))
+  (let* ((vec (ensure-vector signal))
 	 (n (length vec))
 	 (result (make-array n :element-type 'double-float)))
     (when (zerop n)
