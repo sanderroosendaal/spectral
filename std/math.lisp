@@ -193,34 +193,37 @@
 
 
 ;; coordinates 0 ->P and ->R
-;; for now, takes a [x y] coordinate vector and returns [r theta] in radians
+;; for now, takes a [x y] coordinate vector and returns [r theta] in radians (as vector)
 (defun ->P (a)
   "Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]"
-  (cond
-    ((not (listp a))
-     (error "->P takes a vector [x y] of length 2"))
-    ((/= (length a) 2)
-     (error "->P takes a vector [x y] of length 2"))
-    ((= (first a) 0)
-     (if (> (second a) 0)
-	 (/ pi 2)
-	 (- 0 (/ pi 2))))
-    ((= (second a) 0)
-     (if (> (first a) 0)
-	 0
-	 pi))
-    (t
-      (let ((x (first a))
-	    (y (second a)))
-	(list
-	 (sqrt (+ (* x x) (* y y)))
-	 (atan (/ y x)))))))
+  (let ((a (if (arrayp a) (coerce a 'list) a)))
+    (cond
+      ((not (listp a))
+       (error "->P takes a vector [x y] of length 2"))
+      ((/= (length a) 2)
+       (error "->P takes a vector [x y] of length 2"))
+      ((= (first a) 0)
+       (coerce (list (abs (second a))
+                     (if (> (second a) 0) (/ pi 2) (- (/ pi 2))))
+               'vector))
+      ((= (second a) 0)
+       (coerce (list (abs (first a))
+                     (if (> (first a) 0) 0 pi))
+               'vector))
+      (t
+       (let ((x (first a))
+             (y (second a)))
+         (coerce (list (sqrt (+ (* x x) (* y y))) (atan (/ y x)))
+                 'vector))))))
 
 (defun ->R (a)
   "Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]"
-  (let ((r (first a))
-	(theta (second a)))
-    (list (* r (cos theta)) (* r (sin theta)))))
+  (let ((a (if (arrayp a) (coerce a 'list) a)))
+    (when (or (not (listp a)) (/= (length a) 2))
+      (error "->R takes a vector [r theta] of length 2"))
+    (let ((r (first a))
+          (theta (second a)))
+      (coerce (list (* r (cos theta)) (* r (sin theta))) 'vector))))
 
 (register-op '->P #'->P 1)
 (register-op '->R #'->R 1)
