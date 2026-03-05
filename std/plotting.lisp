@@ -23,7 +23,7 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
    1D arrays are plotted index vs value. 2D arrays with two rows are interpreted as x-y-data.
    2D data sets are interpreted as x, y1, y2, y3 etc"
   (cond
-    ((numberp y) (error "Need at least a 1D array to plot"))
+    ((numberp y) (spectral-error "Need at least a 1D array to plot"))
     ((and (arrayp y) (= 1 (length (array-dimensions y))))
      (vgplot:plot
       (loop for x from 0 below (length y) collect (aref y x))))
@@ -33,7 +33,7 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
        (vgplot:plot x y)))
     ((arrayp y)
      (with-plot-rows-2d y))
-    (t (error "Invalid input or not implemented: ~A" y)))
+    (t (spectral-error "Invalid input or not implemented: ~A" y)))
   y)
 
 (defun format-plot (text)
@@ -50,7 +50,7 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
 (defun xyz-array-to-xyz (array)
   "Takes a (3xMxN) array and returns 3 (MxN) arrays"
   (unless (= (length (array-dimensions array)) 3)
-    (error "Must be 3xMxN array"))
+    (spectral-error "Must be 3xMxN array"))
   (let* ((dimensions (array-dimensions array))
 	 (xx (make-array (cdr dimensions)))
 	 (yy (make-array (cdr dimensions)))
@@ -68,13 +68,13 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
   "Plot 3-D surface mesh. Y could be a 2D table (just Z),
   or a 3D (X, Y, Z) array."
   (cond
-    ((numberp y) (error "Need at least a 2D array to plot"))
+    ((numberp y) (spectral-error "Need at least a 2D array to plot"))
     ((and (arrayp y) (= 2 (length (array-dimensions y))))
      (vgplot:surf y))
     ((and (arrayp y) (= 3 (length (array-dimensions y))))
      (multiple-value-bind (xx yy zz) (xyz-array-to-xyz y)
        (vgplot:surf xx yy zz)))
-    (t (error "Invalid input for surface plot")))
+    (t (spectral-error "Invalid input for surface plot")))
   y)
 
 

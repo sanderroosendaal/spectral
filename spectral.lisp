@@ -70,6 +70,12 @@
 (defparameter *scan-ops* (make-hash-table))
 (defparameter *error-stream* t)
 
+(defun spectral-error (format-control &rest format-args)
+  "Signal a user-facing Spectral error with consistent formatting."
+  (error (make-condition 'simple-error
+                        :format-control format-control
+                        :format-arguments format-args)))
+
 ;; Script context for error reporting (bound by run-script)
 (defparameter *script-filename* nil)
 (defparameter *script-line* nil)
@@ -117,7 +123,7 @@
      (let* ((dimensions (array-dimensions a))
 	    (result-array (make-array dimensions)))
        (unless (equal dimensions (array-dimensions b))
-	 (error "Mismatched array dimensions: arrays must have the same dimensions"))
+	 (spectral-error "Mismatched array dimensions: arrays must have the same dimensions"))
        (dotimes (i (array-total-size a))
 	 (setf (row-major-aref result-array i)
 	       (funcall op (row-major-aref a i) (row-major-aref b i))))
@@ -137,7 +143,7 @@
 	 (setf (row-major-aref result-array i)
 	       (funcall op (row-major-aref a i))))
        result-array))
-    (t (error "Invalid input for array operation: ~S" a))))
+    (t (spectral-error "Invalid input for array operation: ~S" a))))
 
 (load (merge-pathnames "std/stack.lisp" *spectral-root*))
 (load (merge-pathnames "std/arrays.lisp" *spectral-root*))
@@ -159,7 +165,7 @@
 (defun reduce-array (op a)
   (cond
     ((numberp a)
-     (error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
+     (spectral-error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
     ((and (arrayp a) (> (length (array-dimensions a)) 1))
      (let* ((dims (array-dimensions a))
 	    (rest-dims (subseq dims 1))
@@ -177,7 +183,7 @@
        (loop for i from 1 to (1- ntot) do
 	 (setf result (funcall op result (row-major-aref a i))))
        result))
-    (t (error "Reduction expects an array, got ~S." a))))
+    (t (spectral-error "Reduction expects an array, got ~S." a))))
 
 (defun scan (op initial lst)
   (let ((results nil)
@@ -189,7 +195,7 @@
 ;; Inclusive prefix scan: first element = itself, no initial value.
 (defun scan1 (op lst)
   (when (null lst)
-    (error "scan1 requires a non-empty list"))
+    (spectral-error "scan1 requires a non-empty list"))
   (let ((results (list (first lst)))
 	(acc (first lst)))
     (dolist (item (rest lst) (nreverse results))
@@ -199,19 +205,19 @@
 (defun scan-array (op a)
   (cond
     ((numberp a)
-     (error "Scan (e.g. &+) expects an array, got ~S. Use &+ [1 2 3] for cumulative sum." a))
+     (spectral-error "Scan (e.g. &+) expects an array, got ~S. Use &+ [1 2 3] for cumulative sum." a))
     ((listp a) (scan1 op a))
     ((arrayp a)
      (let ((lst (coerce a 'list)))
        (coerce (scan1 op lst) 'vector)))
-    (t (error "Scan expects an array, got ~S." a))))
+    (t (spectral-error "Scan expects an array, got ~S." a))))
 
 (defun check-rectangular (elements)
   (when (every #'listp elements)
     ;; Only check if all elements are lists (i.e., nested arrays)
     (let ((first-len (length (first elements))))
       (unless (every (lambda (row) (= (length row) first-len)) elements)
-        (error "Ragged array: all rows must have the same length"))
+        (spectral-error "Ragged array: all rows must have the same length"))
       (when (and (plusp first-len) (listp (caar elements)))
         (dolist (row elements)
           (check-rectangular row))))))
@@ -310,7 +316,7 @@
 	      (op-sym (first val))
 	      (op-fn (gethash op-sym *reduce-ops*)))
 	 (when (null op-fn)
-	   (error "Unknown reduction operator: ~A" op-sym))
+	   (spectral-error "Unknown reduction operator: ~A" op-sym))
 	 (push-stack (reduce-array op-fn operand))))
 
       ;; Scan
@@ -320,7 +326,7 @@
 	      (op-sym (first val))
 	      (op-fn (gethash op-sym *scan-ops*)))
 	 (when (null op-fn)
-	   (error "Unknown scan operator: ~A" op-sym))
+	   (spectral-error "Unknown scan operator: ~A" op-sym))
 	 (push-stack (scan-array op-fn operand))))
 
       ;; Stack operation
@@ -366,10 +372,10 @@
 	      (loop for value in values do (push-stack value))
 	      (first *stack*)))
 
-	   (t (error "Functions of arity ~A are not implemented" arity)))))
+	   (t (spectral-error "Functions of arity ~A are not implemented" arity)))))
 
       ;; unrecognized
-      (t (error "Unexpected expressions: ~A" element)))))
+      (t (spectral-error "Unexpected expressions: ~A" element)))))
 
 (defparameter *single-character-tokens*
   '(#\+ #\% #\* #\< #\> #\!))
@@ -538,7 +544,7 @@ result through each expression using 's' as the placeholder for the current valu
 	(rest (cddr tokens)))
     (unless (and (listp then-else)
 		 (>= (length then-else) 2))
-      (error "Could not find correct then-else clause for IF"))
+      (spectral-error "Could not find correct then-else clause for IF"))
     (let ((groups (parse-group then-else)))
       (values
        rest
@@ -624,7 +630,7 @@ result through each expression using 's' as the placeholder for the current valu
        (parse-ops tokens))
       
       ;; unrecognized
-      (t (error "Unexpected token: ~A" token)))))
+      (t (spectral-error "Unexpected token: ~A" token)))))
 
 (defun parse (tokens)
   (let ((result '()))

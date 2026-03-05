@@ -34,7 +34,7 @@
   "Rotate clockwise, i.e. last element becomes first element"
   (cond
     ((null array)
-     (error "Got empty input"))
+     (spectral-error "Got empty input"))
     ((numberp array) array)
     ((stringp array) array)
     ((= (length (array-dimensions array)) 1)
@@ -92,11 +92,13 @@
 (defun reshape (shape array)
   "Reshape an array into a multi-dimensional array based on the given shape.
    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix."
+  (unless (arrayp array)
+    (spectral-error "reshape expects an array, got ~S" array))
   (let* ((size (array-total-size array))
 	 (new-dims (coerce shape 'list))
 	 (result (make-array new-dims)))
     (if (/= (array-total-size result) size)
-	(error "Non-matching shape ~A" new-dims)
+	(spectral-error "Non-matching shape ~A: array has ~D elements" new-dims size)
 	(copy-array-range result 0 array 0 size))
     result))
 
@@ -104,15 +106,25 @@
   "Pick an element from an array based on the index.
    If index is a number, it returns the nth element.
    If index is a list, it traverses the array according to the indices in the list."
+  (unless (arrayp array)
+    (spectral-error "pick expects an array, got ~S" array))
   (cond
     ((numberp index)
-     (let ((v (aref array index)))
-       (if v v (error "Invalid index ~A for ~A" index array))))
+     (let ((size (array-total-size array)))
+       (unless (and (integerp index) (>= index 0) (< index size))
+	 (spectral-error "Invalid index ~A for array of size ~D" index size))
+       (row-major-aref array index)))
     ((arrayp index)
-     (let ((array-c
-	     (apply #'aref array (coerce index 'list))))
-       (if array-c array-c (error "Invalid index ~A for ~A" index array))))
-    (t (error "Invalid inputs to pick: ~A, ~A" index array))))
+     (let* ((dims (array-dimensions array))
+	    (subs (coerce index 'list)))
+       (unless (= (length subs) (length dims))
+	 (spectral-error "pick index rank mismatch: ~A for shape ~A" index dims))
+       (dotimes (i (length dims))
+	 (let ((s (nth i subs)) (d (nth i dims)))
+	   (unless (and (integerp s) (>= s 0) (< s d))
+	     (spectral-error "Invalid index ~A for shape ~A" index dims))))
+       (apply #'aref array subs)))
+    (t (spectral-error "pick expects number or array index, got ~S" index))))
 
 (defun array-slice (n arr)
   "Pick nth row from array"
@@ -122,32 +134,32 @@
 
 (defun take (index array)
   "Take the first N elements from an array."
-  (cond
-    ((numberp index)
-     (handler-case
-	 (let* ((dims (array-dimensions array))
-		(rank (length dims)))
-	   (unless (and (>= (first dims) index) (> rank 0))
-	     (error "Invalid dimensions or too few elements to take."))
-	   (let* ((new-dims (cons index (rest dims)))
-		  (result (make-array new-dims
-				      :element-type (array-element-type array)))
-		  (n (array-total-size result)))
-	     (copy-array-range result 0 array 0 n)
-	     result))
-       (error (condition)
-	 (declare (ignore condition))
-	 (error "Invalid index: take ~A ~A" index array))))
-     (t (error "Invalid inputs to take: ~A, ~A" index array))))
-
-(defun drop (index array)
-  "Drop the first N elements from an array."
+  (unless (arrayp array)
+    (spectral-error "take expects an array, got ~S" array))
   (cond
     ((numberp index)
      (let* ((dims (array-dimensions array))
 	    (rank (length dims)))
-       (unless (and (>= (first dims) index) (> rank 0))
-	 (error "Invalid dimensions or too few elements to take."))
+       (unless (and (> rank 0) (integerp index) (>= index 0) (<= index (first dims)))
+	 (spectral-error "Invalid index for take: ~A (array has ~D elements along first axis)" index (if (plusp rank) (first dims) 0)))
+       (let* ((new-dims (cons index (rest dims)))
+	      (result (make-array new-dims
+				  :element-type (array-element-type array)))
+	      (n (array-total-size result)))
+	 (copy-array-range result 0 array 0 n)
+	 result)))
+    (t (spectral-error "take expects a number index, got ~S" index))))
+
+(defun drop (index array)
+  "Drop the first N elements from an array."
+  (unless (arrayp array)
+    (spectral-error "drop expects an array, got ~S" array))
+  (cond
+    ((numberp index)
+     (let* ((dims (array-dimensions array))
+	    (rank (length dims)))
+       (unless (and (> rank 0) (integerp index) (>= index 0) (<= index (first dims)))
+	 (spectral-error "Invalid index for drop: ~A (array has ~D elements along first axis)" index (if (plusp rank) (first dims) 0)))
        (let* ((new-dims (cons (- (first dims) index) (rest dims)))
 	      (result (make-array new-dims
 				  :element-type (array-element-type array)))
@@ -155,7 +167,7 @@
 	      (offset (* index (reduce #'* (rest dims)))))
 	 (copy-array-range result 0 array offset element-size)
 	 result)))
-    (t (error "Invalid inputs to drop: ~A, ~A" index array))))
+    (t (spectral-error "Invalid inputs to drop: ~A, ~A" index array))))
 
 (defun array-row-major-index-to-subscript (dims index)
   "Convert row-major index to a list of subscripts for the given DIMS."
@@ -185,7 +197,7 @@
 	       (setf (apply #'aref reversed-array i indices)
 		     (apply #'aref array source-index indices))))))
        reversed-array))
-    (t (error "Cannot reverse ~A" array))))
+    (t (spectral-error "Cannot reverse ~A" array))))
 
 
 
@@ -236,7 +248,7 @@
 	       (copy-array-range new-array 0 array1 0 size1)
 	       (copy-array-range new-array size1 array2 0 size1)
 	       new-array))
-	    (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
+	    (t (spectral-error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
 	 ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
 	  (cond
 	    ((= (array-dimension array1 0) (array-dimension array2 0))
@@ -253,7 +265,7 @@
 	       (copy-array-range new-array 0 array1 0 size1)
 	       (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
 	       new-array))
-	    (t (error "Not implemented or not possible"))))
+	    (t (spectral-error "Not implemented or not possible"))))
 	 ((= (length dims2) (1- (length dims1)))
 	  (cond
 	    ((= (array-dimension array1 0) (array-dimension array2 0))
@@ -263,9 +275,9 @@
 	       (copy-array-range new-array 0 array1 0 size1)
 	       (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
 	       new-array))
-	    (t (error "Not implemented or not possible"))))
-	 (t (error "Not implemented or not possible")))))
-    (t (error "Stack works with 2 arrays only"))))
+	    (t (spectral-error "Not implemented or not possible"))))
+	 (t (spectral-error "Not implemented or not possible")))))
+    (t (spectral-error "Stack works with 2 arrays only"))))
 
 (defun calculate-mean-and-std (data)
   "Return mean and standard deviation of array elements. Handles 1D and flattens higher dimensions."

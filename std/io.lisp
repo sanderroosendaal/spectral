@@ -62,10 +62,11 @@
 
 (defun write-csv (matrix filename &optional (delimiter #\,))
   "Saves a 2D lisp array to a CSV file, comma separated, row oriented"
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp matrix)
-    (error "Expected a 2D array, got ~A" (type-of matrix)))
+    (spectral-error "Expected a 2D array, got ~A" (type-of matrix)))
   (unless (= (array-rank matrix) 2)
-    (error "Expected a 2D array, got ~A" (array-rank matrix)))
+    (spectral-error "Expected a 2D array, got ~A" (array-rank matrix)))
   (with-open-file (stream filename :direction :output :if-exists :supersede
 				   :element-type 'character)
     (let ((rows (first (array-dimensions matrix)))
@@ -165,18 +166,19 @@
     ((-2) 4)   ; float32
     ((-3) 4)   ; int32
     ((-4) 2)   ; int16
-    (t (error "Unknown .sdat type code: ~A" typecode))))
+    (t (spectral-error "Unknown .sdat type code: ~A" typecode))))
 
 (defun write-binary (filename data)
   "Write array to .sdat binary file. Supports float64, float32, int32, int16."
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
-    (error "Expected an array, got ~A" (type-of data)))
+    (spectral-error "Expected an array, got ~A" (type-of data)))
   (let* ((dims (array-dimensions data))
          (ndims (length dims))
          (typecode (array-element-type-to-sdat-code data))
          (bpe (sdat-bytes-per-element typecode)))
     (when (> ndims 8)
-      (error ".sdat supports at most 8 dimensions, got ~A" ndims))
+      (spectral-error ".sdat supports at most 8 dimensions, got ~A" ndims))
     (with-open-file (s filename :direction :output :if-exists :supersede
                        :element-type '(unsigned-byte 8))
       (write-int32-le typecode s)
@@ -280,7 +282,7 @@
            (ndims (read-uint32-le s)))
       (declare (ignore _bpe))
       (when (> ndims 8)
-        (error "Invalid .sdat: ndims ~A > 8" ndims))
+        (spectral-error "Invalid .sdat: ndims ~A > 8" ndims))
       (let ((dims (loop repeat ndims collect (read-uint32-le s))))
         (let ((total (reduce #'* dims))
               (et (case typecode
@@ -288,7 +290,7 @@
                     ((-2) 'single-float)
                     ((-3) '(signed-byte 32))
                     ((-4) '(signed-byte 16))
-                    (t (error "Unknown .sdat type code: ~A" typecode)))))
+                    (t (spectral-error "Unknown .sdat type code: ~A" typecode)))))
           (let ((arr (make-array dims :element-type et)))
             (dotimes (i total)
               (setf (row-major-aref arr i)
@@ -297,7 +299,7 @@
                       ((-2) (read-float32-le s))
                       ((-3) (read-int32-le s))
                       ((-4) (read-int16-le s))
-                      (t (error "Unknown type ~A" typecode)))))
+                      (t (spectral-error "Unknown type ~A" typecode)))))
             ;; Coerce to double-float for Spectral uniformity
             (if (subtypep et 'double-float)
                 arr
@@ -319,11 +321,12 @@
 
 (defun write-npy (filename data)
   "Write array to .npy file. Supports float64, int32, 1D/2D, C order."
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
-    (error "Expected an array, got ~A" (type-of data)))
+    (spectral-error "Expected an array, got ~A" (type-of data)))
   (let ((rank (array-rank data)))
     (when (> rank 2)
-      (error "write-npy: only 1D/2D supported, got rank ~A" rank)))
+      (spectral-error "write-npy: only 1D/2D supported, got rank ~A" rank)))
   (let* ((dims (array-dimensions data))
          (descr (npy-array-descr data))
          (header (format nil "{'descr': '~A', 'fortran_order': False, 'shape': ~A, }~%"
@@ -370,14 +373,14 @@
     (let ((descr-start (find-key "'descr': '"))
           (shape-start (search "'shape': (" header)))
       (unless (and descr-start shape-start)
-        (error "NPY: invalid header"))
+        (spectral-error "NPY: invalid header"))
       (let* ((descr-end (position #\' header :start descr-start))
              (descr (subseq header descr-start descr-end))
              (shape-str (subseq header (+ shape-start 10) (position #\) header :start shape-start))))
         (when (search "fortran_order': True" header)
-          (error "NPY: fortran_order True not supported"))
+          (spectral-error "NPY: fortran_order True not supported"))
         (unless (or (string= descr "<f8") (string= descr "<i4"))
-          (error "NPY: only <f8 and <i4 supported, got ~S" descr))
+          (spectral-error "NPY: only <f8 and <i4 supported, got ~S" descr))
         (let ((dims (npy-parse-shape shape-str)))
           (values descr dims))))))
 
@@ -388,7 +391,7 @@
       (dotimes (i 6)
         (setf (aref magic i) (read-byte s)))
       (unless (equalp magic +npy-magic+)
-        (error "NPY: invalid magic, not a .npy file"))
+        (spectral-error "NPY: invalid magic, not a .npy file"))
       (let ((major (read-byte s)) (minor (read-byte s)))
         (declare (ignore major minor))
         (let ((hlen (read-uint16-le s)))

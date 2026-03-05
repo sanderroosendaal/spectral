@@ -106,9 +106,9 @@
   (let ((a (if (arrayp a) (coerce a 'list) a)))
     (cond
       ((not (listp a))
-       (error "->P takes a vector [x y] of length 2"))
+       (spectral-error "->P takes a vector [x y] of length 2"))
       ((/= (length a) 2)
-       (error "->P takes a vector [x y] of length 2"))
+       (spectral-error "->P takes a vector [x y] of length 2"))
       ((= (first a) 0)
        (coerce (list (abs (second a))
                      (if (> (second a) 0) (/ pi 2) (- (/ pi 2))))
@@ -127,7 +127,7 @@
   "Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]"
   (let ((a (if (arrayp a) (coerce a 'list) a)))
     (when (or (not (listp a)) (/= (length a) 2))
-      (error "->R takes a vector [r theta] of length 2"))
+      (spectral-error "->R takes a vector [r theta] of length 2"))
     (let ((r (first a))
           (theta (second a)))
       (coerce (list (* r (cos theta)) (* r (sin theta))) 'vector))))

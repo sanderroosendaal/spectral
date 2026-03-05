@@ -31,7 +31,7 @@
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
-    (error "Input must be a square matrix"))
+    (spectral-error "Input must be a square matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
       (magicl:det magicl-a)))
 
@@ -40,7 +40,7 @@
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
-    (error "Input must be a square matrix"))
+    (spectral-error "Input must be a square matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
     (magicl:trace magicl-a)))
 
@@ -49,7 +49,7 @@
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
-    (error "Input must be a square matrix"))
+    (spectral-error "Input must be a square matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
     (magicl:upper-triangular magicl-a)))
 
@@ -58,7 +58,7 @@
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
-    (error "Input must be a square matrix"))
+    (spectral-error "Input must be a square matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
     (magicl:lower-triangular magicl-a)))
   
@@ -66,7 +66,7 @@
 (defun dagger (a)
   "BLAS/LAPACK Required: Conjugate transpose of matrix."
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2))
-    (error "Input must be a matrix"))
+    (spectral-error "Input must be a matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
     (magicl:conjugate-transpose magicl-a)))
 
@@ -81,7 +81,7 @@
   (unless (and (arrayp a) (= (length (array-dimensions a)) 2)
 	       (= (first (array-dimensions a))
 		  (second (array-dimensions a))))
-    (error "Input must be a square matrix"))
+    (spectral-error "Input must be a square matrix"))
   (let* ((magicl-a (array-to-magicl-fast a)))
     (multiple-value-bind (eigenvalues eigenvectors)
 	(magicl:eig magicl-a)			  

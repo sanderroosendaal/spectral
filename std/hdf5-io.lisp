@@ -47,8 +47,9 @@
 
 (defun write-hdf5-inner (filename path data)
   "Write array to HDF5 file at path. Overwrites if exists."
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
-    (error "Expected an array, got ~A" (type-of data)))
+    (spectral-error "Expected an array, got ~A" (type-of data)))
   (let* ((dims (array-dimensions data))
          (rank (length dims))
          (space-id (cffi:with-foreign-object (dims-ptr :unsigned-long rank)
