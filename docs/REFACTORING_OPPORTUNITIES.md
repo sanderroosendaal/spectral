@@ -6,6 +6,24 @@ The Lisp prototype is functional and reasonably structured, but there are dead c
 
 ---
 
+## Refactoring Summary (vs `develop`)
+
+**Diff stats:** +1347 lines added, −1115 lines removed (net +232).
+
+### Applied changes
+
+- **Structure:** `std/deps.lisp` loads all Quicklisp deps; std libs use `*spectral-root*` for paths; array ops defined before std libs.
+- **Dead code removed:** `errors.lisp` (handle-error), `array-op-list`/`array-fn-list`/`strip-token` from spectral.lisp; `generate-binary-fixtures.lisp` (duplicate of `write-fixtures-minimal.lisp`).
+- **Bugs fixed:** `array-stack` mutation (`list*` instead of `push`), `reduce-array` variable shadowing, `run-script` filename/line in errors, `write-hdf5` arity 3 support.
+- **Error handling:** `spectral-error`; validation in pick/reshape/take/drop; `ensure-directories-exist` for writes.
+- **Performance:** `spectral-color-text` (fill-pointer), `array-op`/`array-fn` (optimize, list coercion), `reduce-array` 2D (row-major).
+- **Style:** `.editorconfig` (2-space indent), magic-number constants, docstrings refreshed.
+- **Tests:** Error-path group (stack underflow, invalid indices, malformed IF, script errors, etc.); fixture script consolidation.
+- **DRY:** `def-filter` macro in filters.lisp.
+- **Misc:** `range-fn` docstring; `->P`/`->R` return vectors; `testdata/script_err.spec` for error tests.
+
+---
+
 ## 1. Dead / Unused Code
 
 ### 1.1 `array-op-list` and `array-fn-list` (spectral.lisp:106–123)
@@ -46,20 +64,13 @@ The Lisp prototype is functional and reasonably structured, but there are dead c
 
 **Refactor:** Centralize `ensure-vector` and `ensure-double-float-vector` and reuse.
 
-### 2.3 Filter functions (filters.lisp)
+### 2.3 Filter functions (filters.lisp) ✓
 
-**Issue:** All six filter ops share the same structure: `(array-op (lambda (b a) (if (pred a b) 1 0)) a b)`.
+**Issue:** All six filter ops shared the same structure: `(array-op (lambda (b a) (if (pred a b) 1 0)) a b)`.
 
-**Refactor:** Use a macro or higher-order function:
+**Refactor:** Use a macro or higher-order function.
 
-```lisp
-(defmacro def-filter (name pred)
-  `(defun ,name (a b)
-     (array-op (lambda (b a) (if (,pred a b) 1 0)) a b)))
-(def-filter greater-fn >)
-(def-filter smaller-fn <)
-;; etc.
-```
+**Done:** Introduced `def-filter` macro. Each filter is now `(def-filter name pred &optional invert docstring)`; `register-op` kept explicit to avoid symbol/order issues.
 
 ### 2.4 Math wrappers (math.lisp)
 
@@ -244,12 +255,12 @@ The Lisp prototype is functional and reasonably structured, but there are dead c
 
 ---
 
-## 10. Recommended First Steps
+## 10. Recommended Next Steps
 
-1. **Remove or wire dead code:** `array-op-list`, `array-fn-list`, `strip-token`, `handle-error`.
-2. **Fix bugs:** `array-stack` mutation, `reduce-array` variable shadowing, `write-hdf5` arity.
-3. **Introduce filter macro** to reduce repetition in `filters.lisp`.
-4. **Unify std load paths** using `*spectral-root*`.
-5. **Add error-path tests** for stack underflow, invalid reduction, type errors.
+1. ~~**Remove or wire dead code:** `array-op-list`, `array-fn-list`, `strip-token`, `handle-error`~~ ✓
+2. ~~**Fix bugs:** `array-stack` mutation, `reduce-array` variable shadowing, `write-hdf5` arity~~ ✓
+3. ~~**Introduce filter macro** to reduce repetition in `filters.lisp`~~ ✓
+4. ~~**Unify std load paths** using `*spectral-root*`~~ ✓
+5. ~~**Add error-path tests** for stack underflow, invalid reduction, type errors~~ ✓
 
-These steps improve correctness and maintainability without large structural changes. Deeper refactors (ASDF, shared binary I/O layer, full list/array unification) can follow as needed for the C++ port or long-term maintenance.
+Remaining items improve DRY and maintainability. Deeper refactors (ASDF, shared binary I/O layer, full list/array unification) can follow as needed for the C++ port or long-term maintenance.
