@@ -1,6 +1,13 @@
 ; Array functions
+
+(defun copy-array-range (dest dest-start source source-start count)
+  "Copy COUNT elements from SOURCE (row-major offset SOURCE-START) to DEST (row-major offset DEST-START)."
+  (dotimes (i count)
+    (setf (row-major-aref dest (+ dest-start i))
+          (row-major-aref source (+ source-start i)))))
+
 (defun range-fn (n)
-  "Generates a range from 0 to n-1: range 9: [0 1 2 3 4 5 6 7 8 9]"
+  "Generate n elements from 0 to n-1. E.g. range 5 -> [0 1 2 3 4], range 9 -> [0..8]."
   (let ((arr (make-array n :element-type 'number)))
     (dotimes (i n arr)
       (setf (aref arr i) i))))
@@ -27,38 +34,38 @@
   "Rotate clockwise, i.e. last element becomes first element"
   (cond
     ((null array)
-     (error "Got empty input"))
+     (spectral-error "Got empty input"))
     ((numberp array) array)
     ((stringp array) array)
     ((= (length (array-dimensions array)) 1)
      (let* ((len (length array))
-	    (last (aref array (1- len))))
+      (last (aref array (1- len))))
        (loop for i downfrom (1- len) above 0
-	     do (setf (aref array i) (aref array (1- i))))
+       do (setf (aref array i) (aref array (1- i))))
        (setf (aref array 0) last)
        array))
     ((arrayp array)
      (let* ((size (array-total-size array))
-	    (dim0 (array-dimension array 1))
-	    (new-array (make-array (array-dimensions array))))
+      (dim0 (array-dimension array 1))
+      (new-array (make-array (array-dimensions array))))
        (loop for i from 0 below dim0 do
-	 (setf (row-major-aref new-array i)
-	       (row-major-aref array (+ i  (- size dim0)))))
+   (setf (row-major-aref new-array i)
+         (row-major-aref array (+ i  (- size dim0)))))
        (loop for i from dim0 below size do
-	 (setf (row-major-aref new-array i)
-	       (row-major-aref array (- i dim0))))
+   (setf (row-major-aref new-array i)
+         (row-major-aref array (- i dim0))))
        new-array))
     (t array)))
 
 (defun transpose (matrix)
   "Transpose a matrix (list of lists)"
   (let* ((rows (array-dimension matrix 0))
-	 (cols (array-dimension matrix 1))
-	 (result (make-array (list cols rows)
-			     :element-type (array-element-type matrix))))
+   (cols (array-dimension matrix 1))
+   (result (make-array (list cols rows)
+           :element-type (array-element-type matrix))))
     (dotimes (i rows)
       (dotimes (j cols)
-	(setf (aref result j i) (aref matrix i j))))
+  (setf (aref result j i) (aref matrix i j))))
     result))
 
 ;; shape, length
@@ -77,89 +84,98 @@
 (defun flatten (array)
   "Flatten a nested list structure into a single list."
   (let* ((size (array-total-size array))
-	 (flat (make-array size :element-type (array-element-type array))))
-    (dotimes (i size flat)
-      (setf (aref flat i) (row-major-aref array i)))))
+   (flat (make-array size :element-type (array-element-type array))))
+    (copy-array-range flat 0 array 0 size)
+    flat))
 
 
 (defun reshape (shape array)
   "Reshape an array into a multi-dimensional array based on the given shape.
    The shape is a list of dimensions, e.g. (2 3) for a 2x3 matrix."
+  (unless (arrayp array)
+    (spectral-error "reshape expects an array, got ~S" array))
   (let* ((size (array-total-size array))
-	 (new-dims (coerce shape 'list))
-	 (result (make-array new-dims)))
+   (new-dims (coerce shape 'list))
+   (result (make-array new-dims)))
     (if (/= (array-total-size result) size)
-	(error "Non-matching shape ~A" new-dims)
-	(dotimes (i size)
-	  (setf (row-major-aref result i) (row-major-aref array i))))
+  (spectral-error "Non-matching shape ~A: array has ~D elements" new-dims size)
+  (copy-array-range result 0 array 0 size))
     result))
 
 (defun pick (index array)
   "Pick an element from an array based on the index.
    If index is a number, it returns the nth element.
    If index is a list, it traverses the array according to the indices in the list."
+  (unless (arrayp array)
+    (spectral-error "pick expects an array, got ~S" array))
   (cond
     ((numberp index)
-     (let ((v (aref array index)))
-       (if v v (error "Invalid index ~A for ~A" index array))))
+     (let ((size (array-total-size array)))
+       (unless (and (integerp index) (>= index 0) (< index size))
+   (spectral-error "Invalid index ~A for array of size ~D" index size))
+       (row-major-aref array index)))
     ((arrayp index)
-     (let ((array-c
-	     (apply #'aref array (coerce index 'list))))
-       (if array-c array-c (error "Invalid index ~A for ~A" index array))))
-    (t (error "Invalid inputs to pick: ~A, ~A" index array))))
+     (let* ((dims (array-dimensions array))
+      (subs (coerce index 'list)))
+       (unless (= (length subs) (length dims))
+   (spectral-error "pick index rank mismatch: ~A for shape ~A" index dims))
+       (dotimes (i (length dims))
+   (let ((s (nth i subs)) (d (nth i dims)))
+     (unless (and (integerp s) (>= s 0) (< s d))
+       (spectral-error "Invalid index ~A for shape ~A" index dims))))
+       (apply #'aref array subs)))
+    (t (spectral-error "pick expects number or array index, got ~S" index))))
 
 (defun array-slice (n arr)
   "Pick nth row from array"
   (make-array (array-dimension arr 1)
-	      :displaced-to arr
-	      :displaced-index-offset (* n (array-dimension arr 1))))
+        :displaced-to arr
+        :displaced-index-offset (* n (array-dimension arr 1))))
 
 (defun take (index array)
   "Take the first N elements from an array."
-  (cond
-    ((numberp index)
-     (handler-case
-	 (let* ((dims (array-dimensions array))
-		(rank (length dims)))
-	   (unless (and (>= (first dims) index) (> rank 0))
-	     (error "Invalid dimensions or too few elements to take."))
-	   (let* ((new-dims (cons index (rest dims)))
-		  (result (make-array new-dims
-				      :element-type (array-element-type array))))
-	     (dotimes (i (array-total-size result) result)
-	       (setf (row-major-aref result i)
-		     (row-major-aref array i)))))
-       (error
-	   (condition)
-	 (declare (ignore condition))
-	 (error "Invalid index: take ~A ~A" index array))))
-     (t (error "Invalid inputs to take: ~A, ~A" index array))))
-
-(defun drop (index array)
-  "Drop the first N elements from an array."
+  (unless (arrayp array)
+    (spectral-error "take expects an array, got ~S" array))
   (cond
     ((numberp index)
      (let* ((dims (array-dimensions array))
-	    (rank (length dims)))
-       (unless (and (>= (first dims) index) (> rank 0))
-	 (error "Invalid dimensions or too few elements to take."))
+      (rank (length dims)))
+       (unless (and (> rank 0) (integerp index) (>= index 0) (<= index (first dims)))
+   (spectral-error "Invalid index for take: ~A (array has ~D elements along first axis)" index (if (plusp rank) (first dims) 0)))
+       (let* ((new-dims (cons index (rest dims)))
+        (result (make-array new-dims
+          :element-type (array-element-type array)))
+        (n (array-total-size result)))
+   (copy-array-range result 0 array 0 n)
+   result)))
+    (t (spectral-error "take expects a number index, got ~S" index))))
+
+(defun drop (index array)
+  "Drop the first N elements from an array."
+  (unless (arrayp array)
+    (spectral-error "drop expects an array, got ~S" array))
+  (cond
+    ((numberp index)
+     (let* ((dims (array-dimensions array))
+      (rank (length dims)))
+       (unless (and (> rank 0) (integerp index) (>= index 0) (<= index (first dims)))
+   (spectral-error "Invalid index for drop: ~A (array has ~D elements along first axis)" index (if (plusp rank) (first dims) 0)))
        (let* ((new-dims (cons (- (first dims) index) (rest dims)))
-	      (result (make-array new-dims
-				  :element-type (array-element-type array)))
-	      (element-size (array-total-size result)))
-	 (let ((offset (* index (reduce #'* (rest dims)))))
-	   (dotimes (i element-size result)
-	     (setf (row-major-aref result i)
-		   (row-major-aref array (+ offset i))))))))
-    (t (error "Invalid inputs to drop: ~A, ~A" index array))))
+        (result (make-array new-dims
+          :element-type (array-element-type array)))
+        (element-size (array-total-size result))
+        (offset (* index (reduce #'* (rest dims)))))
+   (copy-array-range result 0 array offset element-size)
+   result)))
+    (t (spectral-error "Invalid inputs to drop: ~A, ~A" index array))))
 
 (defun array-row-major-index-to-subscript (dims index)
   "Convert row-major index to a list of subscripts for the given DIMS."
   (let ((coords ()))
     (dolist (dim (reverse dims) coords)
       (multiple-value-bind (q r) (floor index dim)
-	(push r coords)
-	(setf index q)))))
+  (push r coords)
+  (setf index q)))))
 
 
 (defun reverse-array-first-axis (array)
@@ -169,45 +185,45 @@
     ((numberp array) array)
     ((arrayp array)
      (let* ((dimensions (array-dimensions array))
-	    (first-dim (first dimensions))
-	    (element-type (array-element-type array))
-	    (reversed-array (make-array dimensions :element-type element-type)))
+      (first-dim (first dimensions))
+      (element-type (array-element-type array))
+      (reversed-array (make-array dimensions :element-type element-type)))
        (dotimes (i first-dim)
-	 (let ((source-index (- (1- first-dim) i)))
-	   (dotimes (j (reduce #'* (rest dimensions)))
-	     (let ((indices (loop for dim in (rest dimensions)
-				  for index = j then (floor index dim)
-				  collect (mod index dim))))
-	       (setf (apply #'aref reversed-array i indices)
-		     (apply #'aref array source-index indices))))))
+   (let ((source-index (- (1- first-dim) i)))
+     (dotimes (j (reduce #'* (rest dimensions)))
+       (let ((indices (loop for dim in (rest dimensions)
+          for index = j then (floor index dim)
+          collect (mod index dim))))
+         (setf (apply #'aref reversed-array i indices)
+         (apply #'aref array source-index indices))))))
        reversed-array))
-    (t (error "Cannot reverse ~A" array))))
+    (t (spectral-error "Cannot reverse ~A" array))))
 
 
 
 (defun where (array)
   "Return the 1D array of index vectors of non-zero elements in an array."
   (let* ((dims (array-dimensions array))
-	 (size (array-total-size array))
-	 (indices '()))
+   (size (array-total-size array))
+   (indices '()))
     (dotimes (i size)
       (let ((val (row-major-aref array i)))
-	(unless (zerop val)
-	  (push (multiple-value-list (array-row-major-index-to-subscript dims i)) indices))))
+  (unless (zerop val)
+    (push (multiple-value-list (array-row-major-index-to-subscript dims i)) indices))))
     (make-array (length indices)
-		:element-type 'vector
-		:initial-contents (mapcar #'(lambda (lst) (coerce lst 'vector)) (nreverse indices)))))
+    :element-type 'vector
+    :initial-contents (mapcar #'(lambda (lst) (coerce lst 'vector)) (nreverse indices)))))
 
 (defun indexof (value array)
   "Return the index of the first occurrence of VALUE in ARRAY.
    If VALUE is not found, return the dimensions of the array."
   (let* ((dims (array-dimensions array))
-	 (size (array-total-size array)))
+   (size (array-total-size array)))
     (dotimes (i size)
       (when (= (row-major-aref array i) value)
-	(return-from indexof (coerce (multiple-value-list
-			 (array-row-major-index-to-subscript dims i))
-			'vector))))
+  (return-from indexof (coerce (multiple-value-list
+       (array-row-major-index-to-subscript dims i))
+      'vector))))
     (coerce dims 'vector)))
 
 ;;; Joining, stacking, concatenating
@@ -221,76 +237,63 @@
      (make-array 2 :initial-contents (list array1 array2)))
     ((and (arrayp array1) (arrayp array2))
      (let ((dims1 (array-dimensions array1))
-	   (dims2 (array-dimensions array2)))
+     (dims2 (array-dimensions array2)))
        (cond
-	 ((= (length dims1) (length dims2))
-	  (cond
-	    ((equal dims1 dims2)
-	     (let* ((size1 (array-total-size array1))
-		    (new-dims (push 2 dims1))
-		    (new-array (make-array new-dims)))
-	       (loop for i from 0 below size1 do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i))
-		 (setf (row-major-aref new-array (+ i size1)) (row-major-aref array2 i)))
-	       new-array))
-	    (t (error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
-	 ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
-	  (cond
-	    ((= (array-dimension array1 0) (array-dimension array2 0))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims2)))
-					   (cdr dims2)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	       new-array))
-	    ((= (array-dimension array1 0) (array-dimension array2 1))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims2)))
-					   (cdr dims2)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	       new-array))
-	    (t (error "Not implemented or not possible"))))
-	 ((= (length dims2) (1- (length dims1)))
-	  (cond
-	    ((= (array-dimension array1 0) (array-dimension array2 0))
-	     (let* ((new-dims (concatenate 'list
-					   (list (1+ (car dims1)))
-					   (cdr dims1)))
-		    (new-array (make-array new-dims))
-		    (size (array-total-size new-array)))
-	       (loop for i from 0 below (array-total-size array1) do
-		 (setf (row-major-aref new-array i) (row-major-aref array1 i)))
-	       (loop for i from (array-total-size array1) below size do
-		 (setf (row-major-aref new-array i) (row-major-aref array2 (- i (array-total-size array1)))))
-	       new-array))
-	    (t (error "Not implemented or not possible"))))
-	 (t (error "Not implemented or not possible")))))
-    (t (error "Stack works with 2 arrays only"))))
+   ((= (length dims1) (length dims2))
+    (cond
+      ((equal dims1 dims2)
+       (let* ((size1 (array-total-size array1))
+        (new-dims (list* 2 dims1))
+        (new-array (make-array new-dims)))
+         (copy-array-range new-array 0 array1 0 size1)
+         (copy-array-range new-array size1 array2 0 size1)
+         new-array))
+      (t (spectral-error "Cannot concatenate arrays with different dimensions: ~A, ~A" dims1 dims2))))
+   ((= (length dims1) (1- (length dims2))) ;; [[1 2][3 4]] and [5 6] --> [[1 2][3 4][5 6]]
+    (cond
+      ((= (array-dimension array1 0) (array-dimension array2 0))
+       (let* ((size1 (array-total-size array1))
+        (new-dims (concatenate 'list (list (1+ (car dims2))) (cdr dims2)))
+        (new-array (make-array new-dims)))
+         (copy-array-range new-array 0 array1 0 size1)
+         (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
+         new-array))
+      ((= (array-dimension array1 0) (array-dimension array2 1))
+       (let* ((size1 (array-total-size array1))
+        (new-dims (concatenate 'list (list (1+ (car dims2))) (cdr dims2)))
+        (new-array (make-array new-dims)))
+         (copy-array-range new-array 0 array1 0 size1)
+         (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
+         new-array))
+      (t (spectral-error "Not implemented or not possible"))))
+   ((= (length dims2) (1- (length dims1)))
+    (cond
+      ((= (array-dimension array1 0) (array-dimension array2 0))
+       (let* ((size1 (array-total-size array1))
+        (new-dims (concatenate 'list (list (1+ (car dims1))) (cdr dims1)))
+        (new-array (make-array new-dims)))
+         (copy-array-range new-array 0 array1 0 size1)
+         (copy-array-range new-array size1 array2 0 (- (array-total-size new-array) size1))
+         new-array))
+      (t (spectral-error "Not implemented or not possible"))))
+   (t (spectral-error "Not implemented or not possible")))))
+    (t (spectral-error "Stack works with 2 arrays only"))))
 
 (defun calculate-mean-and-std (data)
   "Return mean and standard deviation of array elements. Handles 1D and flattens higher dimensions."
   (cond ((= (length (array-dimensions data)) 1)
-	 (let ((n 0)
-	       (sum 0.0)
-	       (sum-of-squares 0.0))
-	   (loop for i from 0 below (length data) do
-	     (let ((x (aref data i)))
-	       (incf n)
-	       (incf sum x)
-	       (incf sum-of-squares (* x x))))
-	   (let* ((mean (/ sum n))
-		  (variance (/ (- sum-of-squares (* sum mean)) n)))
-	     (values mean (sqrt variance)))))
-	(t (calculate-mean-and-std (flatten data)))))
+   (let ((n 0)
+         (sum 0.0)
+         (sum-of-squares 0.0))
+     (loop for i from 0 below (length data) do
+       (let ((x (aref data i)))
+         (incf n)
+         (incf sum x)
+         (incf sum-of-squares (* x x))))
+     (let* ((mean (/ sum n))
+      (variance (/ (- sum-of-squares (* sum mean)) n)))
+       (values mean (sqrt variance)))))
+  (t (calculate-mean-and-std (flatten data)))))
 
 (defun mean-fn (data)
   "Mean"
@@ -306,31 +309,31 @@
 
 (defun correlation-coefficient (x y)
   (let ((mean-x (mean-fn x))
-	(mean-y (mean-fn y))
-	(sum-xy 0.0)
-	(sum-x2 0.0)
-	(sum-y2 0.0))
+  (mean-y (mean-fn y))
+  (sum-xy 0.0)
+  (sum-x2 0.0)
+  (sum-y2 0.0))
     (dotimes (i (length x))
-	    (let ((xi (- (aref x i) mean-x))
-		  (yi (- (aref y i) mean-y)))
-	      (incf sum-xy (* xi yi))
-	      (incf sum-x2 (* xi xi))
-	      (incf sum-y2 (* yi yi))))
+      (let ((xi (- (aref x i) mean-x))
+      (yi (- (aref y i) mean-y)))
+        (incf sum-xy (* xi yi))
+        (incf sum-x2 (* xi xi))
+        (incf sum-y2 (* yi yi))))
     (/ sum-xy (sqrt (* sum-x2 sum-y2)))))
 
 (defun array-of-correlation-coefficients (data)
   "Assumes a 2D array with X values in first row, Y values in other rows. Returns 1D array of correlation coefficients."
   (let* ((num-rows (array-dimension data 0))
-	 (num-cols (array-dimension data 1))
-	 (x (make-array num-cols))
-	 (coefficients (make-array (- num-rows 1))))
+   (num-cols (array-dimension data 1))
+   (x (make-array num-cols))
+   (coefficients (make-array (- num-rows 1))))
     (dotimes (j num-cols)
       (setf (aref x j) (aref data 0 j)))
     (dotimes (i (- num-rows 1))
       (let ((y (make-array num-cols)))
-	(dotimes (j num-cols)
-	  (setf (aref y j) (aref data (+ i 1) j)))
-	(setf (aref coefficients i) (correlation-coefficient x y))))
+  (dotimes (j num-cols)
+    (setf (aref y j) (aref data (+ i 1) j)))
+  (setf (aref coefficients i) (correlation-coefficient x y))))
     coefficients))
 
 (defun spectral-length (array)
@@ -362,16 +365,13 @@
 
 ;; Magicl stuff
 (handler-case (progn
-		(ql:quickload :magicl)
-		(load "std/linear_algebra.lisp"))
+    (load (merge-pathnames "std/linear_algebra.lisp" *spectral-root*)))
   (error ()
     (format t "Linear Algebra Not Loaded~%")))
   
 
 
 ;; Array-ops stuff
-(ql:quickload :array-operations)
-
 (defun nrow (a)
   "Number of rows in matrix"
   (aops:nrow a))

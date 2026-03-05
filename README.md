@@ -83,7 +83,7 @@ This eliminates parentheses and makes data flow explicit.
 
 ## Current Implementation
 
-This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libraries) implementing:
+This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libraries) implementing:
 
 - ✅ Basic arithmetic (`+`, `-`, `*`, `%`)
 - ✅ Trigonometry (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`)
@@ -262,7 +262,8 @@ Spectral draws inspiration from:
 
 ## Documentation
 
-See [REFERENCE](documentation.md).
+- [REFERENCE](documentation.md) — language reference
+- [REFACTORING_OPPORTUNITIES](docs/REFACTORING_OPPORTUNITIES.md) — completed and planned refactorings
 
 ## License
 

@@ -1,27 +1,18 @@
 ;; basics - we have 1 = True, 0 = False
-(defun greater-fn (a b)
-  "Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]"
-  (array-op (lambda (b a) (if (> a b) 1 0)) a b))
+(defmacro def-filter (name pred &optional invert docstring)
+  "Define a filter op: (name a b) -> array of 0/1 where (pred a b) holds.
+   Does not register; use (register-op 'sym #'name 2) separately."
+  (let ((doc (or docstring (format nil "~A threshold array -> 0/1 mask" pred))))
+    `(defun ,name (a b)
+       ,doc
+       (array-op (lambda (b a) (if (,pred a b) ,(if invert 0 1) ,(if invert 1 0))) a b))))
 
-(defun greater-equal-fn (a b)
-  "Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]"
-  (array-op (lambda (b a) (if (>= a b) 1 0)) a b))
-
-(defun smaller-fn (a b)
-  "Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]"
-  (array-op (lambda (b a) (if (< a b) 1 0)) a b))
-
-(defun smaller-equal-fn (a b)
-  "Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]"
-  (array-op (lambda (b a) (if (<= a b) 1 0)) a b))
-
-(defun eql-fn (a b)
-  "Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]"  
-  (array-op (lambda (b a) (if (= a b) 1 0)) a b))
-
-(defun not-eql-fn (a b)
-  "Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]"  
-  (array-op (lambda (b a) (if (= a b) 0 1)) a b))
+(def-filter greater-fn > nil "Greater than, > 5 [1 2 3 4 5 6 7] -> [0 0 0 0 0 1 1]")
+(def-filter greater-equal-fn >= nil "Greater than or equal, >= 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 1 1]")
+(def-filter smaller-fn < nil "Smaller than, < 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 0 0]")
+(def-filter smaller-equal-fn <= nil "Smaller than or equal, <= 5 [1 2 3 4 5 6 7] -> [1 1 1 1 1 0 0]")
+(def-filter eql-fn = nil "Equal, eq 5 [1 2 3 4 5 6 7] -> [0 0 0 0 1 0 0]")
+(def-filter not-eql-fn = t "Not Equal, neq 5 [1 2 3 4 5 6 7] -> [1 1 1 1 0 1 1]")
 
 (register-op '> #'greater-fn 2)
 (register-op '>= #'greater-equal-fn 2)

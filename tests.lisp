@@ -38,15 +38,36 @@
 
 (defun assert-equal (expr expected &optional (reset t))
   "Evaluate EXPR and check result equals EXPECTED. RESET clears state before eval.
-   Use :run-only as expected to execute without assertion (e.g. file I/O)."
+   Use :run-only as expected to execute without assertion (e.g. file I/O).
+   Use (:error \"substring\") as expected to assert EXPR signals an error whose message contains substring."
   (when reset (reset-spectral-state))
   (when (eq expected :run-only)
     (evaluate expr)
     (incf *test-passed*)
     (return-from assert-equal t))
+  ;; Error-path assertion: expected = (:error "substring")
+  (when (and (listp expected) (eq (first expected) :error))
+    (let ((substring (or (second expected) "")))
+      (return-from assert-equal
+        (handler-case
+            (let ((result (evaluate expr)))
+              ;; No error - we expected one
+              (incf *test-failed*)
+              (format t "  FAIL: ~S~%    expected error containing: ~S~%    got: ~A~%"
+                      expr substring (format-result result))
+              nil)
+          (error (e)
+            (let ((msg (princ-to-string e)))
+              (if (search substring msg)
+                  (progn (incf *test-passed*) t)
+                  (progn (incf *test-failed*)
+                         (format t "  FAIL: ~S~%    expected error containing: ~S~%    got: ~A~%"
+                                 expr substring msg)
+                         nil))))))))
+  ;; Normal success-path assertion
   (handler-case
       (let* ((actual (handler-case (evaluate expr)
-                      (error (e) (list :error (princ-to-string e)))))
+                       (error (e) (list :error (princ-to-string e)))))
              (ok (if (and (listp actual) (eq (first actual) :error))
                      nil
                      (spectral-equal expected actual))))
@@ -84,10 +105,56 @@
     '(("pi" 3.141592653589793d0)
       ("e" 2.718281828459045d0)))
 
+  ;; range
+  (run-test-group "range"
+    '(("size range 5" 5)
+      ("shape range 9" (9))
+      ("pick 0 range 5" 0)
+      ("pick 4 range 5" 4)))
+
   ;; Stack operations
   (run-test-group "Stack"
     '(("* d 2" 4)                      ; 2 * 2 (dup)
       ("swap 1 2" 2)))                 ; push 2, 1; swap -> 2 on top
+
+  ;; Error-path tests (invalid inputs, underflow, type errors)
+  (run-test-group "Error paths"
+    '(;; Stack underflow
+      ("pop" (:error "Stack underflow"))
+      ("swap 1" (:error "Stack underflow"))
+      ("d" (:error "Stack underflow"))
+      ;; Reduction/scan expect array
+      ("/+ 5" (:error "expects an array"))
+      ("&+ 5" (:error "expects an array"))
+      ;; Invalid indices
+      ("pick 99 [1 2 3]" (:error "Invalid index"))
+      ("take 10 [1 2 3]" (:error "Invalid"))
+      ("drop 5 [1 2 3]" (:error "Invalid"))
+      ;; Reshape
+      ("reshape [3 3] [1 2 3 4 5]" (:error "Non-matching shape"))
+      ("reshape [2 2] 5" (:error "reshape expects an array"))
+      ;; Type errors: pick/take/drop with wrong types
+      ("pick 0 5" (:error "pick expects an array"))
+      ("take \"x\" [1 2 3]" (:error "take expects"))
+      ("drop [1] [1 2 3]" (:error "Invalid inputs to drop"))
+      ;; Array op invalid input (CL signals type error for non-numeric)
+      ("+ 1 \"x\"" (:error "not of type"))
+      ;; Mismatched dimensions
+      ("+ [1 2 3] [1 2]" (:error "Mismatched array dimensions"))
+      ;; ->P / ->R wrong length
+      ("->P [1]" (:error "->P takes a vector"))
+      ("->R [1 2 3]" (:error "->R takes a vector"))
+      ;; Ragged array
+      ("[[1 2][3]]" (:error "Ragged array"))
+      ;; Unknown reduction/scan operator
+      ("/foo [1 2 3]" (:error "Unknown reduction"))
+      ("&bar [1 2 3]" (:error "Unknown scan"))
+      ;; Unexpected token
+      ("xyz 1 2" (:error "Unexpected token"))
+      ;; IF malformed (then-else needs 2+ expressions)
+      ("(1) if 1" (:error "then-else"))
+      ;; Script errors include filename and line number
+      ("run \"testdata/script_err.spec\"" (:error ":1:"))))
 
   ;; Variables and assignment (reset before group so stack is clean)
   (run-test-group "Variables"
@@ -127,12 +194,26 @@
       ("B = [3 4]" nil nil)
       ("[A B]" #2A((1 2) (3 4)) nil)))
 
+  ;; stack: vertical stacking of arrays
+  (run-test-group "stack"
+    '(("stack [1 2] [3 4]" #2A((1 2) (3 4)))
+      ("shape stack [1 2] [3 4]" (2 2))
+      ("stack [[1 2][3 4]] [[5 6][7 8]]" #3A(((1 2) (3 4)) ((5 6) (7 8))))
+      ("shape stack [[1 2][3 4]] [[5 6][7 8]]" (2 2 2))
+      ("stack [[1 2][3 4]] [5 6]" #2A((1 2) (3 4) (5 6)))))
+
   ;; Beyond-literals: expressions in arrays (requires group for multi-token)
   (run-test-group "Beyond-literals: expressions"
     '(("[(range 5)]" #2A((0 1 2 3 4))) ; single row from (range 5)
       ("[(+ 1 2)]" #(3))
       ("x = 3" nil)
       ("[1 2 (+ x 1)]" #(1 2 4) nil)))
+
+  ;; Polar/rectangular coordinates
+  (run-test-group "->P / ->R"
+    '(("->P [1 0]" #(1.0d0 0.0d0))
+      ("->R [2 pi]" #(-2.0d0 0.0d0))
+      ("> 0.7 pick 1 ->P [1 1]" 1)))
 
   ;; Conditionals
   (run-test-group "Conditionals"
@@ -147,7 +228,11 @@
   ;; Filters
   (run-test-group "Filters"
     '(("> 5 [1 2 3 4 5 6 7]" #(0 0 0 0 0 1 1))
-      ("eq 5 [1 2 3 4 5 6]" #(0 0 0 0 1 0))))
+      ("< 5 [1 2 3 4 5 6 7]" #(1 1 1 1 0 0 0))
+      (">= 5 [1 2 3 4 5 6 7]" #(0 0 0 0 1 1 1))
+      ("<= 5 [1 2 3 4 5 6 7]" #(1 1 1 1 1 0 0))
+      ("eq 5 [1 2 3 4 5 6]" #(0 0 0 0 1 0))
+      ("neq 5 [1 2 3 4 5 6]" #(1 1 1 1 0 1))))
 
   ;; Reduction (/op collapses array to single value)
   (run-test-group "Reduction"
@@ -228,7 +313,9 @@
 
   ;; Binary array I/O (Tier A .sdat)
   (run-test-group "Binary I/O"
-    '(;; Roundtrip: write then load (uses temp file)
+    '(;; Error: non-existent file
+      ("load-binary \"testdata/nonexistent_xyz.sdat\"" (:error "file"))
+      ;; Roundtrip: write then load (uses temp file)
       ("write-binary \"testdata/roundtrip.sdat\" [1 2 3 4 5]" :run-only)
       ("load-binary \"testdata/roundtrip.sdat\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0) nil)
       ;; Roundtrip 2D

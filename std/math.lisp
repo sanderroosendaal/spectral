@@ -1,3 +1,12 @@
+;; Macro for unary ops: (def-unary-op <spectral-name> <fn-name> <operator> &optional docstring)
+(defmacro def-unary-op (op-name fn-name operator &optional docstring)
+  (let ((doc (or docstring (string-capitalize (string op-name)))))
+    `(progn
+       (defun ,fn-name (a)
+         ,doc
+         (array-fn ,operator a))
+       (register-op ',op-name #',fn-name 1))))
+
 ;; basics
 (defun add-fn (a b)
   "Addition"
@@ -26,42 +35,15 @@
   "Creates complex number a+ib"
   (array-op #'complex a b))
 
-(defun chs (a)
-  "Change sign a -> -a"
-  (array-fn (lambda (x) (- 0 x)) a))
-
-(defun abs-fn (a)
-  "Absolute value, also works for complex numbers"
-  (array-fn #'abs a))
-
-(defun realpart-fn (a)
-  "Get the real part of complex number"
-  (array-fn #'realpart a))
-
-(defun imagpart-fn (a)
-  "Get the imaginary part of complex number"
-  (array-fn #'imagpart a))
-
-(defun intg-fn (a)
-  "Floor"
-  (array-fn #'floor a))
-
-(defun frac-fn (a)
-  "Returns the fractional part 1.23 -> .23"
-  (array-fn (lambda (x) (mod x 1)) a))
-
-(defun rnd-fn (a)
-  "Round"
-  (array-fn #'round a))
+(def-unary-op chs chs (lambda (x) (- 0 x)) "Change sign a -> -a")
+(def-unary-op abs abs-fn #'abs "Absolute value, also works for complex numbers")
+(def-unary-op re realpart-fn #'realpart "Get the real part of complex number")
+(def-unary-op im imagpart-fn #'imagpart "Get the imaginary part of complex number")
+(def-unary-op intg intg-fn #'floor "Floor")
+(def-unary-op frac frac-fn (lambda (x) (mod x 1)) "Returns the fractional part 1.23 -> .23")
+(def-unary-op rnd rnd-fn #'round "Round")
 
 (register-op 'complex #'complex-fn 2)
-(register-op 'chs #'chs 1)
-(register-op 'abs #'abs-fn 1)
-(register-op 'intg #'intg-fn 1)
-(register-op 'frac #'frac-fn 1)
-(register-op 'rnd #'rnd-fn 1)
-(register-op 're #'realpart-fn 1)
-(register-op 'im #'imagpart-fn 1)
 
 ;; max, min
 (defun max-fn (a b)
@@ -76,151 +58,79 @@
 (register-op 'min #'min-fn 2)
 
 ;; power, roots, logarithms
-(defun sqr-fn (a)
-  "Square a^2"
-  (array-fn (lambda (x) (* x x)) a))
-
-(defun sqrt-fn (a)
-  "Square root"
-  (array-fn #'sqrt a))
-
-(defun exp-fn (a)
-  "Exponential: e^a"
-  (array-fn #'exp a))
-
-(defun log-fn (a)
-  "Natural logarithm ln a"
-  (array-fn #'log a))
-
-(defun 10^x (a)
-  "10^a"
-  (array-fn (lambda (x) (expt 10 x)) a))
-
-(defun 10log-fn (a)
-  "10log a"
-  (array-fn (lambda (x) (log x 10)) a))
+(def-unary-op square sqr-fn (lambda (x) (* x x)) "Square a^2")
+(def-unary-op sqrt sqrt-fn #'sqrt "Square root")
+(def-unary-op exp exp-fn #'exp "Exponential: e^a")
+(def-unary-op ln log-fn #'log "Natural logarithm ln a")
+(def-unary-op 10^x 10^x (lambda (x) (expt 10 x)) "10^a")
+(def-unary-op log 10log-fn (lambda (x) (log x 10)) "10log a")
+(def-unary-op 1/x 1/x-fn (lambda (x) (coerce (/ x) 'double-float)) "Reciprocal: 1/a")
 
 (defun y^x-fn (a b)
   "y^x first on stack is exponent, second is base: y^x 3 2 --> 8"
   (array-op (lambda (x y) (expt x y)) b a))
 
-(defun 1/x-fn (a)
-  "Reciprocal: 1/a"
-  (array-fn (lambda (x) (coerce (/ x) 'double-float)) a))
-
-(register-op 'square #'sqr-fn 1)
-(register-op 'sqrt #'sqrt-fn 1)
-(register-op 'exp #'exp-fn 1)
-(register-op 'ln #'log-fn 1)
-(register-op '10^x #'10^x 1)
-(register-op 'log #'10log-fn 1)
 (register-op 'y^x #'y^x-fn 2)
-(register-op '1/x #'1/x-fn 1)
 
-;; trigonometry 
-(defun sin-fn (a)
-  "Sin"
-  (array-fn #'sin a))
-
-(defun cos-fn (a)
-  "Cos"
-  (array-fn #'cos a))
-(defun tan-fn (a)
-  "Tan"
-  (array-fn #'tan a))
-
-(defun asin-fn (a)
-  "Asin"
-  (array-fn #'asin a))
-
-(defun acos-fn (a)
-  "Acos"
-  (array-fn #'acos a))
-
-(defun atan-fn (a)
-  "Atan"
-  (array-fn #'atan a))
-
-(defun sinh-fn (a)
-  "Sinh"
-  (array-fn #'sinh a))
-
-(defun cosh-fn (a)
-  "Cosh"
-  (array-fn #'cosh a))
-
-(defun tanh-fn (a)
-  "Tanh"
-  (array-fn #'tanh a))
-
-(defun asinh-fn (a)
-  "Asinh"
-  (array-fn #'asinh a))
-
-(defun acosh-fn (a)
-  "Acosh"
-  (array-fn #'acosh a))
-
-(defun atanh-fn (a)
-  "Atanh"
-  (array-fn #'atanh a))
-
-
-(register-op 'sin #'sin-fn 1)
-(register-op 'cos #'cos-fn 1)
-(register-op 'tan #'tan-fn 1)
-(register-op 'asin #'asin-fn 1)
-(register-op 'acos #'acos-fn 1)
-(register-op 'atan #'atan-fn 1)
-(register-op 'sinh #'sinh-fn 1)
-(register-op 'cosh #'cosh-fn 1)
-(register-op 'tanh #'tanh-fn 1)
-(register-op 'asinh #'asinh-fn 1)
-(register-op 'acosh #'acosh-fn 1)
-(register-op 'atanh #'atanh-fn 1)
+;; trigonometry
+(def-unary-op sin sin-fn #'sin)
+(def-unary-op cos cos-fn #'cos)
+(def-unary-op tan tan-fn #'tan)
+(def-unary-op asin asin-fn #'asin)
+(def-unary-op acos acos-fn #'acos)
+(def-unary-op atan atan-fn #'atan)
+(def-unary-op sinh sinh-fn #'sinh)
+(def-unary-op cosh cosh-fn #'cosh)
+(def-unary-op tanh tanh-fn #'tanh)
+(def-unary-op asinh asinh-fn #'asinh)
+(def-unary-op acosh acosh-fn #'acosh)
+(def-unary-op atanh atanh-fn #'atanh)
 
 ;; miscellaneous
 (defun fact-fn (a)
   "Factorial ! 8 -> 40320"
   (labels ((fact (n)
-	     (cond
-	       ((= n 0) 1)
-	       ((= n 1) 1)
-	       ((> n 1) (* n (fact (1- n)))))))
+       (cond
+         ((= n 0) 1)
+         ((= n 1) 1)
+         ((> n 1) (* n (fact (1- n)))))))
     (array-fn #'fact a)))
 
 (register-op '! #'fact-fn 1)
 
 
 ;; coordinates 0 ->P and ->R
-;; for now, takes a [x y] coordinate vector and returns [r theta] in radians
+;; for now, takes a [x y] coordinate vector and returns [r theta] in radians (as vector)
 (defun ->P (a)
   "Converts a = [x, y] in Rectangular coordinates to Polar coordinates [r, theta]"
-  (cond
-    ((not (listp a))
-     (error "->P takes a vector [x y] of length 2"))
-    ((/= (length a) 2)
-     (error "->P takes a vector [x y] of length 2"))
-    ((= (first a) 0)
-     (if (> (second a) 0)
-	 (/ pi 2)
-	 (- 0 (/ pi 2))))
-    ((= (second a) 0)
-     (if (> (first a) 0)
-	 0
-	 pi))
-    (t
-      (let ((x (first a))
-	    (y (second a)))
-	(list
-	 (sqrt (+ (* x x) (* y y)))
-	 (atan (/ y x)))))))
+  (let ((a (if (arrayp a) (coerce a 'list) a)))
+    (cond
+      ((not (listp a))
+       (spectral-error "->P takes a vector [x y] of length 2"))
+      ((/= (length a) 2)
+       (spectral-error "->P takes a vector [x y] of length 2"))
+      ((= (first a) 0)
+       (coerce (list (abs (second a))
+                     (if (> (second a) 0) (/ pi 2) (- (/ pi 2))))
+               'vector))
+      ((= (second a) 0)
+       (coerce (list (abs (first a))
+                     (if (> (first a) 0) 0 pi))
+               'vector))
+      (t
+       (let ((x (first a))
+             (y (second a)))
+         (coerce (list (sqrt (+ (* x x) (* y y))) (atan (/ y x)))
+                 'vector))))))
 
 (defun ->R (a)
   "Converts a = [r, theta] in Polar coordinates to Rectangular coordinates [x, y]"
-  (let ((r (first a))
-	(theta (second a)))
-    (list (* r (cos theta)) (* r (sin theta)))))
+  (let ((a (if (arrayp a) (coerce a 'list) a)))
+    (when (or (not (listp a)) (/= (length a) 2))
+      (spectral-error "->R takes a vector [r theta] of length 2"))
+    (let ((r (first a))
+          (theta (second a)))
+      (coerce (list (* r (cos theta)) (* r (sin theta))) 'vector))))
 
 (register-op '->P #'->P 1)
 (register-op '->R #'->R 1)

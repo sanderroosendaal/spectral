@@ -1,6 +1,4 @@
 ;; Simple file I/O functions
-(ql:quickload :cl-csv)
-
 (defun parse-number (str)
   "Parse a string as a number"
   (handler-case (read-from-string str)
@@ -10,12 +8,12 @@
   "Safely parse a string to number"
   (handler-case
       (let ((trimmed (string-trim '(#\Space #\Tab) string)))
-	(cond
-	  ((string= trimmed "") nil)
-	  ((every #'digit-char-p trimmed) (parse-integer trimmed))
-	  ((or (find #\. trimmed) (find #\e trimmed) (find #\E trimmed))
-	   (read-from-string trimmed))
-	  (t (parse-integer trimmed))))
+  (cond
+    ((string= trimmed "") nil)
+    ((every #'digit-char-p trimmed) (parse-integer trimmed))
+    ((or (find #\. trimmed) (find #\e trimmed) (find #\E trimmed))
+     (read-from-string trimmed))
+    (t (parse-integer trimmed))))
     (error () nil)))
 
 (defun load-numbers (filename)
@@ -23,26 +21,26 @@
   (with-open-file (stream filename :direction :input)
     (let ((result '()))
       (loop for line = (read-line stream nil nil)
-	    while line
-	    do (push (parse-number line) result))
+      while line
+      do (push (parse-number line) result))
       (coerce
        (nreverse result) 'vector))))
 
 (defun write-numbers (filename data)
   "Write numbers (vector) to a text file (one per line)"
   (with-open-file (stream filename :direction :output
-				   :if-exists :supersede :element-type 'character)
+           :if-exists :supersede :element-type 'character)
     (loop for i from 0 to (1- (length data))
-	  do
-	     (format stream "~A~%" (aref data i)))
+    do
+       (format stream "~A~%" (aref data i)))
     (terpri stream))
   data)
 
 (defun is-header-row (row)
   "Check if a row contains headers"
   (some (lambda (cell)
-	  (null (parse-number-safe cell)))
-	row))
+    (null (parse-number-safe cell)))
+  row))
 
 (defun write-csv-field (value stream delimiter)
   "Write a single field to CSV stream, properly escaping if necessary."
@@ -64,56 +62,62 @@
 
 (defun write-csv (matrix filename &optional (delimiter #\,))
   "Saves a 2D lisp array to a CSV file, comma separated, row oriented"
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp matrix)
-    (error "Expected a 2D array, got ~A" (type-of matrix)))
+    (spectral-error "Expected a 2D array, got ~A" (type-of matrix)))
   (unless (= (array-rank matrix) 2)
-    (error "Expected a 2D array, got ~A" (array-rank matrix)))
+    (spectral-error "Expected a 2D array, got ~A" (array-rank matrix)))
   (with-open-file (stream filename :direction :output :if-exists :supersede
-				   :element-type 'character)
+           :element-type 'character)
     (let ((rows (first (array-dimensions matrix)))
-	  (cols (second (array-dimensions matrix))))
+    (cols (second (array-dimensions matrix))))
       (dotimes (row rows)
-	(dotimes (col cols)
-	  (let ((value (aref matrix row col)))
-	    (write-csv-field value stream delimiter)
-	    (when (< col (1- cols))
-	      (write-char delimiter stream))))
-	(terpri stream))))
+  (dotimes (col cols)
+    (let ((value (aref matrix row col)))
+      (write-csv-field value stream delimiter)
+      (when (< col (1- cols))
+        (write-char delimiter stream))))
+  (terpri stream))))
   matrix)
 
 
 (defun load-csv (filename)
   "Loads a table from a CSV file, comma separated, row oriented"
   (let* ((all-rows (cl-csv:read-csv (pathname filename)))
-	 (first-row (first all-rows))
-	 (headers nil)
-	 (data-rows nil))
+   (first-row (first all-rows))
+   (headers nil)
+   (data-rows nil))
     (if (is-header-row first-row)
-	(setf headers (coerce first-row 'vector)
-	      data-rows (rest all-rows))
-	(setf data-rows all-rows))
+  (setf headers (coerce first-row 'vector)
+        data-rows (rest all-rows))
+  (setf data-rows all-rows))
 
     ;; Parse numbers in data rows
     (let ((parsed-data
-	    (coerce
-	     (mapcar (lambda (row)
-		       (mapcar #'parse-number-safe row))
-		     data-rows) 'vector)))
+      (coerce
+       (mapcar (lambda (row)
+           (mapcar #'parse-number-safe row))
+         data-rows) 'vector)))
       (if headers
-	  (values headers parsed-data)
-	  parsed-data))))
+    (values headers parsed-data)
+    parsed-data))))
 
 (defun run-script (filename)
-  "Execute a script file line by line"
+  "Execute a script file line by line. Errors include filename and line number."
   (with-open-file (stream filename :direction :input)
-    (let ((line-count 1))
+    (let* ((*script-filename* (namestring (merge-pathnames filename)))
+     (line-count 1))
       (loop for line = (read-line stream nil nil)
-	    while line
-	    when (and (> (length line) 0)
-		      (not (char= (char line 0) #\;))) ; Skip comments
-	      do (evaluate (string-trim " " line)) ;; -- need to add filename line-count)
-	    (incf line-count)))
-     (peek-stack)))
+      while line
+      do (when (and (> (length line) 0)
+        (not (char= (char line 0) #\;)))
+     (let ((*script-line* line-count))
+       (handler-case
+           (evaluate (string-trim " " line))
+         (error (e)
+           (error "~A:~D: ~A" *script-filename* *script-line* e)))))
+         (incf line-count))
+      (peek-stack))))
 
 
 ;;; Binary array I/O (.sdat format - MDA-inspired, zero deps)
@@ -125,14 +129,21 @@
 (defconstant +sdat-int32+ -3)
 (defconstant +sdat-int16+ -4)
 
+;;; Little-endian binary I/O helpers (shared byte-loop logic)
+(defun write-uint-le (n stream nbytes)
+  (dotimes (i nbytes)
+    (write-byte (ldb (byte 8 (* i 8)) n) stream)))
+
+(defun read-uint-le (stream nbytes)
+  (let ((n 0))
+    (dotimes (i nbytes n)
+      (setf n (logior n (ash (read-byte stream) (* i 8)))))))
+
 (defun write-uint32-le (n stream)
-  (dotimes (i 4)
-    (write-byte (ldb (byte 8 (* i 8)) (logand n #xFFFFFFFF)) stream)))
+  (write-uint-le (logand n #xFFFFFFFF) stream 4))
 
 (defun read-uint32-le (stream)
-  (let ((n 0))
-    (dotimes (i 4 n)
-      (setf n (logior n (ash (read-byte stream) (* i 8)))))))
+  (read-uint-le stream 4))
 
 (defun write-int32-le (n stream)
   (write-uint32-le (ldb (byte 32 0) n) stream))
@@ -155,18 +166,19 @@
     ((-2) 4)   ; float32
     ((-3) 4)   ; int32
     ((-4) 2)   ; int16
-    (t (error "Unknown .sdat type code: ~A" typecode))))
+    (t (spectral-error "Unknown .sdat type code: ~A" typecode))))
 
 (defun write-binary (filename data)
   "Write array to .sdat binary file. Supports float64, float32, int32, int16."
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
-    (error "Expected an array, got ~A" (type-of data)))
+    (spectral-error "Expected an array, got ~A" (type-of data)))
   (let* ((dims (array-dimensions data))
          (ndims (length dims))
          (typecode (array-element-type-to-sdat-code data))
          (bpe (sdat-bytes-per-element typecode)))
-    (when (> ndims 8)
-      (error ".sdat supports at most 8 dimensions, got ~A" ndims))
+    (when (> ndims *max-ndims*)
+      (spectral-error ".sdat supports at most ~D dimensions, got ~A" *max-ndims* ndims))
     (with-open-file (s filename :direction :output :if-exists :supersede
                        :element-type '(unsigned-byte 8))
       (write-int32-le typecode s)
@@ -187,14 +199,9 @@
   data)
 
 (defun write-float64-le (x stream)
-  #+sbcl
-  (let ((bits (sb-kernel:double-float-bits x)))
-    (dotimes (j 8)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream)))
-  #-sbcl
-  (let ((bits (double-to-ieee754-bits x)))
-    (dotimes (j 8)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream))))
+  (let ((bits #+sbcl (sb-kernel:double-float-bits x)
+              #-sbcl (double-to-ieee754-bits x)))
+    (write-uint-le bits stream 8)))
 
 (defun double-to-ieee754-bits (x)
   (multiple-value-bind (sig exp sign) (integer-decode-float x)
@@ -206,9 +213,7 @@
       (logior sign-bit (ash ieee-exp 52) mant))))
 
 (defun write-float32-le (x stream)
-  (let ((bits (single-to-ieee754-bits x)))
-    (dotimes (j 4)
-      (write-byte (ldb (byte 8 (* j 8)) bits) stream))))
+  (write-uint-le (single-to-ieee754-bits x) stream 4))
 
 (defun single-to-ieee754-bits (x)
   (multiple-value-bind (sig exp sign) (integer-decode-float (float x 1.0d0))
@@ -219,10 +224,18 @@
         (return-from single-to-ieee754-bits 0))
       (logior sign-bit (ash ieee-exp 23) mant))))
 
+(defun write-uint16-le (n stream)
+  (write-uint-le (logand n #xFFFF) stream 2))
+
+(defun read-uint16-le (stream)
+  (read-uint-le stream 2))
+
 (defun write-int16-le (n stream)
-  (let ((u (ldb (byte 16 0) (round n))))
-    (write-byte (ldb (byte 8 0) u) stream)
-    (write-byte (ldb (byte 8 8) u) stream)))
+  (write-uint16-le (ldb (byte 16 0) (round n)) stream))
+
+(defun read-int16-le (stream)
+  (let ((u (read-uint16-le stream)))
+    (if (logbitp 15 u) (logior u #x-10000) u)))
 
 (defun ieee754-bits-to-double (bits)
   (let ((sign (if (logbitp 63 bits) -1 1))
@@ -240,10 +253,7 @@
                             (- exp 1023)))))))
 
 (defun read-float64-le (stream)
-  (let ((bits 0))
-    (dotimes (i 8)
-      (setf bits (logior bits (ash (read-byte stream) (* i 8)))))
-    (ieee754-bits-to-double bits)))
+  (ieee754-bits-to-double (read-uint-le stream 8)))
 
 (defun ieee754-bits-to-single (bits)
   (let ((sign (if (logbitp 31 bits) -1 1))
@@ -256,10 +266,7 @@
                 'single-float))))
 
 (defun read-float32-le (stream)
-  (let ((bits 0))
-    (dotimes (i 4)
-      (setf bits (logior bits (ash (read-byte stream) (* i 8)))))
-    (ieee754-bits-to-single bits)))
+  (ieee754-bits-to-single (read-uint-le stream 4)))
 
 (defun read-int16-le (stream)
   (let ((low (read-byte stream))
@@ -274,8 +281,8 @@
            (_bpe (read-uint32-le s))
            (ndims (read-uint32-le s)))
       (declare (ignore _bpe))
-      (when (> ndims 8)
-        (error "Invalid .sdat: ndims ~A > 8" ndims))
+      (when (> ndims *max-ndims*)
+        (spectral-error "Invalid .sdat: ndims ~A > ~D" ndims *max-ndims*))
       (let ((dims (loop repeat ndims collect (read-uint32-le s))))
         (let ((total (reduce #'* dims))
               (et (case typecode
@@ -283,7 +290,7 @@
                     ((-2) 'single-float)
                     ((-3) '(signed-byte 32))
                     ((-4) '(signed-byte 16))
-                    (t (error "Unknown .sdat type code: ~A" typecode)))))
+                    (t (spectral-error "Unknown .sdat type code: ~A" typecode)))))
           (let ((arr (make-array dims :element-type et)))
             (dotimes (i total)
               (setf (row-major-aref arr i)
@@ -292,7 +299,7 @@
                       ((-2) (read-float32-le s))
                       ((-3) (read-int32-le s))
                       ((-4) (read-int16-le s))
-                      (t (error "Unknown type ~A" typecode)))))
+                      (t (spectral-error "Unknown type ~A" typecode)))))
             ;; Coerce to double-float for Spectral uniformity
             (if (subtypep et 'double-float)
                 arr
@@ -306,13 +313,6 @@
 ;;; NPY format (NEP 1) - float64 and int32, 1D/2D, C order only
 (defconstant +npy-magic+ #(147 78 85 77 80 89)) ; \x93NUMPY
 
-(defun write-uint16-le (n stream)
-  (write-byte (ldb (byte 8 0) (logand n #xFFFF)) stream)
-  (write-byte (ldb (byte 8 8) (logand n #xFFFF)) stream))
-
-(defun read-uint16-le (stream)
-  (logior (read-byte stream) (ash (read-byte stream) 8)))
-
 (defun npy-array-descr (arr)
   (let ((et (array-element-type arr)))
     (cond ((subtypep et 'double-float) "<f8")
@@ -321,11 +321,12 @@
 
 (defun write-npy (filename data)
   "Write array to .npy file. Supports float64, int32, 1D/2D, C order."
+  (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
-    (error "Expected an array, got ~A" (type-of data)))
+    (spectral-error "Expected an array, got ~A" (type-of data)))
   (let ((rank (array-rank data)))
     (when (> rank 2)
-      (error "write-npy: only 1D/2D supported, got rank ~A" rank)))
+      (spectral-error "write-npy: only 1D/2D supported, got rank ~A" rank)))
   (let* ((dims (array-dimensions data))
          (descr (npy-array-descr data))
          (header (format nil "{'descr': '~A', 'fortran_order': False, 'shape': ~A, }~%"
@@ -334,8 +335,8 @@
                             (format nil "(~{~A~^, ~})" dims)
                             (format nil "(~A,)" (car dims)))))
          (hlen (length header)))
-    ;; Pad so 6+2+2+hlen divisible by 16
-    (let ((pad (mod (- 16 (mod (+ 10 hlen) 16)) 16)))
+    ;; Pad so 6+2+2+hlen divisible by *npy-alignment*
+    (let ((pad (mod (- *npy-alignment* (mod (+ 10 hlen) *npy-alignment*)) *npy-alignment*)))
       (setf header (concatenate 'string header (make-string pad :initial-element #\Space))
             hlen (+ hlen pad)))
     (with-open-file (s filename :direction :output :if-exists :supersede
@@ -372,14 +373,14 @@
     (let ((descr-start (find-key "'descr': '"))
           (shape-start (search "'shape': (" header)))
       (unless (and descr-start shape-start)
-        (error "NPY: invalid header"))
+        (spectral-error "NPY: invalid header"))
       (let* ((descr-end (position #\' header :start descr-start))
              (descr (subseq header descr-start descr-end))
              (shape-str (subseq header (+ shape-start 10) (position #\) header :start shape-start))))
         (when (search "fortran_order': True" header)
-          (error "NPY: fortran_order True not supported"))
+          (spectral-error "NPY: fortran_order True not supported"))
         (unless (or (string= descr "<f8") (string= descr "<i4"))
-          (error "NPY: only <f8 and <i4 supported, got ~S" descr))
+          (spectral-error "NPY: only <f8 and <i4 supported, got ~S" descr))
         (let ((dims (npy-parse-shape shape-str)))
           (values descr dims))))))
 
@@ -390,7 +391,7 @@
       (dotimes (i 6)
         (setf (aref magic i) (read-byte s)))
       (unless (equalp magic +npy-magic+)
-        (error "NPY: invalid magic, not a .npy file"))
+        (spectral-error "NPY: invalid magic, not a .npy file"))
       (let ((major (read-byte s)) (minor (read-byte s)))
         (declare (ignore major minor))
         (let ((hlen (read-uint16-le s)))
@@ -416,9 +417,7 @@
     (progn
       (ql:quickload :hdf5-cffi)
       (setf *hdf5-available-p* t)
-      (load (merge-pathnames "hdf5-io.lisp"
-                             (make-pathname :defaults (truename *load-truename*)
-                                            :name nil :type nil)))
+      (load (merge-pathnames "std/hdf5-io.lisp" *spectral-root*))
       (register-op 'load-hdf5 #'load-hdf5-fn 2)
       (register-op 'write-hdf5 #'write-hdf5-fn 3))
   (error ()
