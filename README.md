@@ -112,7 +112,6 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
 ### Current Limitations
 
 - No loops; composition and `run` only
-- HDF5 support not yet implemented (see `docs/IO_PROPOSAL.md`)
 
 ### Prerequisites
 
@@ -123,6 +122,8 @@ This repository contains a Lisp prototype (~590 lines core, ~1440 lines std libr
   - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
   - [HDF5](https://www.hdfgroup.org/solutions/hdf5/) (libhdf5) — for `load-hdf5` and `write-hdf5`
   - [gnuplot](http://gnuplot.info/) — for plotting
+
+  **Platform note**: FFTW, LAPACK, and HDF5 use Unix-style toolchains (headers, pkg-config). On Linux they install via package managers (`apt install libfftw3-dev liblapack-dev libhdf5-dev`). On Windows, setup is manual and may require MSYS2, pkg-config, and custom configuration; these features often degrade gracefully with a clear message when unavailable.
 
 ### Run Tests
 
@@ -227,9 +228,9 @@ Spectral is designed for:
 
 | Message | Cause |
 |---------|-------|
-| "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load |
-| "HDF5 not available" | libhdf5 not installed; `load-hdf5` and `write-hdf5` disabled |
-| FFT errors | FFTW3 library not found (CFFI) |
+| "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load (common on Windows) |
+| "HDF5 not available" | libhdf5 or hdf5-cffi build failed; needs pkg-config + headers on Windows |
+| FFT errors | FFTW3 library not found (CFFI); common on Windows |
 | Plot commands fail | gnuplot not installed or not on PATH |
 | "Bug in readtable iterators or concurrent access" | SBCL + outdated named-readtables. Install the patched version: `cd ~/quicklisp/local-projects && git clone https://github.com/melisgl/named-readtables.git` (or `%USERPROFILE%\quicklisp\local-projects` on Windows). Then retry. |
 | "Reduction expects an array" | `/+` and friends require an array operand. Use `/+ [1 2 3]`, not `/+ 1 2 3`. |
