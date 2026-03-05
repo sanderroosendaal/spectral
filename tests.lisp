@@ -14,15 +14,18 @@
 
 (defun spectral-equal (expected actual)
   "Compare Spectral results (numbers, arrays, lists)."
-  (cond
-    ((and (arrayp expected) (arrayp actual))
-     (and (equal (array-dimensions expected) (array-dimensions actual))
-          (equalp expected actual)))
-    ((and (numberp expected) (numberp actual))
-     (or (= expected actual)
-         (and (floatp expected) (floatp actual)
-              (< (abs (- expected actual)) 1.0d-10))))
-    (t (equalp expected actual))))
+  (flet ((numbers-equal-p (e a)
+           (or (= e a)
+               (and (numberp e) (numberp a)
+                    (< (abs (- (coerce e 'double-float) (coerce a 'double-float))) 1.0d-10)))))
+    (cond
+      ((and (arrayp expected) (arrayp actual))
+       (and (equal (array-dimensions expected) (array-dimensions actual))
+            (or (equalp expected actual)
+                (every #'numbers-equal-p expected actual))))
+      ((and (numberp expected) (numberp actual))
+       (numbers-equal-p expected actual))
+      (t (equalp expected actual)))))
 
 (defun format-result (result)
   "Format a result for display (truncate long arrays)."
@@ -160,6 +163,68 @@
     '(("&+ [1 2 3 4 5]" #(1 3 6 10 15))
       ("&+ range 5" #(0 1 3 6 10))
       ("&* [1 2 3 4 5]" #(1 2 6 24 120))))
+
+  ;; find-peaks: returns 1D array of indices of local maxima (strict: greater than both neighbors)
+  (run-test-group "find-peaks"
+    '(("find-peaks [1 3 5 4 2]" #(2))           ; single peak at index 2
+      ("find-peaks [1 5 2 4 3]" #(1 3))         ; two peaks at indices 1 and 3
+      ("find-peaks [1 3 2 4 5 4 2]" #(1 4))     ; peaks at 1 and 4
+      ("find-peaks [5 4 3 2 1]" #(0))           ; peak at start
+      ("find-peaks [1 2 3 4 5]" #(4))           ; peak at end (only neighbor is smaller)
+      ("find-peaks [5]" #(0))                   ; single element is a peak
+      ("find-peaks [3 1]" #(0))                 ; two elements, first is peak
+      ("find-peaks [1 3]" #(1))                 ; two elements, last is peak
+      ("find-peaks [1 2 2 1]" #())              ; flat middle, no strict peaks
+      ("find-peaks [1 2 1 2 1]" #(1 3))))      ; two equal peaks
+
+  ;; bandpass [f_low f_high sample_rate] signal - FFT, zero bins outside passband, IFFT
+  ;; Requires FFTW. Full passband preserves signal; passband excluding DC removes mean.
+  (run-test-group "bandpass"
+    '(("shape bandpass [0 4 8] [1 1 1 1 1 1 1 1]" (8))  ; length preserved
+      ("/+ bandpass [1 4 8] [1 1 1 1 1 1 1 1]" 0)       ; DC removed, sum ~0 (passband 1-4 Hz excludes bin 0)
+      ("shape bandpass [0 50 100] range 100" (100))     ; length preserved for longer signal
+      ;; 256 samples @ 200 Hz: in-band (5-15 Hz) keeps 10 Hz sinusoid, out-of-band (20-60 Hz) attenuates it
+      ("sig = sin * 2 * pi * 10 % 200 range 256" nil)
+      ("> /max abs bandpass [20 60 200] sig /max abs bandpass [5 15 200] sig" 1 nil)
+      ;; Mixed 1+10+50 Hz: bandpass [5 15 200] keeps 10 Hz component
+      ("mix = + + sin * 2 * pi * 1 % 200 range 256 sin * 2 * pi * 10 % 200 range 256 sin * 2 * pi * 50 % 200 range 256" nil)
+      ("> 0 /max abs bandpass [5 15 200] mix" 1 nil)))
+
+  ;; smooth window_size signal - boxcar moving average, same-length output with partial windows at edges
+  (run-test-group "smooth"
+    '(("smooth 1 [1 2 3 4 5]" #(1 2 3 4 5))    ; 1-point = identity
+      ("smooth 5 [1 1 1 1 1 1 1]" #(1 1 1 1 1 1 1))  ; constant in = constant out
+      ("shape smooth 3 range 10" (10))          ; length preserved
+      ("smooth 3 [1 2 3 4 5]" #(1.5 2 3 4 4.5))))  ; 3-point: edges partial, center full
+
+  ;; savgol [window_length poly_order] signal - Savitzky-Golay polynomial smoothing
+  (run-test-group "savgol"
+    '(("savgol [5 2] [1 1 1 1 1 1 1 1 1 1]" #(1 1 1 1 1 1 1 1 1 1))  ; constant preserved
+      ("shape savgol [5 2] range 20" (20))       ; length preserved
+      ("> 3.5 pick 4 savgol [5 2] [1 2 3 4 5 6 7 8 9 10]" 1)))  ; center ≈ 5 > 3.5 (threshold first, value second)
+
+  ;; find-valleys: indices of local minima
+  (run-test-group "find-valleys"
+    '(("find-valleys [5 1 5 1 5]" #(1 3))
+      ("find-valleys [3 2 1 2 3]" #(2))
+      ("find-valleys [1 2 3 4 5]" #(0))
+      ("find-valleys [5 4 3 2 1]" #(4))
+      ("find-valleys [4 1 3 2 5]" #(1 3))
+      ("find-valleys [5]" #(0))))
+
+  ;; lowpass, highpass, bandstop - FFT-based filters
+  (run-test-group "lowpass/highpass/bandstop"
+    '(("shape lowpass [10 100] range 100" (100))
+      ("shape highpass [10 100] range 100" (100))
+      ("shape bandstop [5 15 100] range 100" (100))))
+
+  ;; psd, detrend, differentiate
+  (run-test-group "psd/detrend/differentiate"
+    '(("shape psd range 64" (64))
+      ("pick 0 differentiate [0 1 2 3 4]" 1)
+      ("pick 2 differentiate [0 1 2 3 4]" 1)
+      ("pick 0 detrend [0 1 2 3 4]" 0)
+      ("/+ abs detrend [0 1 2 3 4]" 0)))
 
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
