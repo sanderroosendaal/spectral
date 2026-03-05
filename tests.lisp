@@ -251,6 +251,20 @@
       ("load-binary \"testdata/vec_special.sdat\"" #(0.0d0 -1.0d0 2.0d0))
       ("shape load-binary \"testdata/vec100.sdat\"" (100))))
 
+  ;; NPY format (Tier B)
+  (run-test-group "NPY I/O"
+    '(;; Roundtrip 1D float64
+      ("write-npy \"testdata/npy_roundtrip.npy\" [1 2 3 4 5]" :run-only)
+      ("load-npy \"testdata/npy_roundtrip.npy\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0) nil)
+      ;; Roundtrip 2D float64
+      ("write-npy \"testdata/npy_2d.npy\" [[1 2][3 4]]" :run-only)
+      ("load-npy \"testdata/npy_2d.npy\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)) nil)
+      ;; Shape and size preserved
+      ("shape write-npy \"testdata/npy_shape.npy\" range 7" (7))
+      ("shape load-npy \"testdata/npy_shape.npy\"" (7) nil)
+      ("size write-npy \"testdata/npy_size.npy\" [[1 2 3][4 5 6]]" 6)
+      ("size load-npy \"testdata/npy_size.npy\"" 6 nil)))
+
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
     (format t "~%~%--- ~D passed, ~D failed (~D total) ---~%"

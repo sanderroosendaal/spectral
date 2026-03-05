@@ -303,6 +303,110 @@
                   out))))))))
 
 
+;;; NPY format (NEP 1) - float64 and int32, 1D/2D, C order only
+(defconstant +npy-magic+ #(147 78 85 77 80 89)) ; \x93NUMPY
+
+(defun write-uint16-le (n stream)
+  (write-byte (ldb (byte 8 0) (logand n #xFFFF)) stream)
+  (write-byte (ldb (byte 8 8) (logand n #xFFFF)) stream))
+
+(defun read-uint16-le (stream)
+  (logior (read-byte stream) (ash (read-byte stream) 8)))
+
+(defun npy-array-descr (arr)
+  (let ((et (array-element-type arr)))
+    (cond ((subtypep et 'double-float) "<f8")
+          ((subtypep et '(signed-byte 32)) "<i4")
+          (t "<f8"))))
+
+(defun write-npy (filename data)
+  "Write array to .npy file. Supports float64, int32, 1D/2D, C order."
+  (unless (arrayp data)
+    (error "Expected an array, got ~A" (type-of data)))
+  (let ((rank (array-rank data)))
+    (when (> rank 2)
+      (error "write-npy: only 1D/2D supported, got rank ~A" rank)))
+  (let* ((dims (array-dimensions data))
+         (descr (npy-array-descr data))
+         (header (format nil "{'descr': '~A', 'fortran_order': False, 'shape': ~A, }~%"
+                        descr
+                        (if (cdr dims)
+                            (format nil "(~{~A~^, ~})" dims)
+                            (format nil "(~A,)" (car dims)))))
+         (hlen (length header)))
+    ;; Pad so 6+2+2+hlen divisible by 16
+    (let ((pad (mod (- 16 (mod (+ 10 hlen) 16)) 16)))
+      (setf header (concatenate 'string header (make-string pad :initial-element #\Space))
+            hlen (+ hlen pad)))
+    (with-open-file (s filename :direction :output :if-exists :supersede
+                       :element-type '(unsigned-byte 8))
+      (dotimes (i 6) (write-byte (aref +npy-magic+ i) s))
+      (write-byte 1 s) (write-byte 0 s) ; version 1.0
+      (write-uint16-le hlen s)
+      (loop for c across header do (write-byte (char-code c) s))
+      (let ((descr descr))
+        (flet ((write-elem (x)
+                 (if (string= descr "<f8")
+                     (write-float64-le (coerce x 'double-float) s)
+                     (write-int32-le (round (coerce x 'double-float)) s))))
+          (dotimes (i (array-total-size data))
+            (write-elem (row-major-aref data i)))))))
+  data)
+
+(defun npy-parse-shape (str)
+  "Extract shape tuple from e.g. '5, ' or '2, 3)' as list of dims."
+  (let ((out '()) (i 0) (n (length str)))
+    (loop while (< i n) do
+      (let ((start i))
+        (loop while (and (< i n) (digit-char-p (char str i))) do (incf i))
+        (when (> i start)
+          (push (parse-integer str :start start :end i) out)))
+      (loop while (and (< i n) (not (digit-char-p (char str i)))) do (incf i)))
+    (nreverse out)))
+
+(defun parse-npy-header (header)
+  "Parse NPY header dict. Returns (descr dims). Supports <f8, <i4, fortran_order False."
+  (flet ((find-key (key)
+           (let ((pos (search key header)))
+             (when pos (+ pos (length key))))))
+    (let ((descr-start (find-key "'descr': '"))
+          (shape-start (search "'shape': (" header)))
+      (unless (and descr-start shape-start)
+        (error "NPY: invalid header"))
+      (let* ((descr-end (position #\' header :start descr-start))
+             (descr (subseq header descr-start descr-end))
+             (shape-str (subseq header (+ shape-start 10) (position #\) header :start shape-start))))
+        (when (search "fortran_order': True" header)
+          (error "NPY: fortran_order True not supported"))
+        (unless (or (string= descr "<f8") (string= descr "<i4"))
+          (error "NPY: only <f8 and <i4 supported, got ~S" descr))
+        (let ((dims (npy-parse-shape shape-str)))
+          (values descr dims))))))
+
+(defun load-npy (filename)
+  "Load array from .npy file. Returns double-float. Supports <f8, <i4, 1D/2D, C order."
+  (with-open-file (s filename :direction :input :element-type '(unsigned-byte 8))
+    (let ((magic (make-array 6)))
+      (dotimes (i 6)
+        (setf (aref magic i) (read-byte s)))
+      (unless (equalp magic +npy-magic+)
+        (error "NPY: invalid magic, not a .npy file"))
+      (let ((major (read-byte s)) (minor (read-byte s)))
+        (declare (ignore major minor))
+        (let ((hlen (read-uint16-le s)))
+          (let ((header (make-string hlen)))
+            (dotimes (i hlen)
+              (setf (char header i) (code-char (read-byte s))))
+            (multiple-value-bind (descr dims) (parse-npy-header header)
+              (let* ((total (reduce #'* dims))
+                     (arr (make-array dims :element-type 'double-float)))
+                (dotimes (i total)
+                  (setf (row-major-aref arr i)
+                        (if (string= descr "<f8")
+                            (read-float64-le s)
+                            (coerce (read-int32-le s) 'double-float))))
+                arr))))))))
+
 ;; Add file operations
 (register-op 'load #'load-numbers 1)
 (register-op 'write #'write-numbers 2)
@@ -311,4 +415,6 @@
 (register-op 'run #'run-script 1)
 (register-op 'load-binary #'load-binary 1)
 (register-op 'write-binary #'write-binary 2)
+(register-op 'load-npy #'load-npy 1)
+(register-op 'write-npy #'write-npy 2)
 
