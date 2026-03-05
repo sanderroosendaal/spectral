@@ -105,24 +105,6 @@
 (setf (gethash '&* *scan-ops*) #'*)
 
 ;; Array operations
-(defun array-op-list (op a b)
-  "Apply binary operation element-wise"
-  (cond
-    ((and (numberp a) (numberp b)) (funcall op a b))
-    ((and (numberp a) (listp b)) (mapcar (lambda (x) (array-op op a x)) b))
-    ((and (numberp b) (listp a)) (mapcar (lambda (x) (array-op op x b)) a))
-    ((and (listp a) (listp b))
-     (unless (= (length a) (length b))
-       (error "Mismatched array lengths: ~S and ~S" a b))
-     (mapcar #'(lambda (x y) (array-op op x y)) a b))
-    (t (error "Invalid inputs: ~S and ~S" a b))))
-
-(defun array-fn-list (op a)
-  (cond
-    ((numberp a) (funcall op a))
-    ((listp a) (mapcar (lambda (x) (array-fn op x)) a))
-    (t (error "Invalid input for array operation: ~S" a))))
-
 (defun array-op (op a b)
   "Apply binary operation element-wise on n-dimensional arrays."
   (cond
@@ -165,13 +147,6 @@
        result-array))
     (t (error "Invalid input for array operation: ~S" a))))
 
-
-(defun strip-token (token char)
-  (let* ((name (symbol-name token)))
-    (if (and (> (length name) 0)
-	     (char= (char name 0) char))
-	(intern (subseq name 1))
-	token)))
 
 ;; 1D: fold left. 2D: reduce along first axis, return (dims-1) shape.
 (defun reduce-array (op a)
@@ -223,9 +198,6 @@
      (let ((lst (coerce a 'list)))
        (coerce (scan1 op lst) 'vector)))
     (t (error "Scan expects an array, got ~S." a))))
-
-(load (merge-pathnames "errors.lisp" *spectral-root*))
-
 
 (defun check-rectangular (elements)
   (when (every #'listp elements)
