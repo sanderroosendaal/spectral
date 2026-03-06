@@ -1,14 +1,15 @@
-;;; HDF5 I/O — loaded only when hdf5-cffi is available
-;;; Uses :hdf5 package from hdf5-cffi
+;;; HDF5 I/O — loaded only when hdf5-ffi is available
+;;; Uses :hdf5 package from std/hdf5-ffi.lisp (minimal CFFI binding)
 
 (in-package :spectral)
+(use-package :hdf5)
 
 (defun load-hdf5-inner (filename path)
   "Load dataset at path from HDF5 file. Returns double-float array."
   (let ((file-id (hdf5:H5Fopen (namestring (pathname filename))
-                               hdf5:+H5F-ACC-RDONLY+ -1)))
+                               hdf5:+H5F-ACC-RDONLY+ hdf5:+H5P-DEFAULT+)))
     (unwind-protect
-         (let* ((dset-id (hdf5:H5Dopen2 file-id path -1))
+         (let* ((dset-id (hdf5:H5Dopen2 file-id path hdf5:+H5P-DEFAULT+))
                 (space-id (hdf5:H5Dget-space dset-id)))
            (unwind-protect
                 (let* ((rank (hdf5:H5Sget-simple-extent-ndims space-id))
@@ -30,7 +31,7 @@
                                   (hdf5:H5Dread dset-id
                                                 hdf5:+H5T-NATIVE-DOUBLE+
                                                 hdf5:+H5S-ALL+ hdf5:+H5S-ALL+
-                                                -1 buf)
+                                                hdf5:+H5P-DEFAULT+ buf)
                                   (dotimes (i total)
                                     (setf (row-major-aref arr i)
                                           (cffi:mem-aref buf :double i))))
@@ -60,11 +61,12 @@
     (unwind-protect
          (let ((file-id (hdf5:H5Fcreate (namestring (pathname filename))
                                         hdf5:+H5F-ACC-TRUNC+
-                                        -1 -1)))
+                                        hdf5:+H5P-DEFAULT+ hdf5:+H5P-DEFAULT+)))
            (unwind-protect
-                (let ((dset-id (hdf5:H5Dcreate1 file-id path
+                (let ((dset-id (hdf5:H5Dcreate2 file-id path
                                                 hdf5:+H5T-NATIVE-DOUBLE+
-                                                space-id -1)))
+                                                space-id hdf5:+H5P-DEFAULT+
+                                                hdf5:+H5P-DEFAULT+)))
                   (unwind-protect
                        (let ((total (array-total-size data))
                              (buf (cffi:foreign-alloc :double :count total)))
@@ -77,7 +79,7 @@
                                 (hdf5:H5Dwrite dset-id
                                                hdf5:+H5T-NATIVE-DOUBLE+
                                                hdf5:+H5S-ALL+ hdf5:+H5S-ALL+
-                                               -1 buf))
+                                               hdf5:+H5P-DEFAULT+ buf))
                            (cffi:foreign-free buf)))
                     (hdf5:H5Dclose dset-id)))
              (hdf5:H5Fclose file-id)))

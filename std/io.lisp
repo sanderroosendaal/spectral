@@ -409,15 +409,15 @@
                 arr))))))))
 
 
-;;; HDF5 (optional — requires libhdf5 + hdf5-cffi)
+;;; HDF5 (optional — requires libhdf5; uses minimal CFFI binding, no hdf5-cffi)
 ;;; load-hdf5 filename path | write-hdf5 filename path data
 (defvar *hdf5-available-p* nil)
 
 (handler-case
     (progn
-      (ql:quickload :hdf5-cffi)
-      (setf *hdf5-available-p* t)
+      (load (merge-pathnames "std/hdf5-ffi.lisp" *spectral-root*))
       (load (merge-pathnames "std/hdf5-io.lisp" *spectral-root*))
+      (setf *hdf5-available-p* t)
       (register-op 'load-hdf5 #'load-hdf5-fn 2)
       (register-op 'write-hdf5 #'write-hdf5-fn 3))
   (error ()

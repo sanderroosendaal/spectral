@@ -1,5 +1,6 @@
 ;; Spectral test suite
-;; Run with: sbcl --noinform --load tests.lisp
+;; Run with: sbcl --noinform --non-interactive --load tests.lisp
+;; (--non-interactive avoids debugger and speeds up the cycle)
 
 (let ((script-dir (make-pathname :defaults (truename *load-truename*)
                                 :name nil :type nil)))

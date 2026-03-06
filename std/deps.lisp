@@ -12,4 +12,4 @@
 
 ;; Optional (can fail if libs not installed)
 (handler-case (ql:quickload :magicl) (error () nil))
-;; hdf5-cffi loaded in io.lisp handler-case (needs to succeed before setting *hdf5-available-p*)
+;; HDF5: std/hdf5-ffi.lisp loaded in io.lisp handler-case (minimal CFFI binding; no hdf5-cffi)

@@ -93,7 +93,7 @@ This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libr
 - ✅ File I/O (text files) (`load`, `load-csv`, `write-csv`)
 - ✅ Binary array I/O (`.sdat`) (`load-binary`, `write-binary`)
 - ✅ NPY format (`.npy`) (`load-npy`, `write-npy`) — float64/int32, 1D/2D
-- ✅ HDF5 (`.h5`) (`load-hdf5`, `write-hdf5`) — optional, requires libhdf5 + hdf5-cffi
+- ✅ HDF5 (`.h5`) (`load-hdf5`, `write-hdf5`) — optional, requires libhdf5 (minimal CFFI binding; compatible with HDF5 1.14 and 2.0)
 - ✅ Stack operations (`pop` to pop, `dup` or `d` to duplicate, `swap` to swap, `peek`)
 - ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
      `[A B]` where `A` and `B` are user-defined variables which can be arrays.
@@ -120,7 +120,7 @@ This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libr
 - **Optional** (Spectral runs without these, but features are disabled):
   - [FFTW3](http://www.fftw.org/) — for FFT
   - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
-  - [HDF5](https://www.hdfgroup.org/solutions/hdf5/) (libhdf5) — for `load-hdf5` and `write-hdf5` ⚠️ **See troubleshooting below**
+  - [HDF5](https://www.hdfgroup.org/solutions/hdf5/) (libhdf5) — for `load-hdf5` and `write-hdf5`
   - [gnuplot](http://gnuplot.info/) — for plotting
 
   **Platform note**: FFTW, LAPACK, and HDF5 use Unix-style toolchains (headers, pkg-config). On Linux they install via package managers (`apt install libfftw3-dev liblapack-dev libhdf5-dev`). On Windows, setup is manual and may require MSYS2, pkg-config, and custom configuration; these features often degrade gracefully with a clear message when unavailable.
@@ -128,7 +128,7 @@ This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libr
 ### Run Tests
 
 ```bash
-sbcl --noinform --load tests.lisp
+sbcl --noinform --non-interactive --load tests.lisp
 ```
 
 Binary I/O tests use fixtures in `testdata/`. To regenerate them:
@@ -229,42 +229,23 @@ Spectral is designed for:
 | Message | Cause |
 |---------|-------|
 | "Linear Algebra Not Loaded" | Magicl/LAPACK not installed or failed to load (common on Windows) |
-| "HDF5 not available" | **Known issue**: hdf5-cffi (the only HDF5 binding in Quicklisp) is incompatible with HDF5 2.0.0+. See detailed troubleshooting below. |
+| "HDF5 not available" | libhdf5 not found or not on library path. Install `libhdf5-dev` (Linux) or HDF5 SDK (Windows). See HDF5 section below. |
 | FFT errors | FFTW3 library not found (CFFI); common on Windows |
 | Plot commands fail | gnuplot not installed or not on PATH |
 | "Bug in readtable iterators or concurrent access" | SBCL + outdated named-readtables. Install the patched version: `cd ~/quicklisp/local-projects && git clone https://github.com/melisgl/named-readtables.git` (or `%USERPROFILE%\quicklisp\local-projects` on Windows). Then retry. |
 | "Reduction expects an array" | `/+` and friends require an array operand. Use `/+ [1 2 3]`, not `/+ 1 2 3`. |
 
-### HDF5 Compatibility Issues
+### HDF5 Support
 
-**Problem**: On modern Linux systems (e.g., Manjaro with HDF5 2.0.0), hdf5-cffi fails to compile with:
-```
-error: 'H5I_REFERENCE' undeclared (first use in this function)
-```
+Spectral uses a **minimal CFFI binding** (`std/hdf5-ffi.lisp`) — no hdf5-cffi dependency. Compatible with HDF5 1.14 and 2.0.
 
-**Root cause**: The only HDF5 binding available in Quicklisp (`hdf5-cffi`, last updated 2018) is incompatible with HDF5 2.0.0. The constant `H5I_REFERENCE` was removed in HDF5 2.0.
+**If "HDF5 not available" appears:**
+- **Linux**: Install `libhdf5-dev` (e.g. `apt install libhdf5-dev` or `pacman -S hdf5`). Ensure the shared library is on the linker path.
+- **Windows**: Install HDF5 SDK from [HDF Group](https://www.hdfgroup.org/downloads/hdf5/); add the `bin` directory to PATH. Set `HDF5_DIR` (or `HDF5_ROOT`) to the install root if needed.
+- **Windows + HDF5 2.0**: HDF5 2.0’s `H5open` can fail on Windows when used from SBCL ("can't save floating-point environment"). If this happens, try **HDF5 1.14.x** instead, which often works. The handler will fall back gracefully.
+- **Graceful degradation**: Spectral disables `load-hdf5` and `write-hdf5` with a warning; all other features work. Tests skip HDF5-specific cases.
 
-**Workarounds**:
-
-1. **Accept graceful degradation** (recommended for most users):
-   - Spectral detects the compilation failure and disables `load-hdf5` and `write-hdf5` with a warning
-   - All other functionality works normally
-   - Tests run successfully, skipping HDF5-specific tests
-
-2. **Downgrade HDF5 to 1.14.x** (if you need HDF5 support):
-   ```bash
-   sudo pacman -U https://archive.archlinux.org/packages/h/hdf5/hdf5-1.14.3-1-x86_64.pkg.tar.zst
-   rm -rf ~/.cache/common-lisp/sbcl-*
-   sbcl --load tests.lisp
-   ```
-   Note: This may not work on all systems due to other API changes in hdf5-cffi.
-
-3. **Use alternative file formats**:
-   - NPY format (`.npy`) via `load-npy` / `write-npy` — works reliably
-   - CSV format (`.csv`) via `load-csv` / `write-csv` — works reliably
-   - Binary format (`.sdat`) via `load-binary` / `write-binary` — works reliably
-
-**Status**: A modern HDF5 binding for Common Lisp compatible with HDF5 2.0.0+ would be needed to fully resolve this. Contributions welcome!
+**Alternatives**: NPY (`.npy`), CSV, or binary `.sdat` format work without HDF5.
 
 ## Contributing
 
