@@ -6,7 +6,7 @@
   (:use :cl :cffi)
   (:export
    #:+H5F-ACC-RDONLY+ #:+H5F-ACC-TRUNC+
-   #:+H5T-NATIVE-DOUBLE+ #:get-h5t-native-double #:+H5S-ALL+ #:+H5P-DEFAULT+
+   #:get-h5t-native-double #:+H5S-ALL+ #:+H5P-DEFAULT+
    #:H5open #:H5Fopen #:H5Fcreate #:H5Fclose
    #:H5Dopen2 #:H5Dcreate2 #:H5Dget-space #:H5Dread #:H5Dwrite #:H5Dclose
    #:H5Sget-simple-extent-ndims #:H5Sget-simple-extent-dims
@@ -16,9 +16,12 @@
 
 ;;; Load libhdf5 — platform-specific names
 ;;; Windows: hdf5.dll (HDF Group installer puts it in …/HDF5/x.x.x/bin)
+;;; On Linux, libhdf5.so may be a linker script; versioned .so has the actual symbols.
+;;; H5T_NATIVE_DOUBLE_g is defined in libhdf5.so.320 (HDF5 3.x) or libhdf5.so.200 etc.
 (cffi:define-foreign-library libhdf5
   (:darwin (:or "libhdf5.dylib" "libhdf5.10.dylib" "libhdf5.200.dylib"))
-  (:unix (:or "libhdf5.so" "libhdf5.so.200" "libhdf5.so.10" "libhdf5.so.0"))
+  (:unix (:or "libhdf5.so.320" "libhdf5.so.320.0.0"
+              "libhdf5.so.200" "libhdf5.so.10" "libhdf5.so.0" "libhdf5.so"))
   (:windows (:or "hdf5.dll" "libhdf5.dll"))
   (t (:default "libhdf5")))
 
@@ -61,18 +64,36 @@
 ;;; The library initializes itself on first use.
 (cffi:defcfun ("H5open" h5open) herr-t)
 
-;;; H5T_NATIVE_DOUBLE — foreign variable
-;;; Define at package level; wrapped in handler-case to gracefully handle if inaccessible
-(defvar +H5T-NATIVE-DOUBLE+ 0)
-
-(handler-case
-    (cffi:defcvar ("H5T_NATIVE_DOUBLE_g" +H5T-NATIVE-DOUBLE+) :long)
-  (error (e)
-    (warn "Could not access H5T_NATIVE_DOUBLE_g: ~A (HDF5 I/O may not work)" e)))
+;;; H5T_NATIVE_DOUBLE — type ID for native double. On Linux, H5T_NATIVE_DOUBLE_g
+;;; can be "U" (undefined) in the main libhdf5.so; it lives in a companion object.
+;;; We resolve it at runtime via foreign-symbol-pointer (global lookup) instead of
+;;; defcvar, and fall back to H5T_IEEE_F64LE_g on little-endian platforms.
+(defvar *h5t-native-double-cache* nil
+  "Cached H5T_NATIVE_DOUBLE_g value, or :unavailable if lookup failed.")
 
 (defun get-h5t-native-double ()
-  "Return H5T_NATIVE_DOUBLE_g value."
-  +H5T-NATIVE-DOUBLE+)
+  "Return H5T_NATIVE_DOUBLE type ID. Calls H5open on first use; uses
+foreign-symbol-pointer for global lookup (works when symbol is in a dependency)."
+  (when (eq *h5t-native-double-cache* :unavailable)
+    (return-from get-h5t-native-double 0))
+  (when *h5t-native-double-cache*
+    (return-from get-h5t-native-double *h5t-native-double-cache*))
+  ;; Ensure library is initialized (required before type globals are valid on some platforms)
+  (ignore-errors (h5open))
+  (flet ((try-symbol (name)
+           (let ((ptr (cffi:foreign-symbol-pointer name)))
+             (when ptr
+               (cffi:mem-ref ptr :long)))))
+    (let ((val (or (try-symbol "H5T_NATIVE_DOUBLE_g")
+                   ;; Fallback: H5T_IEEE_F64LE is equivalent to native double on x86/ARM LE
+                   (try-symbol "H5T_IEEE_F64LE_g"))))
+      (cond ((and val (not (zerop val)))
+             (setf *h5t-native-double-cache* val))
+            (t
+             (setf *h5t-native-double-cache* :unavailable)
+             (warn "Could not resolve H5T_NATIVE_DOUBLE_g or H5T_IEEE_F64LE_g (HDF5 I/O disabled)")
+             (setq val 0)))
+      val)))
 
 ;;; File
 (cffi:defcfun ("H5Fopen" H5Fopen) hid-t
@@ -105,6 +126,6 @@
   (rank :int) (dims :pointer) (maxdims :pointer))
 (cffi:defcfun ("H5Sclose" H5Sclose) herr-t (space-id hid-t))
 
-;;; NOTE: H5open() is NOT called at load time.
-;;; The HDF5 library initializes itself automatically on first use.
-;;; H5T_NATIVE_DOUBLE_g is accessed lazily via get-h5t-native-double().
+;;; NOTE: H5open() is called on first get-h5t-native-double(). H5T_NATIVE_DOUBLE_g
+;;; is resolved via foreign-symbol-pointer (global lookup) so it works when the
+;;; symbol lives in a dependency rather than the main libhdf5.so.

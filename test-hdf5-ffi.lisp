@@ -23,20 +23,41 @@
     (format t "  ✗ Failed to load libhdf5: ~A~%" e)
     (sb-ext:exit :code 1)))
 
-;; Test 2: Skip H5open() — library initializes itself
-(format t "~%Test 2: Skipping H5open() (library auto-initializes)...~%")
-(format t "  ✓ HDF5 library will initialize on first use~%")
-
-;; Test 3: Can we access H5T_NATIVE_DOUBLE_g?
-(format t "~%Test 3: Accessing H5T_NATIVE_DOUBLE_g...~%")
+;; Test 2: Call H5open() first (required on Linux before H5T_NATIVE_DOUBLE_g is valid)
+(format t "~%Test 2: Calling H5open()...~%")
 (handler-case
     (progn
-      (cffi:defcvar ("H5T_NATIVE_DOUBLE_g" h5t-native-double) :long)
-      (format t "  H5T_NATIVE_DOUBLE_g = ~A~%" h5t-native-double)
-      (format t "  ✓ Successfully accessed H5T_NATIVE_DOUBLE_g~%"))
+      (cffi:defcfun ("H5open" h5open) :int)
+      (let ((err (h5open)))
+        (if (< err 0)
+            (error "H5open failed with code ~A" err)
+            (format t "  ✓ H5open() succeeded~%")))
   (error (e)
-    (format t "  ✗ Failed to access H5T_NATIVE_DOUBLE_g: ~A~%" e)
-    (format t "  Error type: ~A~%" (type-of e))
+    (format t "  ✗ H5open failed: ~A~%" e)
+    (sb-ext:exit :code 1)))
+
+;; Test 3: Resolve H5T_NATIVE_DOUBLE_g via foreign-symbol-pointer (global lookup)
+;; Uses same approach as hdf5-ffi.lisp — works when symbol is in a dependency.
+(format t "~%Test 3: Resolving H5T_NATIVE_DOUBLE_g via foreign-symbol-pointer...~%")
+(handler-case
+    (let ((ptr (cffi:foreign-symbol-pointer "H5T_NATIVE_DOUBLE_g")))
+      (if ptr
+          (let ((val (cffi:mem-ref ptr :long)))
+            (format t "  H5T_NATIVE_DOUBLE_g = ~A~%" val)
+            (format t "  ✓ Successfully resolved H5T_NATIVE_DOUBLE_g~%"))
+          (progn
+            (format t "  ✗ foreign-symbol-pointer returned NIL (symbol not in loaded image)~%")
+            (format t "  Trying H5T_IEEE_F64LE_g fallback...~%")
+            (let ((ptr2 (cffi:foreign-symbol-pointer "H5T_IEEE_F64LE_g")))
+              (if ptr2
+                  (let ((val (cffi:mem-ref ptr2 :long)))
+                    (format t "  H5T_IEEE_F64LE_g = ~A~%" val)
+                    (format t "  ✓ Fallback H5T_IEEE_F64LE_g works~%"))
+                  (progn
+                    (format t "  ✗ Neither symbol resolvable~%")
+                    (sb-ext:exit :code 1))))))
+  (error (e)
+    (format t "  ✗ Error: ~A~%" e)
     (sb-ext:exit :code 1)))
 
 (format t "~%=== All tests passed! ===~%")

@@ -6,6 +6,9 @@
 
 (defun load-hdf5-inner (filename path)
   "Load dataset at path from HDF5 file. Returns double-float array."
+  (let ((type-id (hdf5:get-h5t-native-double)))
+    (when (zerop type-id)
+      (spectral-error "HDF5 type ID unavailable (H5T_NATIVE_DOUBLE_g unresolved); HDF5 I/O disabled")))
   (let ((file-id (hdf5:H5Fopen (namestring (pathname filename))
                                hdf5:+H5F-ACC-RDONLY+ hdf5:+H5P-DEFAULT+)))
     (unwind-protect
@@ -48,6 +51,9 @@
 
 (defun write-hdf5-inner (filename path data)
   "Write array to HDF5 file at path. Overwrites if exists."
+  (let ((type-id (hdf5:get-h5t-native-double)))
+    (when (zerop type-id)
+      (spectral-error "HDF5 type ID unavailable (H5T_NATIVE_DOUBLE_g unresolved); HDF5 I/O disabled")))
   (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
   (unless (arrayp data)
     (spectral-error "Expected an array, got ~A" (type-of data)))
