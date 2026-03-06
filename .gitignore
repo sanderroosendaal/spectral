@@ -5,3 +5,4 @@
 *.fasl
 *.dat
 .aider*
+testdata/*.h5
