@@ -90,6 +90,7 @@
                     (let ((dset-id (hdf5:H5Dcreate2 file-id path
                                                     (hdf5:get-h5t-native-double)
                                                     space-id
+                                                    (or (hdf5:get-h5p-link-create-default) hdf5:+H5P-DEFAULT+)
                                                     (or (hdf5:get-h5p-dataset-create-default) hdf5:+H5P-DEFAULT+)
                                                     (or (hdf5:get-h5p-dataset-access-default) hdf5:+H5P-DEFAULT+))))
                       (when (< dset-id 0)
