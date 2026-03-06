@@ -73,13 +73,20 @@
 
 (defun get-h5t-native-double ()
   "Return H5T_NATIVE_DOUBLE type ID. Calls H5open on first use; uses
-foreign-symbol-pointer for global lookup (works when symbol is in a dependency)."
+foreign-symbol-pointer for global lookup (works when symbol is in a dependency).
+Requires H5open to succeed before using type globals — otherwise they are uninitialized
+and produce corrupt files."
   (when (eq *h5t-native-double-cache* :unavailable)
     (return-from get-h5t-native-double 0))
   (when *h5t-native-double-cache*
     (return-from get-h5t-native-double *h5t-native-double-cache*))
-  ;; Ensure library is initialized (required before type globals are valid on some platforms)
-  (ignore-errors (h5open))
+  ;; H5open must succeed — H5T_NATIVE_DOUBLE_g is only valid after successful init
+  (let ((err (ignore-errors (h5open))))
+    (when (or (null err) (and (integerp err) (< err 0)))
+      (setf *h5t-native-double-cache* :unavailable)
+      (when (integerp err)
+        (warn "HDF5: H5open failed (code ~A); H5T_NATIVE_DOUBLE_g uninitialized. HDF5 I/O disabled." err))
+      (return-from get-h5t-native-double 0)))
   (flet ((try-symbol (name)
            (let ((ptr (cffi:foreign-symbol-pointer name)))
              (when ptr
