@@ -14,11 +14,17 @@
 (defvar *current-test-name* nil)
 
 (defun spectral-equal (expected actual)
-  "Compare Spectral results (numbers, arrays, lists)."
+  "Compare Spectral results (numbers, arrays, lists). Supports complex numbers."
   (flet ((numbers-equal-p (e a)
-           (or (= e a)
-               (and (numberp e) (numberp a)
-                    (< (abs (- (coerce e 'double-float) (coerce a 'double-float))) 1.0d-10)))))
+           (cond
+             ((and (complexp e) (complexp a))
+              (let ((tol 1.0d-10))
+                (and (< (abs (- (realpart e) (realpart a))) tol)
+                     (< (abs (- (imagpart e) (imagpart a))) tol))))
+             ((or (complexp e) (complexp a)) nil)
+             (t (or (= e a)
+                    (and (numberp e) (numberp a)
+                         (< (abs (- (coerce e 'double-float) (coerce a 'double-float))) 1.0d-10)))))))
     (cond
       ((and (arrayp expected) (arrayp actual))
        (and (equal (array-dimensions expected) (array-dimensions actual))
@@ -215,6 +221,24 @@
     '(("->P [1 0]" #(1.0d0 0.0d0))
       ("->R [2 pi]" #(-2.0d0 0.0d0))
       ("> 0.7 pick 1 ->P [1 1]" 1)))
+
+  ;; Complex numbers (scalars, arrays, sqrt of negative)
+  (run-test-group "Complex numbers"
+    '(;; construct, re, im
+      ("re complex 3 4" 3.0d0)
+      ("im complex 3 4" 4.0d0)
+      ("abs complex 3 4" 5.0d0)
+      ;; arithmetic with complex
+      ("+ complex 1 0 complex 0 1" #C(1.0d0 1.0d0))
+      ("* complex 0 1 complex 0 1" -1.0d0)         ; i*i = -1
+      ;; sqrt of negative scalar
+      ("sqrt -1" #C(0.0d0 1.0d0))                  ; sqrt(-1) = i
+      ("sqrt -4" #C(0.0d0 2.0d0))                  ; sqrt(-4) = 2i
+      ;; sqrt of negative array
+      ("sqrt [-1]" #(#C(0.0d0 1.0d0)))
+      ("sqrt [-1 -4]" #(#C(0.0d0 1.0d0) #C(0.0d0 2.0d0)))
+      ;; array of complex, re extracts real parts (groups needed for binary op)
+      ("re [(complex 1 2)(complex 3 4)]" #(1.0d0 3.0d0))))
 
   ;; Conditionals
   (run-test-group "Conditionals"

@@ -17,6 +17,7 @@ Spectral is a **stack-based array language** for scientific computing, targeting
 - **Scientific focus**: Built for detector data, time series, experimental analysis
 - **Performance-oriented**: Designed for large arrays and real-time processing
 - **Graceful degradation**: Optional features (FFT, linear algebra, HDF5) degrade cleanly when dependencies are unavailable
+- **Complex number support** (strong requirement): All numerical values — scalars and array elements — must support complex numbers. Operations that accept or produce numbers must handle both real and complex operands. Users can expect complex support throughout arithmetic, math, trig, reductions, scans, signal processing, and linear algebra.
 
 ---
 
@@ -54,15 +55,17 @@ The evaluator must support operations with arity **0, 1, 2, and 3**:
 | Type   | Description |
 |--------|-------------|
 | Integer | Arbitrary precision; coerced to `double` in many ops |
-| Float  | `double` (64-bit IEEE 754 LE) is the canonical numeric type |
-| Complex | `(real, imag)` pairs; supported by `complex`, `re`, `im`, `fft`, `cfft`, `ifft` |
+| Float  | `double` (64-bit IEEE 754 LE) is the canonical real numeric type |
+| Complex | `(real, imag)` pairs; **first-class** — supported by `complex`, `re`, `im`, `fft`, `cfft`, `ifft`, and all arithmetic/math ops |
 | String | Used for filenames, paths; passed through unchanged |
 | Boolean | `1` = true, `0` = false; non-zero and non-empty also truthy |
+
+**Strong requirement**: All numeric operations must accept and produce complex numbers. Real values are a subset of complex (imaginary part zero). Users must be able to use complex numbers anywhere a number is expected.
 
 ### 3.2 Arrays
 
 - **Layout**: Row-major (C order)
-- **Element type**: `double` canonical; implementations may support `float`, `int32`, `int16` for I/O
+- **Element type**: Both `double` (real) and `(complex double)` are first-class. Implementations may support `float`, `int32`, `int16` for I/O; numeric ops must support complex elements.
 - **Rank**: 1D (vector), 2D (matrix); higher ranks supported for many ops (reshape, flatten, etc.)
 - **Indexing**: Zero-based
 
@@ -481,6 +484,10 @@ The C++ implementation should pass (or produce equivalent results for) the test 
 - **Portability**: Little-endian for binary I/O; IEEE 754
 - **Embedding**: Clean C/C++ API for use as library
 - **Scripting**: REPL and `run` for interactive and batch use
+
+### 10.1 Mandatory Functional Requirements
+
+- **Complex number support**: Implementations **must** support complex numbers for all numerical values. Any optimization (e.g., typed arrays, SIMD) that restricts to real-only types is non-compliant unless complex operands are handled via runtime dispatch or equivalent.
 
 ---
 
