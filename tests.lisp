@@ -268,6 +268,16 @@
       ("/min [3 1 4 1 5]" 1)
       ("/+ [[1 2][3 4]]" #(4 6))))     ; reduce along first axis
 
+  ;; Reduction (large arrays, parallel path; threshold 10000)
+  (run-test-group "Reduction (parallel)"
+    '(;; 1D: sum of 0..14999 = 14999*15000/2 = 112492500
+      ("/+ range 15000" 112492500)
+      ;; 1D: max/min of large vector
+      ("/max range 20000" 19999)
+      ("/min range 10001" 0)            ; [0..10000], min=0
+      ;; 2D: reduce along first axis, 100 rows x 100 cols = 10000 elements (hits parallel threshold)
+      ("pick 0 /+ reshape [100 100] range 10000" 495000)))
+
   ;; Scan (&op prefix scan, cumulative results)
   (run-test-group "Scan"
     '(("&+ [1 2 3 4 5]" #(1 3 6 10 15))

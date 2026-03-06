@@ -98,7 +98,7 @@ This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libr
 - ✅ Stack literals `[[1 2 3][4 5 6]]`, can contain variable refs: `[[1 2 x][3 4 y]]` or
      `[A B]` where `A` and `B` are user-defined variables which can be arrays.
 - ✅ Conditional (`if`)
-- ✅ Reduction (`/+`, `/*`, `/max`, `/min`) — collapse array to single value or reduce along axis
+- ✅ Reduction (`/+`, `/*`, `/max`, `/min`) — collapse array to single value or reduce along axis; uses [lparallel](https://github.com/lmj/lparallel) for parallel processing when array size ≥ 10 000 elements
 - ✅ Scan (`&+`, `&*`) — prefix scan (cumulative sum, product, etc.)
 - ✅ Nested groups `((sin % 2 pi) (sin))` - currently only used in combination with `if`
 - ✅ FFT (need FFTW installed)
@@ -116,7 +116,7 @@ This repository contains a Lisp prototype (~600 lines core, ~1740 lines std libr
 ### Prerequisites
 
 - [SBCL](http://sbcl.org/) (or another Common Lisp implementation)
-- [Quicklisp](https://www.quicklisp.org/) for dependencies
+- [Quicklisp](https://www.quicklisp.org/) for dependencies (fetches [lparallel](https://github.com/lmj/lparallel), CFFI, Magicl, etc.)
 - **Optional** (Spectral runs without these, but features are disabled):
   - [FFTW3](http://www.fftw.org/) — for FFT
   - [LAPACK](https://netlib.org/lapack/) (via Magicl) — for matrix operations
@@ -211,7 +211,7 @@ See [REFERENCE](documentation.md) for more functions implemented.
 
 - [ ] Typed arrays and columnar storage
 - [ ] SIMD vectorization
-- [ ] Parallel processing
+- [X] Parallel processing (reductions on large arrays via lparallel)
 - [ ] Memory-mapped file I/O
 - [ ] C++ implementation for production
 

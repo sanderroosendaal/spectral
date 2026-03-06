@@ -8,6 +8,8 @@
 (ql:quickload :cl-csv)
 (ql:quickload :array-operations)
 (ql:quickload :cffi)
+(ql:quickload :lparallel)
+(setf lparallel:*kernel* (lparallel:make-kernel 4))
 (ql:quickload :vgplot)
 
 ;; Optional (can fail if libs not installed)

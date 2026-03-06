@@ -178,29 +178,48 @@
 (setf (gethash '&+ *scan-ops*) #'+)
 (setf (gethash '&* *scan-ops*) #'*)
 
+(defparameter *parallel-reduce-threshold* 10000
+  "Use parallel reduction when array has more than this many elements.")
+
 ;; 1D: fold left. 2D: reduce along first axis, return (dims-1) shape.
+;; Uses lparallel for large arrays (>= *parallel-reduce-threshold* elements).
 (defun reduce-array (op a)
   (cond
     ((numberp a)
      (spectral-error "Reduction (e.g. /+) expects an array, got ~S. Use /+ [1 2 3] to sum values." a))
     ((and (arrayp a) (> (length (array-dimensions a)) 1))
      (let* ((dims (array-dimensions a))
-      (rest-dims (subseq dims 1))
-      (col-size (reduce #'* rest-dims))
-      (result (make-array rest-dims)))
-       (dotimes (i (array-total-size result))
-   (let ((v (loop with acc = (row-major-aref a i)
-           for k from 1 below (first dims)
-           do (setf acc (funcall op acc (row-major-aref a (+ i (* k col-size)))))
-           finally (return acc))))
-     (setf (row-major-aref result i) v)))
+            (rest-dims (subseq dims 1))
+            (col-size (reduce #'* rest-dims))
+            (ncols (array-total-size (make-array rest-dims)))
+            (result (make-array rest-dims))
+            (use-parallel (>= (* (first dims) ncols) *parallel-reduce-threshold*)))
+       (if use-parallel
+           (lparallel:pdotimes (i ncols result)
+             (let ((v (loop with acc = (row-major-aref a i)
+                           for k from 1 below (first dims)
+                           do (setf acc (funcall op acc (row-major-aref a (+ i (* k col-size)))))
+                           finally (return acc))))
+               (setf (row-major-aref result i) v)))
+           (dotimes (i ncols)
+             (let ((v (loop with acc = (row-major-aref a i)
+                           for k from 1 below (first dims)
+                           do (setf acc (funcall op acc (row-major-aref a (+ i (* k col-size)))))
+                           finally (return acc))))
+               (setf (row-major-aref result i) v))))
        result))
-    ((arrayp a) 
-     (let* ((result (row-major-aref a 0))
-      (ntot (array-total-size a)))
-       (loop for i from 1 to (1- ntot) do
-   (setf result (funcall op result (row-major-aref a i))))
-       result))
+    ((arrayp a)
+     (let* ((ntot (array-total-size a))
+            (use-parallel (>= ntot *parallel-reduce-threshold*)))
+       (if use-parallel
+           ;; Parallel: preduce needs initial-value for + and *; max/min use first of each chunk.
+           (cond ((eq op #'+) (lparallel:preduce op a :initial-value 0))
+                 ((eq op #'*) (lparallel:preduce op a :initial-value 1))
+                 (t (lparallel:preduce op a)))
+           (let ((result (row-major-aref a 0)))
+             (loop for i from 1 to (1- ntot) do
+                   (setf result (funcall op result (row-major-aref a i))))
+             result))))
     (t (spectral-error "Reduction expects an array, got ~S." a))))
 
 (defun scan (op initial lst)
