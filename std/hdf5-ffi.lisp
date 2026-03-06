@@ -6,7 +6,8 @@
   (:use :cl :cffi)
   (:export
    #:+H5F-ACC-RDONLY+ #:+H5F-ACC-TRUNC+
-   #:get-h5t-native-double #:+H5S-ALL+ #:+H5P-DEFAULT+
+   #:get-h5t-native-double #:get-h5p-dataset-create-default #:get-h5p-dataset-access-default
+   #:+H5S-ALL+ #:+H5P-DEFAULT+
    #:H5open #:H5Fopen #:H5Fcreate #:H5Fclose
    #:H5Dopen2 #:H5Dcreate2 #:H5Dget-space #:H5Dread #:H5Dwrite #:H5Dclose
    #:H5Sget-simple-extent-ndims #:H5Sget-simple-extent-dims
@@ -101,6 +102,48 @@ and produce corrupt files."
              (warn "Could not resolve H5T_NATIVE_DOUBLE_g or H5T_IEEE_F64LE_g (HDF5 I/O disabled)")
              (setq val 0)))
       val)))
+
+;;; H5P_DATASET_CREATE_DEFAULT and H5P_DATASET_ACCESS_DEFAULT — for H5Dcreate2/H5Dopen2.
+;;; HDF5 2.0 rejects H5P_DEFAULT (0) for dcpl_id/dapl_id; we must use the real plist IDs.
+;;; Resolve at runtime like H5T_NATIVE_DOUBLE; fallback to 0 for older HDF5.
+(defvar *h5p-dataset-create-default-cache* nil)
+(defvar *h5p-dataset-access-default-cache* nil)
+
+(defun get-h5p-dataset-create-default ()
+  "Return H5P_DATASET_CREATE_DEFAULT (H5P_LST_DATASET_CREATE_ID_g). Fallback 0 for HDF5 1.x.
+Requires H5open before plist globals are valid."
+  (when (eq *h5p-dataset-create-default-cache* :unavailable)
+    (return-from get-h5p-dataset-create-default 0))
+  (when *h5p-dataset-create-default-cache*
+    (return-from get-h5p-dataset-create-default *h5p-dataset-create-default-cache*))
+  (ignore-errors (h5open))
+  (let ((ptr (cffi:foreign-symbol-pointer "H5P_LST_DATASET_CREATE_ID_g")))
+    (if ptr
+        (let ((val (cffi:mem-ref ptr :long)))
+          (when (and val (not (zerop val)))
+            (setf *h5p-dataset-create-default-cache* val))
+          (or val 0))
+        (progn
+          (setf *h5p-dataset-create-default-cache* :unavailable)
+          0))))
+
+(defun get-h5p-dataset-access-default ()
+  "Return H5P_DATASET_ACCESS_DEFAULT (H5P_LST_DATASET_ACCESS_ID_g). Fallback 0 for HDF5 1.x.
+Requires H5open before plist globals are valid."
+  (when (eq *h5p-dataset-access-default-cache* :unavailable)
+    (return-from get-h5p-dataset-access-default 0))
+  (when *h5p-dataset-access-default-cache*
+    (return-from get-h5p-dataset-access-default *h5p-dataset-access-default-cache*))
+  (ignore-errors (h5open))
+  (let ((ptr (cffi:foreign-symbol-pointer "H5P_LST_DATASET_ACCESS_ID_g")))
+    (if ptr
+        (let ((val (cffi:mem-ref ptr :long)))
+          (when (and val (not (zerop val)))
+            (setf *h5p-dataset-access-default-cache* val))
+          (or val 0))
+        (progn
+          (setf *h5p-dataset-access-default-cache* :unavailable)
+          0))))
 
 ;;; File
 (cffi:defcfun ("H5Fopen" H5Fopen) hid-t

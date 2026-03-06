@@ -17,7 +17,8 @@
       (when (< file-id 0)
         (spectral-error "HDF5: Cannot open file ~A for reading (absolute path: ~A)" filename abs-filename))
       (unwind-protect
-           (let* ((dset-id (hdf5:H5Dopen2 file-id path hdf5:+H5P-DEFAULT+)))
+           (let* ((dset-id (hdf5:H5Dopen2 file-id path
+                       (or (hdf5:get-h5p-dataset-access-default) hdf5:+H5P-DEFAULT+))))
              (when (< dset-id 0)
                (spectral-error "HDF5: Cannot open dataset ~A in file ~A" path filename))
              (let ((space-id (hdf5:H5Dget-space dset-id)))
@@ -88,8 +89,9 @@
                (unwind-protect
                     (let ((dset-id (hdf5:H5Dcreate2 file-id path
                                                     (hdf5:get-h5t-native-double)
-                                                    space-id hdf5:+H5P-DEFAULT+
-                                                    hdf5:+H5P-DEFAULT+)))
+                                                    space-id
+                                                    (or (hdf5:get-h5p-dataset-create-default) hdf5:+H5P-DEFAULT+)
+                                                    (or (hdf5:get-h5p-dataset-access-default) hdf5:+H5P-DEFAULT+))))
                       (when (< dset-id 0)
                         (spectral-error "HDF5: Failed to create dataset ~A in ~A" path filename))
                       (unwind-protect
