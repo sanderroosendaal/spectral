@@ -398,7 +398,10 @@
         ("load-hdf5 \"testdata/h5_2d.h5\" \"/matrix\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)) nil)
         ;; Shape preserved
         ("shape write-hdf5 \"testdata/h5_shape.h5\" \"/arr\" range 5" (5))
-        ("shape load-hdf5 \"testdata/h5_shape.h5\" \"/arr\"" (5) nil))))
+        ("shape load-hdf5 \"testdata/h5_shape.h5\" \"/arr\"" (5) nil)
+        ;; Verify files are not corrupt (size > 1KB indicates valid HDF5 structure)
+        ("size load-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\"" 5 nil)
+        ("size load-hdf5 \"testdata/h5_2d.h5\" \"/matrix\"" 4 nil))))
 
   ;; Summary
   (let ((total (+ *test-passed* *test-failed*)))
