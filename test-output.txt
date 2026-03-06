@@ -1,0 +1,180 @@
+sander@rowsandall-2 ~/lisp/spectral (develop) $ sbcl --noinform --non-interactive --load tests.lisp
+To load "named-readtables":
+  Load 1 ASDF system:
+    named-readtables
+; Loading "named-readtables"
+.
+To load "cl-ansi-text":
+  Load 1 ASDF system:
+    cl-ansi-text
+; Loading "cl-ansi-text"
+..
+To load "cl-ppcre":
+  Load 1 ASDF system:
+    cl-ppcre
+; Loading "cl-ppcre"
+
+To load "split-sequence":
+  Load 1 ASDF system:
+    split-sequence
+; Loading "split-sequence"
+
+To load "cl-csv":
+  Load 1 ASDF system:
+    cl-csv
+; Loading "cl-csv"
+.
+To load "array-operations":
+  Load 1 ASDF system:
+    array-operations
+; Loading "array-operations"
+
+To load "cffi":
+  Load 1 ASDF system:
+    cffi
+; Loading "cffi"
+...........
+To load "lparallel":
+  Load 1 ASDF system:
+    lparallel
+; Loading "lparallel"
+
+To load "vgplot":
+  Load 1 ASDF system:
+    vgplot
+; Loading "vgplot"
+
+To load "magicl":
+  Load 1 ASDF system:
+    magicl
+; Loading "magicl"
+.
+WARNING: redefining SPECTRAL::LOAD-HDF5-FN in DEFUN
+WARNING: redefining SPECTRAL::WRITE-HDF5-FN in DEFUN
+Running Spectral tests...
+
+Arithmetic
+
+Constants
+
+range
+
+Stack
+
+Error paths
+
+Variables
+
+Functions
+
+Array literals (basic)
+
+Beyond-literals: variable refs
+
+Beyond-literals: array refs
+
+stack
+
+Beyond-literals: expressions
+
+->P / ->R
+
+Complex numbers
+
+Conditionals
+
+File I/O
+
+Filters
+
+Reduction
+
+Reduction (parallel)
+
+Scan
+
+find-peaks
+
+bandpass
+
+smooth
+
+savgol
+
+find-valleys
+
+lowpass/highpass/bandstop
+
+psd/detrend/differentiate
+
+Binary I/O
+
+NPY I/O
+
+HDF5 I/O
+HDF5-DIAG: Error detected in HDF5 (2.0.0):
+  #000: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5D.c line 189 in H5Dcreate2(): unable to synchronously create dataset
+    major: Dataset
+    minor: Unable to create file
+  #001: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5D.c line 138 in H5D__create_api_common(): unable to create dataset
+    major: Dataset
+    minor: Unable to create file
+  #002: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5VLcallback.c line 1982 in H5VL_dataset_create(): dataset create failed
+    major: Virtual Object Layer
+    minor: Unable to create file
+  #003: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5VLcallback.c line 1947 in H5VL__dataset_create(): dataset create failed
+    major: Virtual Object Layer
+    minor: Unable to create file
+  #004: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5VLnative_dataset.c line 282 in H5VL__native_dataset_create(): unable to create dataset
+    major: Dataset
+    minor: Unable to initialize object
+  #005: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5Dint.c line 398 in H5D__create_named(): unable to create and link to dataset
+    major: Dataset
+    minor: Unable to initialize object
+  #006: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5Lint.c line 522 in H5L_link_object(): unable to create new link to object
+    major: Links
+    minor: Unable to initialize object
+  #007: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5Lint.c line 768 in H5L__create_real(): can't insert link
+    major: Links
+    minor: Unable to insert object
+  #008: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5Gtraverse.c line 833 in H5G_traverse(): unable to retrieve # of soft / UD links to traverse
+    major: Symbol table
+    minor: Can't get value
+  #009: /usr/src/debug/hdf5/hdf5-hdf5_2.0.0/src/H5CX.c line 2398 in H5CX_get_nlinks(): can't get property list
+    major: API Context
+    minor: Inappropriate type
+While evaluating the form starting at line 413, column 0
+  of #P"/home/sander/lisp/spectral/tests.lisp":
+Unhandled SIMPLE-ERROR in thread #<SB-THREAD:THREAD tid=79993 "main thread" RUNNING
+                                    {1200030003}>:
+  HDF5: Failed to create dataset /data in testdata/h5_roundtrip.h5
+
+Backtrace for: #<SB-THREAD:THREAD tid=79993 "main thread" RUNNING {1200030003}>
+0: (SB-DEBUG::DEBUGGER-DISABLED-HOOK #<SIMPLE-ERROR "HDF5: Failed to create dataset ~A in ~A" {120706E6F3}> #<unused argument> :QUIT T)
+1: (SB-DEBUG::RUN-HOOK SB-EXT:*INVOKE-DEBUGGER-HOOK* #<SIMPLE-ERROR "HDF5: Failed to create dataset ~A in ~A" {120706E6F3}>)
+2: (INVOKE-DEBUGGER #<SIMPLE-ERROR "HDF5: Failed to create dataset ~A in ~A" {120706E6F3}>)
+3: (ERROR #<SIMPLE-ERROR "HDF5: Failed to create dataset ~A in ~A" {120706E6F3}>)
+4: (SPECTRAL-ERROR "HDF5: Failed to create dataset ~A in ~A" "/data" "testdata/h5_roundtrip.h5")
+5: (WRITE-HDF5-INNER "testdata/h5_roundtrip.h5" "/data" #(1 2 3 4 5))
+6: (EVAL-NODE (:OP #<FUNCTION WRITE-HDF5-FN> 3) NIL)
+7: (EVALUATE "write-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\" [1 2 3 4 5]" NIL)
+8: (ASSERT-EQUAL "write-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\" [1 2 3 4 5]" :RUN-ONLY T)
+9: (RUN-TEST-GROUP "HDF5 I/O" (("write-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\" [1 2 3 4 5]" :RUN-ONLY) ("load-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\"" #(1.0d0 2.0d0 3.0d0 4.0d0 5.0d0) NIL) ("write-hdf5 \"testdata/h5_2d.h5\" \"/matrix\" [[1 2][3 4]]" :RUN-ONLY) ("load-hdf5 \"testdata/h5_2d.h5\" \"/matrix\"" #2A((1.0d0 2.0d0) (3.0d0 4.0d0)) NIL) ("shape write-hdf5 \"testdata/h5_shape.h5\" \"/arr\" range 5" (5)) ("shape load-hdf5 \"testdata/h5_shape.h5\" \"/arr\"" (5) NIL) ("size load-hdf5 \"testdata/h5_roundtrip.h5\" \"/data\"" 5 NIL) ("size load-hdf5 \"testdata/h5_2d.h5\" \"/matrix\"" 4 NIL)))
+10: (RUN-ALL-TESTS)
+11: ((LAMBDA NIL :IN "/home/sander/lisp/spectral/tests.lisp"))
+12: (SB-INT:SIMPLE-EVAL-IN-LEXENV (LET ((OK (RUN-ALL-TESTS))) (SB-EXT:EXIT :CODE (IF OK 0 1))) #<NULL-LEXENV>)
+13: (SB-EXT:EVAL-TLF (LET ((OK (RUN-ALL-TESTS))) (SB-EXT:EXIT :CODE (IF OK 0 1))) 11 NIL)
+14: ((LABELS SB-FASL::EVAL-FORM :IN SB-INT:LOAD-AS-SOURCE) (LET ((OK (RUN-ALL-TESTS))) (SB-EXT:EXIT :CODE (IF OK 0 1))) 11)
+15: ((LAMBDA (SB-KERNEL:FORM &KEY :CURRENT-INDEX &ALLOW-OTHER-KEYS) :IN SB-INT:LOAD-AS-SOURCE) (LET ((OK (RUN-ALL-TESTS))) (SB-EXT:EXIT :CODE (IF OK 0 1))) :CURRENT-INDEX 11)
+16: (SB-C::%DO-FORMS-FROM-INFO #<FUNCTION (LAMBDA (SB-KERNEL:FORM &KEY :CURRENT-INDEX &ALLOW-OTHER-KEYS) :IN SB-INT:LOAD-AS-SOURCE) {7FEDCFC674CB}> #<SB-C::SOURCE-INFO {12030D3073}> SB-C::INPUT-ERROR-IN-LOAD)
+17: (SB-INT:LOAD-AS-SOURCE #<SB-INT:FORM-TRACKING-STREAM for "file /home/sander/lisp/spectral/tests.lisp" {120311C923}> :VERBOSE NIL :PRINT NIL :CONTEXT "loading")
+18: ((LABELS SB-FASL::LOAD-STREAM-1 :IN LOAD) #<SB-INT:FORM-TRACKING-STREAM for "file /home/sander/lisp/spectral/tests.lisp" {120311C923}> NIL)
+19: (SB-FASL::CALL-WITH-LOAD-BINDINGS #<FUNCTION (LABELS SB-FASL::LOAD-STREAM-1 :IN LOAD) {7FEDCFC6788B}> #<SB-INT:FORM-TRACKING-STREAM for "file /home/sander/lisp/spectral/tests.lisp" {120311C923}> NIL #<SB-INT:FORM-TRACKING-STREAM for "file /home/sander/lisp/spectral/tests.lisp" {120311C923}>)
+20: (LOAD #P"tests.lisp" :VERBOSE NIL :PRINT NIL :IF-DOES-NOT-EXIST :ERROR :EXTERNAL-FORMAT :DEFAULT)
+21: (SB-IMPL::PROCESS-EVAL/LOAD-OPTIONS ((:LOAD . "tests.lisp") (:QUIT)))
+22: (SB-IMPL::TOPLEVEL-INIT)
+23: ((FLET SB-UNIX::BODY :IN SB-IMPL::START-LISP))
+24: ((FLET "WITHOUT-INTERRUPTS-BODY-3" :IN SB-IMPL::START-LISP))
+25: (SB-IMPL::%START-LISP)
+
+unhandled condition in --disable-debugger mode, quitting
