@@ -19,6 +19,12 @@
   (make-pathname :defaults (or *load-truename* (truename "spectral.lisp"))
                 :name nil :type nil))
 
+;; Forward declarations for mutually recursive / forward-referenced functions
+#+sbcl
+(declaim (ftype (function (t) boolean) is-true)
+         (ftype (function (list) list) parse parse-group)
+         (ftype (function (list) (values list t)) parse-expression))
+
 (defun in-slime-p ()
   (let ((pkg (find-package :swank)))
     (and pkg

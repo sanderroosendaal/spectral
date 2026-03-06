@@ -4,10 +4,6 @@
   "Coerce list to vector; return other sequences (e.g. arrays) unchanged."
   (if (listp x) (coerce x 'vector) x))
 
-(defun ensure-double-float-vector (x)
-  "Ensure input is a double-float vector. Coerces lists and non-float arrays."
-  (convert-to-float (ensure-vector x)))
-
 (defun convert-to-float (input)
   "Convert the input 1D array to a float array. Do nothing if the array is already double float."
   (when (and (arrayp input) (= (array-rank input) 1)
@@ -17,6 +13,10 @@
     (dotimes (i (length input))
       (setf (aref float-array i) (coerce (aref input i) 'double-float)))
     float-array))
+
+(defun ensure-double-float-vector (x)
+  "Ensure input is a double-float vector. Coerces lists and non-float arrays."
+  (convert-to-float (ensure-vector x)))
 
 (defun fft-fn (input)
   "Fast Fourier Transform of the input signal."
@@ -241,7 +241,6 @@
 (defun psd-fn (signal)
   "Power spectral density: |FFT(signal)|^2. Returns real array of power at each frequency bin."
   (let* ((vec (ensure-double-float-vector signal))
-   (n (length vec))
    (spec (fftw-ffi:fft-forward (map 'vector (lambda (x) (complex x 0.0d0)) vec))))
     (map 'vector (lambda (c) (* (abs c) (abs c))) spec)))
 

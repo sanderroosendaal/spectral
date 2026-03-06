@@ -14,7 +14,6 @@ Expands into a call like (vgplot:plot x y1 x y2 ...)."
          collect (loop for j below ,cols-sym
              collect (aref ,array-sym i j))))
       (,args-sym (loop for y in ,ys-sym append (list ,x-sym y))))
-       (declare (ignore ,cols-sym))
        (apply ,fun ,args-sym))))
 
 

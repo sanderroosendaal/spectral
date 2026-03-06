@@ -1,3 +1,6 @@
+;; Forward declaration (evaluate defined in spectral.lisp, loaded before this file)
+#+sbcl (declaim (ftype (function (string &optional t) t) evaluate))
+
 ;; Simple file I/O functions
 (defun parse-number (str)
   "Parse a string as a number"
@@ -168,6 +171,39 @@
     ((-4) 2)   ; int16
     (t (spectral-error "Unknown .sdat type code: ~A" typecode))))
 
+;; Float/int writers (defined before write-binary which uses them)
+(defun double-to-ieee754-bits (x)
+  (multiple-value-bind (sig exp sign) (integer-decode-float x)
+    (let* ((sign-bit (ash (if (minusp sign) 1 0) 63))
+           (mant (logand sig #xFFFFFFFFFFFFF))
+           (ieee-exp (+ exp 1023)))
+      (when (or (< ieee-exp 0) (>= ieee-exp 2047))
+        (return-from double-to-ieee754-bits 0))
+      (logior sign-bit (ash ieee-exp 52) mant))))
+
+(defun single-to-ieee754-bits (x)
+  (multiple-value-bind (sig exp sign) (integer-decode-float (float x 1.0d0))
+    (let* ((sign-bit (ash (if (minusp sign) 1 0) 31))
+           (mant (logand sig #x7FFFFF))
+           (ieee-exp (+ exp 127)))
+      (when (or (< ieee-exp 0) (>= ieee-exp 256))
+        (return-from single-to-ieee754-bits 0))
+      (logior sign-bit (ash ieee-exp 23) mant))))
+
+(defun write-float64-le (x stream)
+  (let ((bits #+sbcl (sb-kernel:double-float-bits x)
+              #-sbcl (double-to-ieee754-bits x)))
+    (write-uint-le bits stream 8)))
+
+(defun write-float32-le (x stream)
+  (write-uint-le (single-to-ieee754-bits x) stream 4))
+
+(defun write-uint16-le (n stream)
+  (write-uint-le (logand n #xFFFF) stream 2))
+
+(defun write-int16-le (n stream)
+  (write-uint16-le (ldb (byte 16 0) (round n)) stream))
+
 (defun write-binary (filename data)
   "Write array to .sdat binary file. Supports float64, float32, int32, int16."
   (ensure-directories-exist (make-pathname :defaults (merge-pathnames filename) :name nil :type nil))
@@ -198,40 +234,8 @@
           (write-elem (row-major-aref data i))))))
   data)
 
-(defun write-float64-le (x stream)
-  (let ((bits #+sbcl (sb-kernel:double-float-bits x)
-              #-sbcl (double-to-ieee754-bits x)))
-    (write-uint-le bits stream 8)))
-
-(defun double-to-ieee754-bits (x)
-  (multiple-value-bind (sig exp sign) (integer-decode-float x)
-    (let* ((sign-bit (ash (if (minusp sign) 1 0) 63))
-           (mant (logand sig #xFFFFFFFFFFFFF))
-           (ieee-exp (+ exp 1023)))
-      (when (or (< ieee-exp 0) (>= ieee-exp 2047))
-        (return-from double-to-ieee754-bits 0))
-      (logior sign-bit (ash ieee-exp 52) mant))))
-
-(defun write-float32-le (x stream)
-  (write-uint-le (single-to-ieee754-bits x) stream 4))
-
-(defun single-to-ieee754-bits (x)
-  (multiple-value-bind (sig exp sign) (integer-decode-float (float x 1.0d0))
-    (let* ((sign-bit (ash (if (minusp sign) 1 0) 31))
-           (mant (logand sig #x7FFFFF))
-           (ieee-exp (+ exp 127)))
-      (when (or (< ieee-exp 0) (>= ieee-exp 256))
-        (return-from single-to-ieee754-bits 0))
-      (logior sign-bit (ash ieee-exp 23) mant))))
-
-(defun write-uint16-le (n stream)
-  (write-uint-le (logand n #xFFFF) stream 2))
-
 (defun read-uint16-le (stream)
   (read-uint-le stream 2))
-
-(defun write-int16-le (n stream)
-  (write-uint16-le (ldb (byte 16 0) (round n)) stream))
 
 (defun read-int16-le (stream)
   (let ((u (read-uint16-le stream)))
@@ -412,6 +416,14 @@
 ;;; HDF5 (optional — requires libhdf5; uses minimal CFFI binding, no hdf5-cffi)
 ;;; load-hdf5 filename path | write-hdf5 filename path data
 (defvar *hdf5-available-p* nil)
+
+;; Stubs so compiler sees definitions; hdf5-io.lisp redefines when HDF5 loads.
+(defun load-hdf5-fn (&rest args)
+  (declare (ignore args))
+  (error "HDF5 not available"))
+(defun write-hdf5-fn (&rest args)
+  (declare (ignore args))
+  (error "HDF5 not available"))
 
 (handler-case
     (progn
