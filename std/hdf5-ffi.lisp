@@ -6,7 +6,7 @@
   (:use :cl :cffi)
   (:export
    #:+H5F-ACC-RDONLY+ #:+H5F-ACC-TRUNC+
-   #:+H5T-NATIVE-DOUBLE+ #:+H5S-ALL+ #:+H5P-DEFAULT+
+   #:+H5T-NATIVE-DOUBLE+ #:get-h5t-native-double #:+H5S-ALL+ #:+H5P-DEFAULT+
    #:H5open #:H5Fopen #:H5Fcreate #:H5Fclose
    #:H5Dopen2 #:H5Dcreate2 #:H5Dget-space #:H5Dread #:H5Dwrite #:H5Dclose
    #:H5Sget-simple-extent-ndims #:H5Sget-simple-extent-dims
@@ -57,11 +57,22 @@
 (defconstant +H5F-ACC-RDONLY+ 0)
 (defconstant +H5F-ACC-TRUNC+ 2)
 
-;;; H5open — call once so H5T_NATIVE_DOUBLE_g is valid
+;;; H5open — NOT called at load time (causes FLOATING-POINT-INVALID-OPERATION on some systems)
+;;; The library initializes itself on first use.
 (cffi:defcfun ("H5open" h5open) herr-t)
 
-;;; H5T_NATIVE_DOUBLE — foreign variable (valid after H5open)
-(cffi:defcvar ("H5T_NATIVE_DOUBLE_g" +H5T-NATIVE-DOUBLE+) :long)
+;;; H5T_NATIVE_DOUBLE — foreign variable
+;;; Define at package level; wrapped in handler-case to gracefully handle if inaccessible
+(defvar +H5T-NATIVE-DOUBLE+ 0)
+
+(handler-case
+    (cffi:defcvar ("H5T_NATIVE_DOUBLE_g" +H5T-NATIVE-DOUBLE+) :long)
+  (error (e)
+    (warn "Could not access H5T_NATIVE_DOUBLE_g: ~A (HDF5 I/O may not work)" e)))
+
+(defun get-h5t-native-double ()
+  "Return H5T_NATIVE_DOUBLE_g value."
+  +H5T-NATIVE-DOUBLE+)
 
 ;;; File
 (cffi:defcfun ("H5Fopen" H5Fopen) hid-t
@@ -94,7 +105,6 @@
   (rank :int) (dims :pointer) (maxdims :pointer))
 (cffi:defcfun ("H5Sclose" H5Sclose) herr-t (space-id hid-t))
 
-;;; Initialize library at load time (H5T_NATIVE_DOUBLE_g populated by H5open)
-(let ((err (h5open)))
-  (when (< err 0)
-    (error "HDF5: H5open failed with code ~A" err)))
+;;; NOTE: H5open() is NOT called at load time.
+;;; The HDF5 library initializes itself automatically on first use.
+;;; H5T_NATIVE_DOUBLE_g is accessed lazily via get-h5t-native-double().

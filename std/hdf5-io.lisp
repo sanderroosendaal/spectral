@@ -29,7 +29,7 @@
                            (unwind-protect
                                 (progn
                                   (hdf5:H5Dread dset-id
-                                                hdf5:+H5T-NATIVE-DOUBLE+
+                                                (hdf5:get-h5t-native-double)
                                                 hdf5:+H5S-ALL+ hdf5:+H5S-ALL+
                                                 hdf5:+H5P-DEFAULT+ buf)
                                   (dotimes (i total)
@@ -64,7 +64,7 @@
                                         hdf5:+H5P-DEFAULT+ hdf5:+H5P-DEFAULT+)))
            (unwind-protect
                 (let ((dset-id (hdf5:H5Dcreate2 file-id path
-                                                hdf5:+H5T-NATIVE-DOUBLE+
+                                                (hdf5:get-h5t-native-double)
                                                 space-id hdf5:+H5P-DEFAULT+
                                                 hdf5:+H5P-DEFAULT+)))
                   (unwind-protect
@@ -77,7 +77,7 @@
                                         (coerce (row-major-aref data i)
                                                 'double-float)))
                                 (hdf5:H5Dwrite dset-id
-                                               hdf5:+H5T-NATIVE-DOUBLE+
+                                               (hdf5:get-h5t-native-double)
                                                hdf5:+H5S-ALL+ hdf5:+H5S-ALL+
                                                hdf5:+H5P-DEFAULT+ buf))
                            (cffi:foreign-free buf)))
