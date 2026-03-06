@@ -237,7 +237,7 @@ Spectral is designed for:
 
 ### HDF5 Support
 
-Spectral uses a **minimal CFFI binding** (`std/hdf5-ffi.lisp`) — no hdf5-cffi dependency. Compatible with HDF5 1.14 and 2.0.
+Spectral uses a **minimal CFFI binding** (`std/hdf5-ffi.lisp`) — no hdf5-cffi dependency. Compatible with HDF5 1.14 and 2.0. The binding uses runtime symbol resolution for property list IDs (`H5P_LST_LINK_CREATE_ID_g`, `H5P_LST_DATASET_CREATE_ID_g`, `H5P_LST_DATASET_ACCESS_ID_g`) to satisfy HDF5 2.0's stricter API requirements; older versions fall back to `H5P_DEFAULT` where needed.
 
 **If "HDF5 not available" appears:**
 - **Linux**: Install `libhdf5-dev` (e.g. `apt install libhdf5-dev` or `pacman -S hdf5`). Ensure the shared library is on the linker path.

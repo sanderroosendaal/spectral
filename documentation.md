@@ -1,4 +1,4 @@
-﻿# API Documentation
+# API Documentation
 
 Generated from Lisp source files.
 
@@ -543,7 +543,9 @@ Loads a table from a CSV file, comma separated, row oriented
 - **Arity:** 2
 - **Source:** std/io.lisp
 
-**Parameters:** `(PATH FILENAME)`
+**Parameters:** `(FILENAME PATH)`
+
+Load a dataset at the given path from an HDF5 file. Returns a double-float array. Requires libhdf5; compatible with HDF5 1.14 and 2.0.
 
 ---
 
@@ -623,7 +625,9 @@ Saves a 2D lisp array to a CSV file, comma separated, row oriented
 - **Arity:** 3
 - **Source:** std/io.lisp
 
-**Parameters:** `(DATA PATH FILENAME)`
+**Parameters:** `(FILENAME PATH DATA)`
+
+Write an array to an HDF5 file at the given path. Overwrites the dataset if it exists. Requires libhdf5; compatible with HDF5 1.14 and 2.0.
 
 ---
 

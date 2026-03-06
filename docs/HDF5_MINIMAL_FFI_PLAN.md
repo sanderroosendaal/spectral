@@ -68,7 +68,7 @@ An updated hdf5-cffi would likely:
 So our FFI defines:
 - Same function names as today, except `H5Dcreate1` → `H5Dcreate2`.
 - Same constant names.
-- `H5Dcreate2(loc_id, name, type_id, space_id, dcpl_id, dapl_id)` — we pass `H5P_DEFAULT` (or -1) for dcpl_id and dapl_id.
+- `H5Dcreate2(loc_id, name, type_id, space_id, lcpl_id, dcpl_id, dapl_id)` — full 7-parameter signature. For HDF5 2.0, we resolve `H5P_LST_LINK_CREATE_ID_g` (lcpl_id), `H5P_LST_DATASET_CREATE_ID_g` (dcpl_id), and `H5P_LST_DATASET_ACCESS_ID_g` (dapl_id) at runtime via `foreign-symbol-pointer`; older HDF5 falls back to `H5P_DEFAULT` (0) when these symbols are absent.
 
 ### C Type Mapping
 
@@ -88,7 +88,7 @@ So our FFI defines:
 | H5Fcreate | H5Fcreate | (filename, flags, fcpl_id, fapl_id) |
 | H5Fclose | H5Fclose | (file_id) |
 | H5Dopen2 | H5Dopen2 | (loc_id, name, dapl_id) |
-| **H5Dcreate2** | H5Dcreate2 | (loc_id, name, type_id, space_id, dcpl_id, dapl_id) — replaces H5Dcreate1 |
+| **H5Dcreate2** | H5Dcreate2 | (loc_id, name, type_id, space_id, lcpl_id, dcpl_id, dapl_id) — full 7-param signature; replaces H5Dcreate1 |
 | H5Dget_space | H5Dget-space | (dset_id) |
 | H5Dread | H5Dread | (dset_id, mem_type_id, mem_space_id, file_space_id, xfer_id, buf) |
 | H5Dwrite | H5Dwrite | (dset_id, mem_type_id, mem_space_id, file_space_id, xfer_id, buf) |
@@ -120,7 +120,7 @@ HDF5 uses special "predefined" ids for H5T_NATIVE_DOUBLE and H5S_ALL; they are u
 
 ## 4. hdf5-io.lisp Changes
 
-1. **H5Dcreate1 → H5Dcreate2:** Replace the create call with H5Dcreate2, passing two extra args (dcpl_id, dapl_id) as `H5P_DEFAULT` or -1.
+1. **H5Dcreate1 → H5Dcreate2:** Replace the create call with H5Dcreate2, passing the full 7 args (loc_id, name, type_id, space_id, lcpl_id, dcpl_id, dapl_id). Use `get-h5p-link-create-default()`, `get-h5p-dataset-create-default()`, and `get-h5p-dataset-access-default()` for HDF5 2.0; fall back to `H5P_DEFAULT` (0) when these return 0 (HDF5 1.x).
 2. **Package:** Ensure we use the package from hdf5-ffi (`:hdf5` or `:spectral.hdf5`).
 3. **Nothing else** — the rest of the logic (allocation, read/write loop, unwind-protect) stays the same.
 

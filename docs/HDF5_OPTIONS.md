@@ -1,8 +1,10 @@
 # HDF5 Support Options
 
-**Context:** Spectral's HDF5 support relies on `hdf5-cffi`, which is incompatible with HDF5 2.0.0+ (constant `H5I_REFERENCE` removed). On modern Linux (e.g. Manjaro), hdf5-cffi fails to compile.
+**Context:** Spectral's HDF5 support originally relied on `hdf5-cffi`, which is incompatible with HDF5 2.0.0+ (constant `H5I_REFERENCE` removed). On modern Linux (e.g. Manjaro), hdf5-cffi fails to compile.
 
 **Scope:** We need only `load-hdf5` and `write-hdf5` — single-dataset read/write of double arrays. Our usage is minimal (~15 HDF5 API calls).
+
+**Implementation status:** Option 3 (Minimal CFFI binding) has been implemented. The binding supports HDF5 1.14 and 2.0, using runtime resolution of property list IDs (`H5P_LST_LINK_CREATE_ID_g`, `H5P_LST_DATASET_CREATE_ID_g`, `H5P_LST_DATASET_ACCESS_ID_g`) for HDF5 2.0 compatibility. H5Dcreate2 uses the full 7-parameter signature including `lcpl_id`.
 
 ---
 
