@@ -429,9 +429,17 @@
     (progn
       (load (merge-pathnames "std/hdf5-ffi.lisp" *spectral-root*))
       (load (merge-pathnames "std/hdf5-io.lisp" *spectral-root*))
-      (setf *hdf5-available-p* t)
-      (register-op 'load-hdf5 #'load-hdf5-fn 2)
-      (register-op 'write-hdf5 #'write-hdf5-fn 3))
+      ;; Only enable HDF5 when type ID is resolvable. On Windows, H5open often fails
+      ;; and the type ID can be invalid even when non-zero, causing memory faults.
+      ;; Use find-symbol to avoid read-time dependency on :hdf5 package
+      #-win32
+      (let ((type-id (when (find-package "HDF5")
+                       (ignore-errors
+                         (funcall (find-symbol "GET-H5T-NATIVE-DOUBLE" "HDF5"))))))
+        (when (and type-id (not (zerop type-id)))
+          (setf *hdf5-available-p* t)
+          (register-op 'load-hdf5 #'load-hdf5-fn 2)
+          (register-op 'write-hdf5 #'write-hdf5-fn 3))))
   (error ()
     (warn "HDF5 not available; load-hdf5 and write-hdf5 disabled")))
 

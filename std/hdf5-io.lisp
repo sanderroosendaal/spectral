@@ -74,8 +74,8 @@
                                                 space-id hdf5:+H5P-DEFAULT+
                                                 hdf5:+H5P-DEFAULT+)))
                   (unwind-protect
-                       (let ((total (array-total-size data))
-                             (buf (cffi:foreign-alloc :double :count total)))
+                       (let* ((total (array-total-size data))
+                              (buf (cffi:foreign-alloc :double :count total)))
                          (unwind-protect
                               (progn
                                 (dotimes (i total)
@@ -92,5 +92,5 @@
       (hdf5:H5Sclose space-id)))
   data)
 
-(defun write-hdf5-fn (data path filename)
+(defun write-hdf5-fn (filename path data)
   (write-hdf5-inner filename path data))
